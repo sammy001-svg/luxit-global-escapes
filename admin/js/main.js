@@ -665,29 +665,190 @@ function renderCustomers() {
 }
 
 function renderAnalytics() {
-    contentArea.innerHTML = `
-        <div class="space-y-8 animate-fade-in">
-            <h1 class="text-3xl font-bold">Analytics & Reports</h1>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="glass-card rounded-2xl p-6">
-                    <h2 class="text-xl font-bold mb-6">Revenue Growth</h2>
-                    <canvas id="analyticsRevenueChart" class="w-full h-80"></canvas>
+    console.log('Rendering Analytics & Reports...');
+    try {
+        const { analytics, bookings, tours } = state.data;
+        
+        // Calculate dynamic insights
+        const totalConfirmed = bookings.filter(b => b.status === 'Confirmed').length;
+        const avgBookingValue = Math.round(analytics.totalRevenue / analytics.totalBookings);
+        
+        contentArea.innerHTML = `
+        <div class="space-y-8 animate-fade-in pb-12">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold">Analytics & Reports</h1>
+                    <p class="text-slate-500 mt-1">Deep dive into your agency performance and trends</p>
                 </div>
+                <div class="flex space-x-3">
+                    <button class="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl text-sm font-semibold border border-white/10 transition flex items-center">
+                        <i class="fas fa-download mr-2"></i> Export Report
+                    </button>
+                    <div class="h-10 w-px bg-white/10 mx-2"></div>
+                    <select class="bg-slate-800 border border-white/10 rounded-xl px-4 py-2 text-sm outline-none focus:border-primary">
+                        <option>Last 6 Months</option>
+                        <option>Last 12 Months</option>
+                        <option>This Year</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- KPI Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                ${renderAnalyticsStatCard('Total Revenue', `$${analytics.totalRevenue.toLocaleString()}`, 'fa-dollar-sign', 'text-emerald-400', '+18.4%')}
+                ${renderAnalyticsStatCard('Conversion Rate', '4.2%', 'fa-bullseye', 'text-amber-400', '+0.8%')}
+                ${renderAnalyticsStatCard('Avg. Order Value', `$${avgBookingValue}`, 'fa-receipt', 'text-blue-400', '-2.1%')}
+                ${renderAnalyticsStatCard('Customer LTV', '$2,840', 'fa-user-graduate', 'text-purple-400', '+12%')}
+            </div>
+
+            <!-- Main Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 glass-card rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="text-xl font-bold">Revenue Growth</h2>
+                            <p class="text-xs text-slate-500">Monthly financial performance tracking</p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center">
+                                <span class="w-3 h-3 rounded-full bg-primary mr-2"></span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase">Revenue</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="h-80 w-full">
+                        <canvas id="analyticsRevenueChart"></canvas>
+                    </div>
+                </div>
+                
                 <div class="glass-card rounded-2xl p-6">
-                    <h2 class="text-xl font-bold mb-6">Bookings Distribution</h2>
-                    <canvas id="bookingsDoughnut" class="w-full h-80"></canvas>
+                    <h2 class="text-xl font-bold mb-2">Regional Distribution</h2>
+                    <p class="text-xs text-slate-500 mb-8">Bookings by destination region</p>
+                    <div class="h-64 w-full mb-6">
+                        <canvas id="bookingsDoughnut"></canvas>
+                    </div>
+                    <div class="space-y-3">
+                        ${[
+                            { label: 'Africa', value: '35%', color: 'bg-[#006A72]' },
+                            { label: 'Asia', value: '25%', color: 'bg-[#FFD214]' },
+                            { label: 'Europe', value: '20%', color: 'bg-[#10B981]' }
+                        ].map(item => `
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <span class="w-2 h-2 rounded-full ${item.color} mr-3"></span>
+                                    <span class="text-xs font-medium text-slate-400">${item.label}</span>
+                                </div>
+                                <span class="text-xs font-bold">${item.value}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Metrics & Popular Tours -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="glass-card rounded-2xl overflow-hidden">
+                    <div class="p-6 border-b border-white/5 flex items-center justify-between">
+                        <h2 class="text-xl font-bold">Top Performing Tours</h2>
+                        <button class="text-xs font-bold text-primary hover:underline">View All</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-white/5">
+                                <tr>
+                                    <th class="p-4 text-[10px] font-black uppercase text-slate-500 tracking-wider">Tour Name</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-slate-500 tracking-wider">Bookings</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-slate-500 tracking-wider">Revenue</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-slate-500 tracking-wider">Trend</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5">
+                                ${analytics.popularTours.map(tour => `
+                                    <tr class="hover:bg-white/5 transition group">
+                                        <td class="p-4 flex items-center">
+                                            <div class="w-8 h-8 rounded-lg bg-slate-800 mr-3 overflow-hidden flex-shrink-0">
+                                                <img src="../assets/images/tour/style1/pic${Math.floor(Math.random()*6)+1}.jpg" class="w-full h-full object-cover">
+                                            </div>
+                                            <span class="text-sm font-bold group-hover:text-primary transition truncate max-w-[150px]">${tour.name}</span>
+                                        </td>
+                                        <td class="p-4 text-sm font-medium">${tour.bookings}</td>
+                                        <td class="p-4 text-sm font-bold text-secondary">$${(tour.bookings * 850).toLocaleString()}</td>
+                                        <td class="p-4">
+                                            <span class="text-emerald-400 text-xs font-bold"><i class="fas fa-caret-up mr-1"></i>${Math.floor(Math.random()*15)+5}%</span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6">
+                    <h2 class="text-xl font-bold mb-6">Device & Source Traffic</h2>
+                    <div class="space-y-8">
+                        ${[
+                            { label: 'Direct Traffic', percent: 65, color: 'bg-primary' },
+                            { label: 'Social Media', percent: 22, color: 'bg-secondary' },
+                            { label: 'Referral', percent: 13, color: 'bg-emerald-400' }
+                        ].map(source => `
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-bold text-slate-400 uppercase tracking-widest">${source.label}</span>
+                                    <span class="font-bold">${source.percent}%</span>
+                                </div>
+                                <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                                    <div class="${source.color} h-full rounded-full" style="width: ${source.percent}%"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="mt-12 p-4 rounded-xl bg-primary/5 border border-primary/10">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-lightbulb text-primary mt-1"></i>
+                            <div>
+                                <h4 class="text-sm font-bold text-white">Insight: Mobile users are growing</h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Bookings from mobile devices have increased by 24% this month. Consider optimizing the checkout flow for smaller screens.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    `;
-    setTimeout(() => {
-        try {
-            initAnalyticsCharts();
-        } catch (e) {
-            console.error('Analytics chart init failed:', e);
-        }
-    }, 0);
+        `;
+        
+        setTimeout(() => {
+            try {
+                initAnalyticsCharts();
+            } catch (e) {
+                console.error('Analytics chart init failed:', e);
+            }
+        }, 0);
+    } catch (error) {
+        console.error('Error rendering analytics:', error);
+        contentArea.innerHTML = `<div class="p-8 text-rose-500">Error: ${error.message}</div>`;
+    }
 }
+
+function renderAnalyticsStatCard(title, value, icon, iconColor, trend) {
+    const isPositive = trend.startsWith('+');
+    return `
+        <div class="glass-card rounded-2xl p-6 border border-white/5 hover:border-white/10 transition">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-10 h-10 rounded-xl bg-dark-900 flex items-center justify-center">
+                    <i class="fas ${icon} ${iconColor} text-lg"></i>
+                </div>
+                <span class="text-[10px] font-black px-2 py-1 rounded-lg ${isPositive ? 'bg-emerald-400/10 text-emerald-400' : 'bg-rose-500/10 text-rose-500'}">
+                    ${trend}
+                </span>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 font-bold uppercase tracking-widest mb-1">${title}</p>
+                <p class="text-2xl font-bold">${value}</p>
+            </div>
+        </div>
+    `;
+}
+
 
 function renderSettings() {
     contentArea.innerHTML = `
@@ -802,28 +963,58 @@ function initDashboardCharts() {
 }
 
 function initAnalyticsCharts() {
+    if (typeof Chart === 'undefined') return;
+
     const revCtx = document.getElementById('analyticsRevenueChart');
     const distCtx = document.getElementById('bookingsDoughnut');
     
     if (revCtx) {
+        const gradient = revCtx.getContext('2d').createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(0, 106, 114, 0.4)');
+        gradient.addColorStop(1, 'rgba(0, 106, 114, 0)');
+
         new Chart(revCtx, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: state.data.analytics.monthlyStats.map(s => s.month),
                 datasets: [{
-                    label: 'Revenue',
+                    label: 'Revenue ($)',
                     data: state.data.analytics.monthlyStats.map(s => s.revenue),
-                    backgroundColor: '#006A72',
-                    borderRadius: 8
+                    borderColor: '#006A72',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#006A72',
+                    pointBorderColor: 'rgba(255,255,255,0.1)',
+                    pointHoverRadius: 6,
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: gradient
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0F172A',
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 12 },
+                        padding: 12,
+                        cornerRadius: 12,
+                        displayColors: false
+                    }
+                },
                 scales: {
-                    y: { grid: { color: 'rgba(255,255,255,0.05)' } },
-                    x: { grid: { display: false } }
+                    y: { 
+                        grid: { color: 'rgba(255,255,255,0.03)' },
+                        ticks: { color: '#64748b', font: { size: 10 } },
+                        border: { display: false }
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { size: 10 } },
+                        border: { display: false }
+                    }
                 }
             }
         });
@@ -833,10 +1024,11 @@ function initAnalyticsCharts() {
         new Chart(distCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Africa', 'Asia', 'Europe', 'Middle East', 'Americas'],
+                labels: ['Africa', 'Asia', 'Europe', 'Other'],
                 datasets: [{
-                    data: [35, 25, 20, 15, 5],
-                    backgroundColor: ['#006A72', '#FFD214', '#10B981', '#3B82F6', '#F43F5E'],
+                    data: [35, 25, 20, 20],
+                    backgroundColor: ['#006A72', '#FFD214', '#10B981', '#1E293B'],
+                    hoverOffset: 15,
                     borderWidth: 0
                 }]
             },
@@ -844,47 +1036,82 @@ function initAnalyticsCharts() {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: '#94a3b8', padding: 20 }
-                    }
+                    legend: { display: false }
                 },
-                cutout: '70%'
+                cutout: '75%',
+                plugins: {
+                    tooltip: {
+                        backgroundColor: '#0F172A',
+                        padding: 12,
+                        cornerRadius: 12
+                    }
+                }
             }
         });
     }
 }
 
+
 window.openTourModal = (tourId = null) => {
     const tour = tourId ? state.data.tours.find(t => t.id === tourId) : null;
+    const destinations = state.data.destinations || [];
+    
     modalOverlay.classList.remove('hidden');
     modalContent.innerHTML = `
-        <form id="tour-form" class="p-8 space-y-6">
-            <div class="flex items-center justify-between">
+        <form id="tour-form" class="p-8 space-y-6 max-h-[90vh] overflow-y-auto custom-scroll">
+            <div class="flex items-center justify-between sticky top-0 bg-dark-800 z-10 pb-4 border-b border-white/5">
                 <div>
                     <h2 class="text-2xl font-bold">${tour ? 'Edit Tour Package' : 'Create New Package'}</h2>
                     <p class="text-slate-500 text-xs mt-1">Fill in the details for your travel offering</p>
                 </div>
-                <button type="button" onclick="window.closeModal()" class="text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+                <button type="button" onclick="window.closeModal()" class="text-slate-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
             </div>
             
             <div class="grid grid-cols-2 gap-6 text-sm">
+                <!-- Title Row -->
                 <div class="space-y-2 col-span-2">
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Tour Title</label>
                     <input type="text" name="title" required value="${tour ? tour.title : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="e.g. Serengeti Luxury Safari">
                 </div>
+
+                <!-- Image Upload Row -->
                 <div class="space-y-2 col-span-2">
-                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Image Asset Path</label>
-                    <input type="text" name="image" value="${tour ? (tour.image || '') : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition font-mono text-[10px]" placeholder="assets/images/tour/style1/pic1.jpg">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Package Image</label>
+                    <div id="image-dropzone" class="relative group cursor-pointer border-2 border-dashed border-white/10 rounded-2xl p-4 hover:border-primary/50 transition bg-dark-900/50">
+                        <input type="file" id="tour-image-input" accept="image/*" class="hidden">
+                        <div id="image-preview-container" class="flex flex-col items-center justify-center space-y-2 ${tour && tour.image ? 'hidden' : ''}">
+                            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                <i class="fas fa-cloud-upload-alt text-xl"></i>
+                            </div>
+                            <p class="text-xs font-bold text-slate-400">Click or drag to upload image</p>
+                            <p class="text-[10px] text-slate-600">JPG, PNG or WEBP (Max 2MB)</p>
+                        </div>
+                        <div id="image-preview" class="relative ${tour && tour.image ? '' : 'hidden'}">
+                            <img src="${tour && tour.image ? (tour.image.startsWith('assets') ? '../' + tour.image : tour.image) : ''}" id="preview-img" class="w-full h-48 object-cover rounded-xl border border-white/5 shadow-2xl">
+                            <button type="button" id="remove-img" class="absolute top-2 right-2 bg-rose-500 text-white size-8 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                <i class="fas fa-trash-alt text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="hidden" name="image" id="image-path-hidden" value="${tour ? (tour.image || '') : ''}">
+                </div>
+
+                <!-- Destination & Price Row -->
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Destination</label>
+                    <select name="location" required class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition appearance-none">
+                        <option value="" disabled ${!tour ? 'selected' : ''}>Select Destination</option>
+                        ${destinations.map(d => `
+                            <option value="${d.name}" ${tour && tour.location === d.name ? 'selected' : ''}>${d.name}</option>
+                        `).join('')}
+                    </select>
                 </div>
                 <div class="space-y-2">
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Price ($)</label>
                     <input type="number" name="price" required value="${tour ? tour.price : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="1200">
                 </div>
-                <div class="space-y-2">
-                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Location</label>
-                    <input type="text" name="location" required value="${tour ? tour.location : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="e.g. Tanzania">
-                </div>
+
+                <!-- Duration & Category Row -->
                 <div class="space-y-2">
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Duration</label>
                     <input type="text" name="duration" required value="${tour ? tour.duration : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="e.g. 5 Days / 4 Nights">
@@ -897,37 +1124,97 @@ window.openTourModal = (tourId = null) => {
                         `).join('')}
                     </select>
                 </div>
+
+                <!-- Status & Home Page Row -->
                 <div class="space-y-2">
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Status</label>
-                    <div class="flex p-1.5 bg-dark-900 border border-white/10 rounded-xl">
-                        <label class="flex-1 text-center py-2 rounded-lg cursor-pointer text-xs font-bold transition ${(!tour || tour.status === 'Active') ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-white'}">
-                            <input type="radio" name="status" value="Active" class="hidden" ${(!tour || tour.status === 'Active') ? 'checked' : ''} onchange="this.parentElement.parentElement.querySelectorAll('label').forEach(l=>l.className=l.className.replace('bg-primary text-white shadow-lg','text-slate-500 hover:text-white')); this.parentElement.className='flex-1 text-center py-2 rounded-lg cursor-pointer text-xs font-bold bg-primary text-white shadow-lg'">
+                    <div class="flex p-1 bg-dark-900 border border-white/10 rounded-xl">
+                        <label class="flex-1 text-center py-2.5 rounded-lg cursor-pointer text-xs font-bold transition ${(!tour || tour.status === 'Active') ? 'bg-primary text-white' : 'text-slate-500 hover:text-white'}">
+                            <input type="radio" name="status" value="Active" class="hidden" ${(!tour || tour.status === 'Active') ? 'checked' : ''} onchange="this.parentElement.parentElement.querySelectorAll('label').forEach(l=>l.classList.remove('bg-primary','text-white')); this.parentElement.classList.add('bg-primary','text-white')">
                             Active
                         </label>
-                        <label class="flex-1 text-center py-2 rounded-lg cursor-pointer text-xs font-bold transition ${tour && tour.status === 'Draft' ? 'bg-slate-700 text-white shadow-lg' : 'text-slate-500 hover:text-white'}">
-                            <input type="radio" name="status" value="Draft" class="hidden" ${tour && tour.status === 'Draft' ? 'checked' : ''} onchange="this.parentElement.parentElement.querySelectorAll('label').forEach(l=>l.className=l.className.replace('bg-primary text-white shadow-lg','text-slate-500 hover:text-white')); this.parentElement.className='flex-1 text-center py-2 rounded-lg cursor-pointer text-xs font-bold bg-slate-700 text-white shadow-lg'">
+                        <label class="flex-1 text-center py-2.5 rounded-lg cursor-pointer text-xs font-bold transition ${tour && tour.status === 'Draft' ? 'bg-slate-700 text-white' : 'text-slate-500 hover:text-white'}">
+                            <input type="radio" name="status" value="Draft" class="hidden" ${tour && tour.status === 'Draft' ? 'checked' : ''} onchange="this.parentElement.parentElement.querySelectorAll('label').forEach(l=>l.classList.remove('bg-primary','text-white')); this.parentElement.classList.add('bg-slate-700','text-white')">
                             Draft
                         </label>
                     </div>
                 </div>
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Home Page Visibility</label>
+                    <div class="flex items-center space-x-3 p-3.5 bg-dark-900 border border-white/10 rounded-xl">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="showOnHome" class="sr-only peer" ${tour && tour.showOnHome ? 'checked' : ''} onchange="document.getElementById('home-section-container').classList.toggle('opacity-50', !this.checked); document.getElementById('home-section-container').classList.toggle('pointer-events-none', !this.checked)">
+                            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
+                        <span class="text-xs font-bold text-slate-400">Featured on Home</span>
+                    </div>
+                </div>
+
+                <div id="home-section-container" class="space-y-2 col-span-2 transition-opacity ${(!tour || !tour.showOnHome) ? 'opacity-50 pointer-events-none' : ''}">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Home Page Section</label>
+                    <select name="homeSection" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition appearance-none">
+                        ${['Explore Popular Tours', 'We Recommend', 'Marketing Carousel', 'Main Header Slider'].map(s => `
+                            <option value="${s}" ${tour && tour.homeSection === s ? 'selected' : ''}>${s}</option>
+                        `).join('')}
+                    </select>
+                </div>
+
                 <div class="space-y-2 col-span-2">
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Description</label>
-                    <textarea name="description" rows="3" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="Short highlights and key features...">${tour ? (tour.description || '') : ''}</textarea>
+                    <textarea name="description" rows="4" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="Short highlights and key features...">${tour ? (tour.description || '') : ''}</textarea>
                 </div>
             </div>
             
-            <div class="flex justify-end space-x-3 pt-6 border-t border-white/5">
-                <button type="button" onclick="window.closeModal()" class="px-8 py-2.5 rounded-xl text-slate-500 hover:text-white font-bold transition">Discard</button>
-                <button type="submit" class="bg-primary px-10 py-2.5 rounded-xl text-white font-bold shadow-xl shadow-primary/20 hover:scale-105 transition">
+            <div class="flex justify-end space-x-3 pt-6 border-t border-white/5 sticky bottom-0 bg-dark-800 z-10">
+                <button type="button" onclick="window.closeModal()" class="px-8 py-3 rounded-xl text-slate-500 hover:text-white font-bold transition">Discard</button>
+                <button type="submit" class="bg-primary px-10 py-3 rounded-xl text-white font-bold shadow-xl shadow-primary/20 hover:scale-105 transition">
                     ${tour ? 'Update Package' : 'Create Package'}
                 </button>
             </div>
         </form>
     `;
 
+    // Image Upload Handlers
+    const uploadZone = document.getElementById('image-dropzone');
+    const fileInput = document.getElementById('tour-image-input');
+    const previewContainer = document.getElementById('image-preview-container');
+    const previewDiv = document.getElementById('image-preview');
+    const previewImg = document.getElementById('preview-img');
+    const pathHidden = document.getElementById('image-path-hidden');
+    const removeBtn = document.getElementById('remove-img');
+
+    uploadZone.onclick = (e) => {
+        if (e.target !== removeBtn && !removeBtn.contains(e.target)) fileInput.click();
+    };
+
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                previewImg.src = event.target.result;
+                pathHidden.value = event.target.result; // Store as data URL for prototype
+                previewContainer.classList.add('hidden');
+                previewDiv.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    removeBtn.onclick = (e) => {
+        e.stopPropagation();
+        previewImg.src = '';
+        pathHidden.value = '';
+        fileInput.value = '';
+        previewContainer.classList.remove('hidden');
+        previewDiv.classList.add('hidden');
+    };
+
+
     document.getElementById('tour-form').onsubmit = (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
+        
         const tourData = {
             id: tour ? tour.id : Date.now(),
             title: formData.get('title'),
@@ -938,6 +1225,8 @@ window.openTourModal = (tourId = null) => {
             category: formData.get('category'),
             status: formData.get('status'),
             description: formData.get('description'),
+            showOnHome: formData.get('showOnHome') === 'on',
+            homeSection: formData.get('homeSection'),
             rating: tour ? tour.rating : 5.0
         };
 
@@ -952,6 +1241,7 @@ window.openTourModal = (tourId = null) => {
         window.closeModal();
     };
 };
+
 
 window.setTourStatusFilter = (status) => {
     state.tourStatusFilter = status;
