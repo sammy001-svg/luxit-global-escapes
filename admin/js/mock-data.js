@@ -72,7 +72,16 @@ window.MOCK_DATA = {
         { id: 1, user: "Admin", action: "Added new tour", target: "Iceland Northern Lights", time: "2 hours ago" },
         { id: 2, user: "System", action: "New Booking", target: "BK-1011", time: "4 hours ago" },
         { id: 3, user: "John Doe", action: "Left a review", target: "Safari in Kenya", time: "1 day ago" }
-    ]
+    ],
+    settings: {
+        agencyName: "Luxit Global Escapes",
+        contactEmail: "info@luxitglobalescapes.com",
+        contactPhone: "+254 737 800 900",
+        currency: "USD",
+        timezone: "UTC+3",
+        maintenanceMode: false,
+        theme: "dark"
+    }
 };
 
 // End of file (export removed for global compatibility)

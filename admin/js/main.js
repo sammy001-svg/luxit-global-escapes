@@ -71,9 +71,21 @@ let state = {
 };
 
 // Persistence
-const saveState = () => {
+const saveState = async (action = null, payload = null) => {
     try {
         localStorage.setItem('adminData', JSON.stringify(state.data));
+        
+        // Sync with Backend if action is provided
+        if (action) {
+            console.log(`Syncing action ${action} with backend...`);
+            const response = await fetch(`api.php?action=${action}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload || state.data)
+            });
+            const result = await response.json();
+            if (!result.success) console.error('Backend sync failed:', result.error);
+        }
     } catch (e) {
         console.error('Failed to save state:', e);
     }
@@ -140,6 +152,57 @@ if (globalSearch) {
     });
 }
 
+// Mobile Sidebar Toggling
+const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+const closeSidebar = document.getElementById('close-sidebar');
+const adminSidebar = document.getElementById('admin-sidebar');
+
+if (mobileMenuToggle && adminSidebar) {
+    mobileMenuToggle.addEventListener('click', () => {
+        adminSidebar.classList.remove('-translate-x-full');
+        // Add overlay if it doesn't exist
+        if (!document.getElementById('sidebar-overlay')) {
+            const overlay = document.createElement('div');
+            overlay.id = 'sidebar-overlay';
+            overlay.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm z-50 md:hidden animate-fade-in';
+            overlay.onclick = () => window.closeMobileSidebar();
+            document.body.appendChild(overlay);
+        }
+    });
+}
+
+if (closeSidebar) {
+    closeSidebar.addEventListener('click', () => window.closeMobileSidebar());
+}
+
+window.closeMobileSidebar = () => {
+    if (adminSidebar) adminSidebar.classList.add('-translate-x-full');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (overlay) overlay.remove();
+};
+
+// Toast Notification System
+window.showToast = (message, type = 'success') => {
+    const toast = document.createElement('div');
+    const colors = {
+        success: 'bg-emerald-500 shadow-emerald-500/20',
+        error: 'bg-rose-500 shadow-rose-500/20',
+        info: 'bg-primary shadow-primary/20'
+    };
+    
+    toast.className = `fixed bottom-8 right-8 ${colors[type]} text-white px-6 py-3 rounded-2xl shadow-2xl z-[200] flex items-center space-x-3 animate-slide-up-center`;
+    toast.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+        <span class="font-bold text-sm">${message}</span>
+    `;
+    
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-4', 'transition', 'duration-500');
+        setTimeout(() => toast.remove(), 500);
+    }, 3000);
+};
+
 function switchTab(tab) {
     try {
         console.log(`Switching to tab: ${tab}`);
@@ -147,6 +210,7 @@ function switchTab(tab) {
         sidebarLinks.forEach(l => {
             l.classList.toggle('active', l.getAttribute('data-tab') === tab);
         });
+        window.closeMobileSidebar(); // Auto-close on nav
         if (tabs[tab]) {
             console.log(`Executing tab function for ${tab}`);
             tabs[tab]();
@@ -851,21 +915,114 @@ function renderAnalyticsStatCard(title, value, icon, iconColor, trend) {
 
 
 function renderSettings() {
+    const settings = state.data.settings || {};
     contentArea.innerHTML = `
-        <div class="space-y-8 animate-fade-in">
-            <h1 class="text-3xl font-bold">System Settings</h1>
-            <div class="max-w-xl space-y-6">
-                <div class="glass-card rounded-2xl p-6 space-y-4">
-                    <h3 class="font-bold">General Settings</h3>
-                    <div class="space-y-2">
-                        <label class="text-xs text-slate-500 uppercase">Agency Name</label>
-                        <input type="text" value="Luxit Global Escapes" class="w-full bg-dark-900 border border-white/10 rounded-lg p-2.5 outline-none focus:border-primary">
+        <div class="space-y-8 animate-fade-in pb-20">
+            <div>
+                <h1 class="text-3xl font-bold">System Settings</h1>
+                <p class="text-slate-500 mt-1">Configure global agency parameters and preferences</p>
+            </div>
+            
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                <div class="space-y-6">
+                    <div class="glass-card rounded-2xl p-6 space-y-6">
+                        <h3 class="font-bold flex items-center"><i class="fas fa-building mr-3 text-primary"></i> Agency Profile</h3>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Agency Name</label>
+                                <input type="text" id="set-agencyName" value="${settings.agencyName || ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Contact Email</label>
+                                <input type="email" id="set-contactEmail" value="${settings.contactEmail || ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Contact Phone</label>
+                                <input type="text" id="set-contactPhone" value="${settings.contactPhone || ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-2xl p-6 space-y-6">
+                        <h3 class="font-bold flex items-center"><i class="fas fa-globe mr-3 text-primary"></i> Localization</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Currency</label>
+                                <select id="set-currency" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition appearance-none">
+                                    <option value="USD" ${settings.currency === 'USD' ? 'selected' : ''}>USD ($)</option>
+                                    <option value="EUR" ${settings.currency === 'EUR' ? 'selected' : ''}>EUR (€)</option>
+                                    <option value="GBP" ${settings.currency === 'GBP' ? 'selected' : ''}>GBP (£)</option>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Timezone</label>
+                                <select id="set-timezone" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition appearance-none">
+                                    <option value="UTC+3" ${settings.timezone === 'UTC+3' ? 'selected' : ''}>UTC+3 (Nairobi)</option>
+                                    <option value="UTC+0" ${settings.timezone === 'UTC+0' ? 'selected' : ''}>UTC+0 (London)</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <div class="space-y-6">
+                    <div class="glass-card rounded-2xl p-6 space-y-6">
+                        <h3 class="font-bold flex items-center"><i class="fas fa-shield-alt mr-3 text-primary"></i> Advanced & Security</h3>
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="text-sm font-bold">Maintenance Mode</h4>
+                                    <p class="text-xs text-slate-500">Temporarily disable public access</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="set-maintenanceMode" class="sr-only peer" ${settings.maintenanceMode ? 'checked' : ''}>
+                                    <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between border-t border-white/5 pt-6">
+                                <div>
+                                    <h4 class="text-sm font-bold">Two-Factor Auth</h4>
+                                    <p class="text-xs text-slate-500">Add extra security to admin login</p>
+                                </div>
+                                <button class="text-xs font-bold text-primary hover:underline">Configure</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-2xl p-6 border border-rose-500/20 bg-rose-500/5">
+                        <h3 class="font-bold text-rose-500 flex items-center mb-4"><i class="fas fa-exclamation-triangle mr-3"></i> Danger Zone</h3>
+                        <p class="text-xs text-slate-400 mb-6">These actions are irreversible. Please be careful.</p>
+                        <button onclick="window.hardReset()" class="w-full py-3 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-xl text-sm font-bold border border-rose-500/20 transition duration-300">
+                            Wipe Local Cache & Reset Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fixed bottom-8 right-8 z-40 md:static md:mt-12 md:flex md:justify-end">
+                <button onclick="window.saveSettings()" class="bg-primary text-white px-12 py-4 rounded-2xl font-bold shadow-2xl shadow-primary/40 hover:scale-105 active:scale-95 transition-all flex items-center space-x-3">
+                    <i class="fas fa-save"></i>
+                    <span>Save Changes</span>
+                </button>
             </div>
         </div>
     `;
 }
+
+window.saveSettings = async () => {
+    const newSettings = {
+        agencyName: document.getElementById('set-agencyName').value,
+        contactEmail: document.getElementById('set-contactEmail').value,
+        contactPhone: document.getElementById('set-contactPhone').value,
+        currency: document.getElementById('set-currency').value,
+        timezone: document.getElementById('set-timezone').value,
+        maintenanceMode: document.getElementById('set-maintenanceMode').checked ? '1' : '0'
+    };
+
+    state.data.settings = { ...state.data.settings, ...newSettings };
+    await saveState('save_settings', newSettings);
+    window.showToast('Settings saved successfully!');
+};
 
 // --- Helpers & UI Events ---
 
@@ -1236,8 +1393,9 @@ window.openTourModal = (tourId = null) => {
             state.data.tours.unshift(tourData);
         }
 
-        saveState();
+        saveState('save_tour', tourData);
         renderTours();
+        window.showToast(tour ? 'Tour package updated!' : 'New tour package created!');
         window.closeModal();
     };
 };
@@ -1252,11 +1410,13 @@ window.viewTourPublic = (id) => {
     alert('This would open the public tour page: ' + id);
 };
 
-window.deleteTour = (id) => {
+window.deleteTour = async (id) => {
     if (confirm('Are you sure you want to delete this tour?')) {
+        await fetch(`api.php?action=delete_tour&id=${id}`);
         state.data.tours = state.data.tours.filter(t => t.id !== id);
         saveState();
         renderTours();
+        window.showToast('Tour package deleted.', 'error');
     }
 };
 
