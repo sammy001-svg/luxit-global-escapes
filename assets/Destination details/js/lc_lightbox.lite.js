@@ -272,7 +272,7 @@
 			var subj = o[subj_key];
 			
 			if(subj.indexOf('> ') !== -1) {
-				return ($elem.find( subj.replace('> ', '') ).length) ? $.trim( $elem.find( subj.replace('> ', '') ).php()) : '';
+				return ($elem.find( subj.replace('> ', '') ).length) ? $.trim( $elem.find( subj.replace('> ', '') ).html()) : '';
 			} 
 			else {
 				return (typeof($elem.attr( subj )) != 'undefined') ? revert_html_entit( $elem.attr( subj )) : '';	
@@ -806,7 +806,7 @@
 			
 			// backup html/body inline CSS
 			if(o.remove_scrollbar) {
-				lcl_ai_vars.php_style = (typeof(jQuery('html').attr('style')) != 'undefined') ? jQuery('html').attr('style') : '';
+				lcl_ai_vars.html_style = (typeof(jQuery('html').attr('style')) != 'undefined') ? jQuery('html').attr('style') : '';
 				lcl_ai_vars.body_style = (typeof(jQuery('body').attr('style')) != 'undefined') ? jQuery('body').attr('style') : '';
 				
 				// avoid page scrolling and maintain contents position
@@ -841,8 +841,8 @@
 			//////
 
 			// html is appended and ready - callback
-			if(typeof(o.php_is_ready) == 'function') {
-				o.php_is_ready.call(null, lcl_ai_opts, lcl_ai_vars);
+			if(typeof(o.html_is_ready) == 'function') {
+				o.html_is_ready.call(null, lcl_ai_opts, lcl_ai_vars);
 			}
 			
 			// lightbox html has been appended and managed 
@@ -987,7 +987,7 @@
 					break;
 				
 				default : // error message size
-					$('#lcl_elem_wrap').php('<div id="lcl_inline" class="lcl_elem"><br/>Error loading the resource .. </div>');
+					$('#lcl_elem_wrap').html('<div id="lcl_inline" class="lcl_elem"><br/>Error loading the resource .. </div>');
 					break; 
 			}
 			
@@ -997,14 +997,14 @@
 					
 					var arr = el.download.split('/');
 					var filename = arr[ (arr.length -1) ];
-					$('.lcl_download').php('<a href="'+ el.download +'" target="_blank" download="'+ filename +'"></a>');
+					$('.lcl_download').html('<a href="'+ el.download +'" target="_blank" download="'+ filename +'"></a>');
 				} else {
 					$('.lcl_download').hide();	
 				}
 			}
 			
 			// counter
-			$('.lcl_counter').php( (el_index+1) +' / '+ lcl_ai_vars.elems.length );
+			$('.lcl_counter').html( (el_index+1) +' / '+ lcl_ai_vars.elems.length );
 			
 			// texts
 			if(elem_has_txt(el) && el.type != 'unknown') {
@@ -1603,7 +1603,7 @@
 				
 				// restore html/body inline CSS
 				if(lcl_ai_opts.remove_scrollbar) {
-					jQuery('html').attr('style', lcl_ai_vars.php_style);
+					jQuery('html').attr('style', lcl_ai_vars.html_style);
 					jQuery('body').attr('style', lcl_ai_vars.body_style);
 				}
 				
@@ -2449,7 +2449,7 @@
 				code += 	
 				'</div>';
 				
-				$('.lcl_socials').addClass('lcl_socials_shown').php(code);
+				$('.lcl_socials').addClass('lcl_socials_shown').html(code);
 				
 				setTimeout(function() { // delay to let CSS execute animation
 					$('.lcl_socials_tt').addClass('lcl_show_tt');
