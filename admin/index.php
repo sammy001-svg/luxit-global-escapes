@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header("Location: login.php");
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,6 +61,9 @@
             <a href="#" class="sidebar-link" data-tab="customers">
                 <i class="fas fa-users mr-3"></i> Customers
             </a>
+            <a href="#" class="sidebar-link" data-tab="finance">
+                <i class="fas fa-file-invoice-dollar mr-3"></i> Finance
+            </a>
             <a href="#" class="sidebar-link" data-tab="analytics">
                 <i class="fas fa-chart-line mr-3"></i> Analytics
             </a>
@@ -69,12 +79,17 @@
         </nav>
 
         <div class="p-4 border-t border-white/5">
-            <div class="flex items-center space-x-3 p-2 rounded-xl bg-white/5">
-                <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-bold">A</div>
-                <div class="overflow-hidden">
-                    <p class="text-sm font-medium truncate">Admin User</p>
-                    <p class="text-xs text-slate-500 truncate">admin@luxit.com</p>
+            <div class="flex items-center justify-between p-2 rounded-xl bg-white/5">
+                <div class="flex items-center space-x-3 overflow-hidden">
+                    <div class="w-10 h-10 rounded-full bg-primary flex-shrink-0 flex items-center justify-center font-bold">A</div>
+                    <div class="overflow-hidden">
+                        <p class="text-sm font-medium truncate">Admin User</p>
+                        <p class="text-xs text-slate-500 truncate">admin@luxit.com</p>
+                    </div>
                 </div>
+                <a href="logout.php" class="text-slate-400 hover:text-rose-500 transition ml-2" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
             </div>
         </div>
     </aside>
@@ -112,12 +127,102 @@
         </div>
     </div>
 
-    <script src="/admin/js/mock-data.js?v=5"></script>
+    <?php
+    require_once '../includes/db.php';
+
+    // Fetch Tours
+    $stmt = $pdo->query("SELECT * FROM tours");
+    $tours = $stmt->fetchAll();
+
+    // Fetch Destinations
+    $stmt = $pdo->query("SELECT id, name, region, parent_id, tours_count, visits FROM destinations");
+    $destinations = $stmt->fetchAll();
+
+    // Fetch Bookings
+    $stmt = $pdo->query("SELECT id, user_name as user, email, tour_name as tour, booking_date as date, amount, status, created_at FROM bookings ORDER BY created_at DESC");
+    $bookings = $stmt->fetchAll();
+
+    // Fetch Customers
+    $stmt = $pdo->query("SELECT id, name, email, country, bookings_count as bookings, joined_date as joined FROM customers");
+    $customers = $stmt->fetchAll();
+
+    // Fetch Events
+    $stmt = $pdo->query("SELECT id, title, event_date as date, type FROM events");
+    $events = $stmt->fetchAll();
+
+    // Fetch Activity Feed
+    $stmt = $pdo->query("SELECT id, user, action, target, activity_time as time FROM activity_feed ORDER BY created_at DESC");
+    $activityFeed = $stmt->fetchAll();
+
+    // Fetch Finance Data
+    $stmt = $pdo->query("SELECT q.*, c.name as customer_name FROM quotations q JOIN customers c ON q.customer_id = c.id ORDER BY q.created_at DESC");
+    $quotations = $stmt->fetchAll();
+
+    $stmt = $pdo->query("SELECT i.*, c.name as customer_name FROM invoices i JOIN customers c ON i.customer_id = c.id ORDER BY i.created_at DESC");
+    $invoices = $stmt->fetchAll();
+
+    $stmt = $pdo->query("SELECT * FROM expenses ORDER BY expense_date DESC");
+    $expenses = $stmt->fetchAll();
+
+    // Calculate Analytics
+    $totalRevenue = 0;
+    $currentMonthIncome = 0;
+    $newBookingsToday = 0;
+    $today = date('Y-m-d');
+    $currentMonth = date('Y-m');
+
+    foreach ($bookings as $b) {
+        if ($b['status'] === 'Confirmed') {
+            $totalRevenue += $b['amount'];
+            if (isset($b['date']) && strpos($b['date'], $currentMonth) === 0) {
+                $currentMonthIncome += $b['amount'];
+            }
+        }
+        if (isset($b['created_at']) && strpos($b['created_at'], $today) === 0) {
+            $newBookingsToday++;
+        }
+    }
+
+    // Popular Tours with Revenue
+    $stmt = $pdo->query("SELECT tour_name as name, COUNT(*) as bookings, SUM(amount) as revenue FROM bookings GROUP BY tour_name ORDER BY bookings DESC LIMIT 5");
+    $popularTours = $stmt->fetchAll();
+
+    // Monthly Stats (Last 6 months)
+    $stmt = $pdo->query("SELECT DATE_FORMAT(booking_date, '%b') as month, SUM(amount) as revenue FROM bookings WHERE status = 'Confirmed' GROUP BY month, DATE_FORMAT(booking_date, '%m') ORDER BY DATE_FORMAT(booking_date, '%m') ASC LIMIT 6");
+    $monthlyStats = $stmt->fetchAll();
+
+    $analytics = [
+        'totalRevenue' => $totalRevenue,
+        'currentMonthIncome' => $currentMonthIncome,
+        'totalBookings' => count($bookings),
+        'newBookingsToday' => $newBookingsToday,
+        'activeTours' => count(array_filter($tours, fn($t) => $t['status'] === 'Active')),
+        'popularTours' => $popularTours,
+        'monthlyStats' => $monthlyStats
+    ];
+
+    $mock_data = [
+        'tours' => $tours,
+        'destinations' => $destinations,
+        'bookings' => $bookings,
+        'customers' => $customers,
+        'analytics' => $analytics,
+        'events' => $events,
+        'activityFeed' => $activityFeed,
+        'finance' => [
+            'quotations' => $quotations,
+            'invoices' => $invoices,
+            'expenses' => $expenses
+        ]
+    ];
+    ?>
+    <script>
+        window.MOCK_DATA = <?php echo json_encode($mock_data); ?>;
+    </script>
     <script src="/admin/js/main.js?v=5"></script>
     <script>
-        console.log('Script tags parsed. Checking window.MOCK_DATA:', !!window.MOCK_DATA);
         if (!window.MOCK_DATA) {
-            document.getElementById('content-area').innerHTML = '<div class="p-8 text-rose-500 font-bold">CRITICAL ERROR: Data could not be loaded from js/mock-data.js. Please check file permissions or paths.</div>';
+            document.getElementById('content-area').innerHTML = '<div class="p-8 text-rose-500 font-bold">CRITICAL ERROR: Data could not be loaded from Database. Please check your .env settings.</div>';
         }
     </script>
 </body>

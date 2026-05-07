@@ -13,13 +13,13 @@ include 'header.php';
 						<div class="swiper-slide">
 							<div class="h-170 sm:h-192 2xl:h-225 3xl:h-237.5 relative">
 								<img src="assets/images/header-carousel/safari.png" alt="Safari" class="absolute inset-0 object-cover w-full h-full">
-								<div class="absolute inset-0 flex items-center" style="background-color: rgba(0,0,0,0.6);">
+								<div class="absolute inset-0 flex items-center justify-center text-center" style="background-color: rgba(0,0,0,0.6);">
 									<div class="container mx-auto px-5 lg:px-20">
-										<div class="max-w-3xl">
-											<span class="text-aquamist text-2xl lg:text-4xl font-display block mb-4">Unforgettable Safaris</span>
+										<div class="max-w-3xl mx-auto">
+											<span class="text-white text-2xl lg:text-4xl font-display block mb-4">Unforgettable Safaris</span>
 											<h1 class="text-white text-5xl lg:text-8xl font-display mb-6">Experience the Wild Heart of Africa</h1>
 											<p class="text-white text-lg lg:text-2xl mb-8">Discover our curated safari packages designed for nature lovers and adventurers.</p>
-											<div class="flex gap-4">
+											<div class="flex justify-center gap-4">
 												<a href="safari-packages.php" class="site-button butn-bg-shape">View Safaris</a>
 												<a href="contact.php" class="site-button outline !text-white !border-white">Get In Touch</a>
 											</div>
@@ -32,13 +32,13 @@ include 'header.php';
 						<div class="swiper-slide">
 							<div class="h-170 sm:h-192 2xl:h-225 3xl:h-237.5 relative">
 								<img src="assets/images/header-carousel/maldives.png" alt="Maldives" class="absolute inset-0 object-cover w-full h-full">
-								<div class="absolute inset-0 flex items-center" style="background-color: rgba(0,0,0,0.6);">
+								<div class="absolute inset-0 flex items-center justify-center text-center" style="background-color: rgba(0,0,0,0.6);">
 									<div class="container mx-auto px-5 lg:px-20">
-										<div class="max-w-3xl">
-											<span class="text-aquamist text-2xl lg:text-4xl font-display block mb-4">Luxury Escapes</span>
+										<div class="max-w-3xl mx-auto">
+											<span class="text-white text-2xl lg:text-4xl font-display block mb-4">Luxury Escapes</span>
 											<h1 class="text-white text-5xl lg:text-8xl font-display mb-6">Paradise Found in the Maldives</h1>
 											<p class="text-white text-lg lg:text-2xl mb-8">Discover the world's most exclusive destinations in complete comfort and style.</p>
-											<div class="flex gap-4">
+											<div class="flex justify-center gap-4">
 												<a href="international-packages.php" class="site-button butn-bg-shape">Explore Deals</a>
 												<a href="contact.php" class="site-button outline !text-white !border-white">Inquire Now</a>
 											</div>
@@ -51,13 +51,13 @@ include 'header.php';
 						<div class="swiper-slide">
 							<div class="h-170 sm:h-192 2xl:h-225 3xl:h-237.5 relative">
 								<img src="assets/images/header-carousel/mountains.png" alt="Mountains" class="absolute inset-0 object-cover w-full h-full">
-								<div class="absolute inset-0 flex items-center" style="background-color: rgba(0,0,0,0.6);">
+								<div class="absolute inset-0 flex items-center justify-center text-center" style="background-color: rgba(0,0,0,0.6);">
 									<div class="container mx-auto px-5 lg:px-20">
-										<div class="max-w-3xl">
-											<span class="text-aquamist text-2xl lg:text-4xl font-display block mb-4">Adventure Awaits</span>
+										<div class="max-w-3xl mx-auto">
+											<span class="text-white text-2xl lg:text-4xl font-display block mb-4">Adventure Awaits</span>
 											<h1 class="text-white text-5xl lg:text-8xl font-display mb-6">Reach New Heights with Luxit</h1>
 											<p class="text-white text-lg lg:text-2xl mb-8">From the peaks of the Himalayas to the depths of the Great Barrier Reef.</p>
-											<div class="flex gap-4">
+											<div class="flex justify-center gap-4">
 												<a href="destinations.php" class="site-button butn-bg-shape">Discover Missions</a>
 												<a href="contact.php" class="site-button outline !text-white !border-white">Join the Journey</a>
 											</div>

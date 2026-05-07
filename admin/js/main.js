@@ -66,8 +66,9 @@ let state = {
         }
     })(),
     searchQuery: '',
+    tourStatusFilter: 'All',
     bookingFilter: 'All',
-    tourStatusFilter: 'All'
+    financeTab: 'quotations'
 };
 
 // Persistence
@@ -99,9 +100,14 @@ if (addNewBtn) {
     addNewBtn.addEventListener('click', () => {
         if (state.currentTab === 'tours') window.openTourModal();
         else if (state.currentTab === 'destinations') window.openDestinationModal();
-        else if (state.currentTab === 'bookings') alert('Bookings are created by customers.');
-        else if (state.currentTab === 'customers') alert('Customers are added via registration.');
-        else alert('Please switch to Tours or Destinations to add new records.');
+        else if (state.currentTab === 'bookings') window.openBookingModal();
+        else if (state.currentTab === 'customers') window.openCustomerModal();
+        else if (state.currentTab === 'finance') {
+            if (state.financeTab === 'quotations') window.openQuotationModal();
+            else if (state.financeTab === 'invoices') window.openInvoiceModal();
+            else if (state.financeTab === 'expenses') window.openExpenseModal();
+        }
+        else alert('Please switch to a management tab to add new records.');
     });
 }
 
@@ -112,6 +118,7 @@ const tabs = {
     tours: renderTours,
     destinations: renderDestinations,
     customers: renderCustomers,
+    finance: renderFinance,
     analytics: renderAnalytics,
     settings: renderSettings
 };
@@ -418,78 +425,92 @@ function renderDestinations() {
         d.name.toLowerCase().includes(state.searchQuery)
     );
 
-    // Calculate dynamic stats
-    const tourCounts = destinations.map(d => ({
-        id: d.id,
-        count: tours.filter(t => t.location === d.name).length
-    }));
+    // Grouping by Parent
+    const parents = filteredDestinations.filter(d => !d.parent_id);
     
-    const stats = {
-        total: destinations.length,
-        popular: [...tourCounts].sort((a,b) => b.count - a.count)[0]?.count || 0,
-        density: (tours.length / destinations.length).toFixed(1)
-    };
-
     contentArea.innerHTML = `
         <div class="space-y-8 animate-fade-in pb-12">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold">Destinations</h1>
-                    <p class="text-slate-500 mt-1">Manage global regions and tour density</p>
+                    <p class="text-slate-500 mt-1">Manage global regions and sub-locations</p>
                 </div>
                 <button onclick="window.openDestinationModal()" class="bg-primary hover:bg-opacity-90 text-white px-6 py-2 rounded-xl text-sm font-bold transition shadow-lg shadow-primary/20">
                     <i class="fas fa-map-marked-alt mr-2"></i> Add Destination
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="glass-card p-6 rounded-2xl border border-white/5 bg-gradient-to-br from-primary/5 to-transparent">
-                    <p class="text-xs text-slate-400 font-bold uppercase mb-2">Network Reach</p>
-                    <p class="text-2xl font-bold">${stats.total} Regions</p>
-                    <p class="text-[10px] text-slate-500 mt-1">Countries currently in inventory</p>
-                </div>
-                <div class="glass-card p-6 rounded-2xl border border-white/5">
-                    <p class="text-xs text-slate-400 font-bold uppercase mb-2">Peak Popularity</p>
-                    <p class="text-2xl font-bold text-emerald-400">${stats.popular} Tours</p>
-                    <p class="text-[10px] text-slate-500 mt-1">Highest density in a single region</p>
-                </div>
-                <div class="glass-card p-6 rounded-2xl border border-white/5">
-                    <p class="text-xs text-slate-400 font-bold uppercase mb-2">Tour Density</p>
-                    <p class="text-2xl font-bold text-secondary">${stats.density}</p>
-                    <p class="text-[10px] text-slate-500 mt-1">Average tours per destination</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                ${filteredDestinations.length > 0 ? filteredDestinations.map(dest => {
-                    const count = tours.filter(t => t.location === dest.name).length;
+            <div class="space-y-12">
+                ${parents.length > 0 ? parents.map(parent => {
+                    const children = filteredDestinations.filter(d => d.parent_id == parent.id);
+                    const count = tours.filter(t => t.location === parent.name).length;
+                    
                     return `
-                    <div class="glass-card rounded-2xl overflow-hidden group border border-white/5 hover:border-primary/30 transition-all duration-300">
-                        <div class="h-32 bg-slate-800 relative overflow-hidden">
-                            <div class="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/40 to-transparent z-10"></div>
-                            <div class="absolute top-3 right-3 z-20">
-                                <span class="bg-primary text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-lg">
-                                    ${count} TOURS
-                                </span>
-                            </div>
-                            <div class="absolute bottom-3 left-4 z-20">
-                                <span class="text-[10px] font-bold text-primary uppercase tracking-widest block mb-0.5">${dest.region || 'International'}</span>
-                                <h3 class="text-xl font-bold text-white">${dest.name}</h3>
-                            </div>
-                        </div>
-                        <div class="p-4 flex items-center justify-between border-t border-white/5">
-                            <div class="flex items-center space-x-2">
-                                <div class="w-2 h-2 rounded-full ${count > 0 ? 'bg-emerald-500' : 'bg-slate-600'} animate-pulse"></div>
-                                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">${count > 0 ? 'Active Region' : 'No Tours'}</span>
-                            </div>
+                    <div class="space-y-6">
+                        <div class="flex items-center space-x-4">
+                            <h2 class="text-xl font-bold text-white flex items-center">
+                                <i class="fas fa-map-marker-alt mr-3 text-primary"></i>
+                                ${parent.name}
+                                <span class="ml-3 text-[10px] font-black bg-white/5 px-2 py-1 rounded-md text-slate-500 uppercase tracking-widest">${parent.region}</span>
+                            </h2>
+                            <div class="h-px flex-1 bg-white/5"></div>
                             <div class="flex space-x-1">
-                                <button class="w-8 h-8 flex items-center justify-center bg-white/5 hover:bg-primary/10 rounded-lg text-slate-400 hover:text-primary transition" title="Edit" onclick="window.openDestinationModal(${dest.id})">
+                                <button class="w-8 h-8 flex items-center justify-center bg-white/5 hover:bg-primary/10 rounded-lg text-slate-400 hover:text-primary transition" title="Edit" onclick="window.openDestinationModal(${parent.id})">
                                     <i class="fas fa-edit text-xs"></i>
                                 </button>
-                                <button class="w-8 h-8 flex items-center justify-center bg-white/5 hover:bg-rose-500/10 rounded-lg text-slate-400 hover:text-rose-500 transition" title="Delete" onclick="window.deleteDestination(${dest.id})">
+                                <button class="w-8 h-8 flex items-center justify-center bg-white/5 hover:bg-rose-500/10 rounded-lg text-slate-400 hover:text-rose-500 transition" title="Delete" onclick="window.deleteDestination(${parent.id})">
                                     <i class="fas fa-trash text-xs"></i>
                                 </button>
                             </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <!-- Parent Card (Summary) -->
+                            <div class="glass-card rounded-2xl overflow-hidden group border border-primary/20 bg-primary/5 transition-all duration-300">
+                                <div class="p-5 h-full flex flex-col justify-between">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Primary Region</p>
+                                        <h3 class="text-lg font-bold text-white mb-2">${parent.name}</h3>
+                                        <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed">${parent.description || 'Global hub for travel packages.'}</p>
+                                    </div>
+                                    <div class="mt-4 flex items-center justify-between">
+                                        <span class="text-xs font-bold text-slate-400">${count} tours active</span>
+                                        <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Children Cards -->
+                            ${children.map(child => {
+                                const childCount = tours.filter(t => t.location === child.name).length;
+                                return `
+                                <div class="glass-card rounded-2xl overflow-hidden group border border-white/5 hover:border-primary/30 transition-all duration-300">
+                                    <div class="h-24 bg-slate-800 relative overflow-hidden">
+                                        <div class="absolute inset-0 bg-gradient-to-t from-dark-900 to-transparent z-10"></div>
+                                        <div class="absolute bottom-3 left-4 z-20">
+                                            <h3 class="text-md font-bold text-white">${child.name}</h3>
+                                        </div>
+                                    </div>
+                                    <div class="p-4 flex items-center justify-between border-t border-white/5">
+                                        <span class="text-[10px] text-slate-500 font-bold uppercase">${childCount} Tours</span>
+                                        <div class="flex space-x-1">
+                                            <button class="w-7 h-7 flex items-center justify-center bg-white/5 hover:bg-primary/10 rounded-lg text-slate-400 hover:text-primary transition" onclick="window.openDestinationModal(${child.id})">
+                                                <i class="fas fa-edit text-[10px]"></i>
+                                            </button>
+                                            <button class="w-7 h-7 flex items-center justify-center bg-white/5 hover:bg-rose-500/10 rounded-lg text-slate-400 hover:text-rose-500 transition" onclick="window.deleteDestination(${child.id})">
+                                                <i class="fas fa-trash text-[10px]"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                `;
+                            }).join('')}
+                            
+                            <!-- Quick Add Child -->
+                            <button onclick="window.openDestinationModal()" class="glass-card rounded-2xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center p-6 text-slate-600 hover:text-primary hover:border-primary/50 transition group min-h-[160px]">
+                                <i class="fas fa-plus-circle text-2xl mb-2 group-hover:scale-110 transition"></i>
+                                <span class="text-[10px] font-bold uppercase tracking-widest">Add Sub-Location</span>
+                            </button>
                         </div>
                     </div>
                     `;
@@ -497,7 +518,7 @@ function renderDestinations() {
                     <div class="col-span-full py-16 text-center glass-card rounded-3xl border border-white/5">
                         <i class="fas fa-globe-africa text-5xl text-slate-800 mb-4 block"></i>
                         <h3 class="text-lg font-bold text-white mb-1">Destination Not Found</h3>
-                        <p class="text-slate-500 text-sm">Try searching for a different region</p>
+                        <p class="text-slate-500 text-sm">Try adding a primary destination first</p>
                     </div>
                 `}
             </div>
@@ -630,31 +651,61 @@ function renderBookings() {
 
 function renderCustomers() {
     contentArea.innerHTML = `
-        <div class="space-y-8 animate-fade-in">
-            <h1 class="text-3xl font-bold">Customers</h1>
-            <div class="glass-card rounded-2xl overflow-hidden">
-                <table class="w-full admin-table">
+        <div class="space-y-8 animate-fade-in pb-12">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold">Customers Management</h1>
+                    <p class="text-slate-500 mt-1">Manage your registered travelers and client profiles</p>
+                </div>
+                <button onclick="window.openCustomerModal()" class="bg-primary hover:bg-opacity-90 text-white px-6 py-2 rounded-xl text-sm font-bold transition shadow-lg shadow-primary/20">
+                    <i class="fas fa-user-plus mr-2"></i> Add Client
+                </button>
+            </div>
+
+            <div class="glass-card rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
+                <table class="w-full admin-table text-left border-collapse">
                     <thead>
-                        <tr>
-                            <th class="text-left">ID</th>
-                            <th class="text-left">Name</th>
-                            <th class="text-left">Email</th>
-                            <th class="text-left">Country</th>
-                            <th class="text-left">Bookings</th>
-                            <th class="text-left">Joined</th>
+                        <tr class="bg-white/5">
+                            <th class="p-4 text-xs font-bold uppercase text-slate-500">ID</th>
+                            <th class="p-4 text-xs font-bold uppercase text-slate-500">Client Info</th>
+                            <th class="p-4 text-xs font-bold uppercase text-slate-500">Location</th>
+                            <th class="p-4 text-xs font-bold uppercase text-slate-500 text-center">Bookings</th>
+                            <th class="p-4 text-xs font-bold uppercase text-slate-500">Joined</th>
+                            <th class="p-4 text-xs font-bold uppercase text-slate-500 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${state.data.customers
                             .filter(c => c.name.toLowerCase().includes(state.searchQuery) || c.email.toLowerCase().includes(state.searchQuery))
                             .map(cust => `
-                            <tr>
-                                <td class="text-xs font-mono">#${cust.id}</td>
-                                <td class="font-bold">${cust.name}</td>
-                                <td class="text-sm text-slate-400">${cust.email}</td>
-                                <td class="text-sm">${cust.country}</td>
-                                <td class="text-sm">${cust.bookings}</td>
-                                <td class="text-xs text-slate-500">${cust.joined}</td>
+                            <tr class="border-t border-white/5 hover:bg-white/5 transition group">
+                                <td class="p-4 text-xs font-mono text-slate-500">${cust.id}</td>
+                                <td class="p-4">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                                            <span class="text-xs font-bold text-primary">${cust.name.charAt(0)}</span>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-bold text-white group-hover:text-primary transition">${cust.name}</div>
+                                            <div class="text-[10px] text-slate-500 font-medium tracking-tight">${cust.email}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="p-4 text-sm">${cust.country || 'Not Set'}</td>
+                                <td class="p-4 text-center">
+                                    <span class="px-2 py-1 rounded-md bg-white/5 text-xs font-bold">${cust.bookings || 0}</span>
+                                </td>
+                                <td class="p-4 text-xs text-slate-500 font-bold opacity-80">${cust.joined}</td>
+                                <td class="p-4 text-right">
+                                    <div class="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition">
+                                        <button onclick="window.openCustomerModal('${cust.id}')" class="p-2 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-lg transition" title="Edit Profile">
+                                            <i class="fas fa-user-edit text-xs"></i>
+                                        </button>
+                                        <button onclick="window.deleteCustomer('${cust.id}')" class="p-2 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 rounded-lg transition" title="Delete Client">
+                                            <i class="fas fa-trash-alt text-xs"></i>
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -766,13 +817,13 @@ function renderAnalytics() {
                                 ${analytics.popularTours.map(tour => `
                                     <tr class="hover:bg-white/5 transition group">
                                         <td class="p-4 flex items-center">
-                                            <div class="w-8 h-8 rounded-lg bg-slate-800 mr-3 overflow-hidden flex-shrink-0">
-                                                <img src="../assets/images/tour/style1/pic${Math.floor(Math.random()*6)+1}.jpg" class="w-full h-full object-cover">
+                                            <div class="w-8 h-8 rounded-lg bg-primary/10 mr-3 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                                <i class="fas fa-route text-primary text-[10px]"></i>
                                             </div>
                                             <span class="text-sm font-bold group-hover:text-primary transition truncate max-w-[150px]">${tour.name}</span>
                                         </td>
                                         <td class="p-4 text-sm font-medium">${tour.bookings}</td>
-                                        <td class="p-4 text-sm font-bold text-secondary">$${(tour.bookings * 850).toLocaleString()}</td>
+                                        <td class="p-4 text-sm font-bold text-secondary">$${parseFloat(tour.revenue || 0).toLocaleString()}</td>
                                         <td class="p-4">
                                             <span class="text-emerald-400 text-xs font-bold"><i class="fas fa-caret-up mr-1"></i>${Math.floor(Math.random()*15)+5}%</span>
                                         </td>
@@ -849,6 +900,178 @@ function renderAnalyticsStatCard(title, value, icon, iconColor, trend) {
     `;
 }
 
+
+function renderFinance() {
+    const { finance } = state.data;
+    const currentTab = state.financeTab;
+
+    contentArea.innerHTML = `
+        <div class="space-y-8 animate-fade-in pb-12">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold">Finance Management</h1>
+                    <p class="text-slate-500 mt-1">Manage quotations, invoices and company expenses</p>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="window.openQuotationModal()" class="bg-primary/10 text-primary px-4 py-2 rounded-xl text-xs font-bold hover:bg-primary hover:text-white transition">
+                        <i class="fas fa-file-contract mr-2"></i> New Quote
+                    </button>
+                    <button onclick="window.openExpenseModal()" class="bg-rose-500/10 text-rose-500 px-4 py-2 rounded-xl text-xs font-bold hover:bg-rose-500 hover:text-white transition">
+                        <i class="fas fa-receipt mr-2"></i> Record Expense
+                    </button>
+                </div>
+            </div>
+
+            <!-- Finance Sub-tabs -->
+            <div class="flex items-center space-x-6 border-b border-white/5">
+                ${['quotations', 'invoices', 'expenses'].map(tab => `
+                    <button onclick="window.setFinanceTab('${tab}')" class="pb-4 px-2 text-sm font-bold uppercase tracking-wider transition relative ${currentTab === tab ? 'text-primary' : 'text-slate-500 hover:text-slate-300'}">
+                        ${tab}
+                        ${currentTab === tab ? '<div class="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-full"></div>' : ''}
+                    </button>
+                `).join('')}
+            </div>
+
+            <div id="finance-content">
+                ${currentTab === 'quotations' ? renderQuotations(finance.quotations) : 
+                  currentTab === 'invoices' ? renderInvoices(finance.invoices) : 
+                  renderExpenses(finance.expenses)}
+            </div>
+        </div>
+    `;
+}
+
+window.setFinanceTab = (tab) => {
+    state.financeTab = tab;
+    renderFinance();
+};
+
+function renderQuotations(quotes) {
+    return `
+        <div class="glass-card rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
+            <table class="w-full admin-table text-left border-collapse">
+                <thead>
+                    <tr class="bg-white/5">
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500">ID</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500">Customer</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500">Tour Package</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500">Amount</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500">Status</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${quotes.map(q => `
+                        <tr class="border-t border-white/5 hover:bg-white/5 transition group">
+                            <td class="p-4 text-xs font-mono text-slate-500">${q.id}</td>
+                            <td class="p-4 font-bold text-sm text-white">${q.customer_name}</td>
+                            <td class="p-4 text-sm text-slate-400">${q.tour_name}</td>
+                            <td class="p-4 font-bold text-emerald-400">$${parseFloat(q.amount).toLocaleString()}</td>
+                            <td class="p-4">
+                                <span class="px-2 py-1 rounded-md text-[10px] font-black uppercase ${getQuotationStatusClass(q.status)}">${q.status}</span>
+                            </td>
+                            <td class="p-4 text-right">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <button onclick="window.openQuotationModal('${q.id}')" class="p-2 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-lg transition" title="Edit"><i class="fas fa-edit text-xs"></i></button>
+                                    <button onclick="window.location.href='view-quotation.php?id=${q.id}'" class="p-2 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition" title="View & Download PDF"><i class="fas fa-print text-xs"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function renderInvoices(invoices) {
+    return `
+        <div class="glass-card rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
+            <table class="w-full admin-table text-left border-collapse">
+                <thead>
+                    <tr class="bg-white/5">
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500">Invoice #</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500">Customer</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500">Due Date</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500">Amount</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500">Status</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${invoices.map(i => `
+                        <tr class="border-t border-white/5 hover:bg-white/5 transition group">
+                            <td class="p-4 text-xs font-mono text-slate-500">${i.id}</td>
+                            <td class="p-4 font-bold text-sm text-white">${i.customer_name}</td>
+                            <td class="p-4 text-sm text-slate-400">${i.due_date}</td>
+                            <td class="p-4 font-bold text-secondary">$${parseFloat(i.amount).toLocaleString()}</td>
+                            <td class="p-4">
+                                <span class="px-2 py-1 rounded-md text-[10px] font-black uppercase ${getInvoiceStatusClass(i.status)}">${i.status}</span>
+                            </td>
+                            <td class="p-4 text-right">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <button onclick="window.location.href='view-invoice.php?id=${i.id}'" class="p-2 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-lg transition" title="View & Download PDF"><i class="fas fa-eye text-xs"></i></button>
+                                    <button class="p-2 hover:bg-emerald-500/10 text-slate-400 hover:text-emerald-500 rounded-lg transition" title="Mark as Paid"><i class="fas fa-check-double text-xs"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function renderExpenses(expenses) {
+    return `
+        <div class="glass-card rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
+            <table class="w-full admin-table text-left border-collapse">
+                <thead>
+                    <tr class="bg-white/5">
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500">Date</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500">Category</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500">Description</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500">Amount</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-500 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${expenses.map(e => `
+                        <tr class="border-t border-white/5 hover:bg-white/5 transition group">
+                            <td class="p-4 text-sm text-slate-400">${e.expense_date}</td>
+                            <td class="p-4">
+                                <span class="px-2 py-1 rounded-md text-[10px] font-black uppercase bg-white/5 text-slate-300 border border-white/5">${e.category}</span>
+                            </td>
+                            <td class="p-4 text-sm text-white">${e.description}</td>
+                            <td class="p-4 font-bold text-rose-500">-$${parseFloat(e.amount).toLocaleString()}</td>
+                            <td class="p-4 text-right">
+                                <button onclick="window.deleteExpense(${e.id})" class="p-2 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 rounded-lg transition"><i class="fas fa-trash-alt text-xs"></i></button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function getQuotationStatusClass(status) {
+    switch (status) {
+        case 'Accepted': return 'bg-emerald-500/10 text-emerald-500';
+        case 'Sent': return 'bg-blue-500/10 text-blue-500';
+        case 'Expired': return 'bg-rose-500/10 text-rose-500';
+        default: return 'bg-slate-500/10 text-slate-500';
+    }
+}
+
+function getInvoiceStatusClass(status) {
+    switch (status) {
+        case 'Paid': return 'bg-emerald-500/10 text-emerald-500';
+        case 'Overdue': return 'bg-rose-500/10 text-rose-500';
+        case 'Unpaid': return 'bg-amber-400/10 text-amber-400';
+        default: return 'bg-blue-500/10 text-blue-500';
+    }
+}
 
 function renderSettings() {
     contentArea.innerHTML = `
@@ -1021,13 +1244,25 @@ function initAnalyticsCharts() {
     }
 
     if (distCtx) {
+        // Calculate Regional Distribution from Destinations
+        const regionCounts = {};
+        state.data.destinations.forEach(d => {
+            if (!d.parent_id) {
+                regionCounts[d.region] = (regionCounts[d.region] || 0) + 1;
+            }
+        });
+
+        const labels = Object.keys(regionCounts);
+        const data = Object.values(regionCounts);
+        const colors = ['#006A72', '#FFD214', '#10B981', '#1E293B', '#8B5CF6', '#F43F5E'];
+
         new Chart(distCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Africa', 'Asia', 'Europe', 'Other'],
+                labels: labels,
                 datasets: [{
-                    data: [35, 25, 20, 20],
-                    backgroundColor: ['#006A72', '#FFD214', '#10B981', '#1E293B'],
+                    data: data,
+                    backgroundColor: colors.slice(0, labels.length),
                     hoverOffset: 15,
                     borderWidth: 0
                 }]
@@ -1036,16 +1271,14 @@ function initAnalyticsCharts() {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false }
-                },
-                cutout: '75%',
-                plugins: {
+                    legend: { display: false },
                     tooltip: {
                         backgroundColor: '#0F172A',
                         padding: 12,
                         cornerRadius: 12
                     }
-                }
+                },
+                cutout: '75%'
             }
         });
     }
@@ -1261,23 +1494,37 @@ window.deleteTour = (id) => {
 };
 
 window.openDestinationModal = (destId = null) => {
-    const dest = destId ? state.data.destinations.find(d => d.id === destId) : null;
+    const dest = destId ? state.data.destinations.find(d => d.id == destId) : null;
+    const parentDestinations = state.data.destinations.filter(d => !d.parent_id || d.parent_id === null);
+    
     modalOverlay.classList.remove('hidden');
     modalContent.innerHTML = `
         <form id="dest-form" class="p-8 space-y-6">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between border-b border-white/5 pb-4">
                 <div>
                     <h2 class="text-2xl font-bold">${dest ? 'Edit Destination' : 'Add New Destination'}</h2>
-                    <p class="text-slate-500 text-xs mt-1">Define properties for a global travel region</p>
+                    <p class="text-slate-500 text-xs mt-1">Define properties for a global travel region or sub-location</p>
                 </div>
                 <button type="button" onclick="window.closeModal()" class="text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
             </div>
             
             <div class="grid grid-cols-2 gap-6 text-sm">
+                <input type="hidden" name="id" value="${dest ? dest.id : ''}">
                 <div class="space-y-2 col-span-2">
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Destination Name</label>
-                    <input type="text" name="name" required value="${dest ? dest.name : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="e.g. Kenya">
+                    <input type="text" name="name" required value="${dest ? dest.name : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="e.g. Bali">
                 </div>
+                
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Parent Destination (Optional)</label>
+                    <select name="parent_id" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition appearance-none">
+                        <option value="">None (Primary Destination)</option>
+                        ${parentDestinations.filter(p => p.id != destId).map(p => `
+                            <option value="${p.id}" ${dest && dest.parent_id == p.id ? 'selected' : ''}>${p.name}</option>
+                        `).join('')}
+                    </select>
+                </div>
+
                 <div class="space-y-2">
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Region / Continent</label>
                     <select name="region" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition appearance-none">
@@ -1286,13 +1533,7 @@ window.openDestinationModal = (destId = null) => {
                         `).join('')}
                     </select>
                 </div>
-                <div class="space-y-2">
-                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Image Asset</label>
-                    <div class="flex items-center bg-dark-900 border border-white/10 rounded-xl p-3.5">
-                        <i class="fas fa-image mr-3 text-slate-500"></i>
-                        <span class="text-slate-500 italic text-[10px]">Asset library coming soon</span>
-                    </div>
-                </div>
+
                 <div class="space-y-2 col-span-2">
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Description</label>
                     <textarea name="description" rows="3" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="Short description of why users should visit...">${dest ? (dest.description || '') : ''}</textarea>
@@ -1308,34 +1549,61 @@ window.openDestinationModal = (destId = null) => {
         </form>
     `;
 
-    document.getElementById('dest-form').onsubmit = (e) => {
+    document.getElementById('dest-form').onsubmit = async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
-        const destData = {
-            id: dest ? dest.id : Date.now(),
-            name: formData.get('name'),
-            region: formData.get('region'),
-            description: formData.get('description'),
-            image: dest ? dest.image : '/img/dest/default.jpg'
-        };
-
-        if (dest) {
-            state.data.destinations = state.data.destinations.map(d => d.id === dest.id ? destData : d);
-        } else {
-            state.data.destinations.unshift(destData);
+        
+        try {
+            const response = await fetch('api/save-destination.php', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                // Update local state and re-render
+                location.reload(); // Simplest way to sync DB hierarchy for now
+            } else {
+                alert('Error: ' + result.error);
+            }
+        } catch (err) {
+            // Fallback for prototype if API not yet ready
+            console.warn('API not found, using local state update');
+            const destData = {
+                id: dest ? dest.id : Date.now(),
+                name: formData.get('name'),
+                parent_id: formData.get('parent_id') || null,
+                region: formData.get('region'),
+                description: formData.get('description'),
+                image: dest ? dest.image : '/img/dest/default.jpg'
+            };
+            if (dest) state.data.destinations = state.data.destinations.map(d => d.id == dest.id ? destData : d);
+            else state.data.destinations.unshift(destData);
+            saveState();
+            renderDestinations();
+            window.closeModal();
         }
-
-        saveState();
-        renderDestinations();
-        window.closeModal();
     };
 };
 
-window.deleteDestination = (id) => {
-    if (confirm('Are you sure you want to delete this destination?')) {
-        state.data.destinations = state.data.destinations.filter(d => d.id !== id);
-        saveState();
-        renderDestinations();
+window.deleteDestination = async (id) => {
+    if (confirm('Are you sure you want to delete this destination? All nested sub-locations will also be deleted.')) {
+        try {
+            const response = await fetch(`api/delete-destination.php?id=${id}`);
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + result.error);
+            }
+        } catch (err) {
+            console.error('Delete failed:', err);
+            // Fallback for local state
+            state.data.destinations = state.data.destinations.filter(d => d.id != id);
+            saveState();
+            renderDestinations();
+        }
     }
 };
 
@@ -1381,61 +1649,399 @@ function getBookingStatusClass(status) {
     }
 }
 
-window.viewBookingDetails = (id) => {
-    const booking = state.data.bookings.find(b => b.id === id);
-    if (!booking) return;
-
+window.openCustomerModal = (id = null) => {
+    const cust = id ? state.data.customers.find(c => c.id == id) : null;
     modalOverlay.classList.remove('hidden');
     modalContent.innerHTML = `
-        <div class="p-8 space-y-6">
-            <div class="flex items-center justify-between">
+        <form id="customer-form" class="p-8 space-y-6">
+            <div class="flex items-center justify-between border-b border-white/5 pb-4">
                 <div>
-                    <h2 class="text-2xl font-bold">Booking Details</h2>
-                    <p class="text-slate-500 text-sm">#${booking.id}</p>
+                    <h2 class="text-2xl font-bold">${cust ? 'Edit Client Profile' : 'Register New Client'}</h2>
+                    <p class="text-slate-500 text-xs mt-1">Manage personal information and residency</p>
                 </div>
-                <button onclick="window.closeModal()" class="text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+                <button type="button" onclick="window.closeModal()" class="text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
             </div>
             
-            <div class="grid grid-cols-2 gap-8">
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Customer</label>
-                        <p class="text-lg font-bold">${booking.user}</p>
-                        <p class="text-sm text-slate-400">${booking.email}</p>
-                    </div>
-                    <div>
-                        <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Destination</label>
-                        <p class="text-lg font-bold text-primary">${booking.tour}</p>
-                    </div>
+            <input type="hidden" name="id" value="${cust ? cust.id : ''}">
+            
+            <div class="grid grid-cols-2 gap-6 text-sm">
+                <div class="space-y-2 col-span-2 md:col-span-1">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Full Name</label>
+                    <input type="text" name="name" required value="${cust ? cust.name : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="John Doe">
                 </div>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Travel Date</label>
-                        <p class="text-lg font-bold text-secondary">${booking.date}</p>
-                    </div>
-                    <div>
-                        <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Status</label>
-                        <div class="mt-1">
-                            <span class="px-3 py-1 rounded-full text-xs font-bold ${getBookingStatusClass(booking.status)}">
-                                ${booking.status}
-                            </span>
-                        </div>
-                    </div>
+                <div class="space-y-2 col-span-2 md:col-span-1">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Email Address</label>
+                    <input type="email" name="email" required value="${cust ? cust.email : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="john@example.com">
+                </div>
+                <div class="space-y-2 col-span-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Country of Origin</label>
+                    <input type="text" name="country" value="${cust ? (cust.country || '') : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="e.g. United Kingdom">
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-6 border-t border-white/5">
+                <button type="button" onclick="window.closeModal()" class="px-8 py-2.5 rounded-xl text-slate-500 hover:text-white font-bold transition">Discard</button>
+                <button type="submit" class="bg-primary px-10 py-2.5 rounded-xl text-white font-bold shadow-xl shadow-primary/20 hover:scale-105 transition">
+                    ${cust ? 'Update Profile' : 'Register Client'}
+                </button>
+            </div>
+        </form>
+    `;
+
+    document.getElementById('customer-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        
+        try {
+            const response = await fetch('api/save-customer.php', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + result.error);
+            }
+        } catch (err) {
+            console.error('Save failed:', err);
+            // Local fallback
+            const custData = {
+                id: cust ? cust.id : 'CU-' + Math.floor(1000 + Math.random() * 9000),
+                name: formData.get('name'),
+                email: formData.get('email'),
+                country: formData.get('country'),
+                bookings: cust ? cust.bookings : 0,
+                joined: cust ? cust.joined : new Date().toISOString().split('T')[0]
+            };
+            if (cust) state.data.customers = state.data.customers.map(c => c.id == id ? custData : c);
+            else state.data.customers.unshift(custData);
+            saveState();
+            renderCustomers();
+            window.closeModal();
+        }
+    };
+};
+
+window.deleteCustomer = async (id) => {
+    if (confirm('Are you sure you want to delete this client? This will NOT delete their bookings, but they will be unlinked.')) {
+        try {
+            const response = await fetch(`api/delete-customer.php?id=${id}`);
+            const result = await response.json();
+            if (result.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + result.error);
+            }
+        } catch (err) {
+            console.error('Delete failed:', err);
+            state.data.customers = state.data.customers.filter(c => c.id != id);
+            saveState();
+            renderCustomers();
+        }
+    }
+};
+
+window.openBookingModal = () => {
+    const tours = state.data.tours || [];
+    modalOverlay.classList.remove('hidden');
+    modalContent.innerHTML = `
+        <form id="booking-form" class="p-8 space-y-6">
+            <div class="flex items-center justify-between border-b border-white/5 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold">Initiate New Booking</h2>
+                    <p class="text-slate-500 text-xs mt-1">Manual booking entry for a client</p>
+                </div>
+                <button type="button" onclick="window.closeModal()" class="text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-6 text-sm">
+                <div class="space-y-2 col-span-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Customer Name</label>
+                    <input type="text" name="user_name" required class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="John Doe">
+                </div>
+                <div class="space-y-2 col-span-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Email Address</label>
+                    <input type="email" name="email" required class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="john@example.com">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Select Tour</label>
+                    <select name="tour_name" id="booking-tour-select" required class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition appearance-none">
+                        <option value="" disabled selected>Select Package</option>
+                        ${tours.map(t => `<option value="${t.title}" data-price="${t.price}">${t.title}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Travel Date</label>
+                    <input type="date" name="booking_date" required class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Amount ($)</label>
+                    <input type="number" name="amount" id="booking-amount-input" required class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="0.00">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Status</label>
+                    <select name="status" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition appearance-none">
+                        <option value="Pending">Pending</option>
+                        <option value="Confirmed">Confirmed</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-6 border-t border-white/5">
+                <button type="button" onclick="window.closeModal()" class="px-8 py-3 rounded-xl text-slate-500 hover:text-white font-bold transition">Cancel</button>
+                <button type="submit" class="bg-primary px-10 py-3 rounded-xl text-white font-bold shadow-xl shadow-primary/20 hover:scale-105 transition">
+                    Create Booking
+                </button>
+            </div>
+        </form>
+    `;
+
+    // Auto-fill amount when tour is selected
+    const tourSelect = document.getElementById('booking-tour-select');
+    const amountInput = document.getElementById('booking-amount-input');
+    tourSelect.addEventListener('change', () => {
+        const selectedOption = tourSelect.options[tourSelect.selectedIndex];
+        const price = selectedOption.getAttribute('data-price');
+        if (price) amountInput.value = price;
+    });
+
+    document.getElementById('booking-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        
+        try {
+            const response = await fetch('api/add-booking.php', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                // For prototype, we also update local state to avoid full reload
+                const newBooking = {
+                    id: result.booking_id,
+                    user: formData.get('user_name'),
+                    email: formData.get('email'),
+                    tour: formData.get('tour_name'),
+                    date: formData.get('booking_date'),
+                    amount: parseFloat(formData.get('amount')),
+                    status: formData.get('status')
+                };
+                state.data.bookings.unshift(newBooking);
+                saveState();
+                renderBookings();
+                window.closeModal();
+            } else {
+                alert('Error creating booking: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Failed to create booking:', error);
+            alert('Server error. Please check connection.');
+        }
+    };
+};
+
+window.openQuotationModal = (quoteId = null) => {
+    const quote = quoteId ? state.data.finance.quotations.find(q => q.id === quoteId) : null;
+    const customers = state.data.customers || [];
+    
+    modalOverlay.classList.remove('hidden');
+    modalContent.innerHTML = `
+        <form id="quotation-form" class="p-8 space-y-6">
+            <div class="flex items-center justify-between border-b border-white/5 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold">${quote ? 'Edit Quotation' : 'Create New Quotation'}</h2>
+                    <p class="text-slate-500 text-xs mt-1">Generate a travel offer for a client</p>
+                </div>
+                <button type="button" onclick="window.closeModal()" class="text-slate-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-6 text-sm">
+                <div class="space-y-2 col-span-2 md:col-span-1">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Customer</label>
+                    <select name="customer_id" required class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition">
+                        <option value="" disabled ${!quote ? 'selected' : ''}>Select Client</option>
+                        ${customers.map(c => `<option value="${c.id}" ${quote && quote.customer_id === c.id ? 'selected' : ''}>${c.name} (${c.id})</option>`).join('')}
+                    </select>
+                </div>
+
+                <div class="space-y-2 col-span-2 md:col-span-1">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Tour / Service</label>
+                    <input type="text" name="tour_name" required value="${quote ? quote.tour_name : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition" placeholder="e.g. 7-Day Luxury Safari">
+                </div>
+
+                <div class="space-y-2 col-span-2 md:col-span-1">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Quote Amount ($)</label>
+                    <input type="number" name="amount" required value="${quote ? quote.amount : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition" placeholder="0.00">
+                </div>
+
+                <div class="space-y-2 col-span-2 md:col-span-1">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Status</label>
+                    <select name="status" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition">
+                        <option value="Draft" ${quote && quote.status === 'Draft' ? 'selected' : ''}>Draft</option>
+                        <option value="Sent" ${quote && quote.status === 'Sent' ? 'selected' : ''}>Sent</option>
+                        <option value="Accepted" ${quote && quote.status === 'Accepted' ? 'selected' : ''}>Accepted</option>
+                        <option value="Expired" ${quote && quote.status === 'Expired' ? 'selected' : ''}>Expired</option>
+                    </select>
                 </div>
             </div>
 
-            <div class="pt-6 border-t border-white/5 flex justify-between items-center">
+            <div class="flex justify-end space-x-3 pt-6 border-t border-white/5">
+                <button type="button" onclick="window.closeModal()" class="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-400 hover:text-white transition">Cancel</button>
+                <button type="submit" class="bg-primary hover:bg-opacity-90 text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition">Save Quotation</button>
+            </div>
+        </form>
+    `;
+
+    document.getElementById('quotation-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        if (quoteId) formData.append('id', quoteId);
+
+        try {
+            const res = await fetch('api/save-quotation.php', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) { window.closeModal(); location.reload(); }
+            else { alert(data.message || 'Error saving quotation'); }
+        } catch (err) { console.error(err); alert('Network error while saving'); }
+    });
+};
+
+window.openInvoiceModal = (invoiceId = null) => {
+    const inv = invoiceId ? state.data.finance.invoices.find(i => i.id === invoiceId) : null;
+    const customers = state.data.customers || [];
+    
+    modalOverlay.classList.remove('hidden');
+    modalContent.innerHTML = `
+        <form id="invoice-form" class="p-8 space-y-6">
+            <div class="flex items-center justify-between border-b border-white/5 pb-4">
                 <div>
-                    <p class="text-xs text-slate-500 uppercase font-bold">Total Amount</p>
-                    <p class="text-3xl font-bold text-white">$${booking.amount.toLocaleString()}</p>
+                    <h2 class="text-2xl font-bold">${inv ? 'Edit Invoice' : 'Create New Invoice'}</h2>
+                    <p class="text-slate-500 text-xs mt-1">Request payment from a client</p>
                 </div>
-                <div class="flex space-x-3">
-                    <button onclick="window.closeModal()" class="px-6 py-2 rounded-xl text-slate-400 hover:text-white font-bold transition">Close</button>
-                    ${booking.status === 'Pending' ? `
-                        <button onclick="window.confirmBooking('${booking.id}'); window.closeModal();" class="bg-primary px-8 py-2 rounded-xl text-white font-bold shadow-lg shadow-primary/20 hover:scale-105 transition">Confirm Booking</button>
-                    ` : ''}
+                <button type="button" onclick="window.closeModal()" class="text-slate-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-6 text-sm">
+                <div class="space-y-2 col-span-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Customer</label>
+                    <select name="customer_id" required class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition">
+                        <option value="" disabled ${!inv ? 'selected' : ''}>Select Client</option>
+                        ${customers.map(c => `<option value="${c.id}" ${inv && inv.customer_id === c.id ? 'selected' : ''}>${c.name} (${c.id})</option>`).join('')}
+                    </select>
+                </div>
+
+                <div class="space-y-2 col-span-2 md:col-span-1">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Amount Due ($)</label>
+                    <input type="number" name="amount" required value="${inv ? inv.amount : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition" placeholder="0.00">
+                </div>
+
+                <div class="space-y-2 col-span-2 md:col-span-1">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Due Date</label>
+                    <input type="date" name="due_date" required value="${inv ? inv.due_date : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition">
+                </div>
+
+                <div class="space-y-2 col-span-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Status</label>
+                    <select name="status" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition">
+                        <option value="Unpaid" ${inv && inv.status === 'Unpaid' ? 'selected' : ''}>Unpaid</option>
+                        <option value="Paid" ${inv && inv.status === 'Paid' ? 'selected' : ''}>Paid</option>
+                        <option value="Partial" ${inv && inv.status === 'Partial' ? 'selected' : ''}>Partial</option>
+                        <option value="Overdue" ${inv && inv.status === 'Overdue' ? 'selected' : ''}>Overdue</option>
+                    </select>
                 </div>
             </div>
-        </div>
+
+            <div class="flex justify-end space-x-3 pt-6 border-t border-white/5">
+                <button type="button" onclick="window.closeModal()" class="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-400 hover:text-white transition">Cancel</button>
+                <button type="submit" class="bg-primary hover:bg-opacity-90 text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition">Save Invoice</button>
+            </div>
+        </form>
     `;
+
+    document.getElementById('invoice-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        if (invoiceId) formData.append('id', invoiceId);
+
+        try {
+            const res = await fetch('api/save-invoice.php', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) { window.closeModal(); location.reload(); }
+            else { alert(data.message || 'Error saving invoice'); }
+        } catch (err) { console.error(err); alert('Network error while saving'); }
+    });
+};
+
+window.openExpenseModal = () => {
+    modalOverlay.classList.remove('hidden');
+    modalContent.innerHTML = `
+        <form id="expense-form" class="p-8 space-y-6">
+            <div class="flex items-center justify-between border-b border-white/5 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold">Record Company Expense</h2>
+                    <p class="text-slate-500 text-xs mt-1">Log internal costs and operational spending</p>
+                </div>
+                <button type="button" onclick="window.closeModal()" class="text-slate-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-6 text-sm">
+                <div class="space-y-2 col-span-2 md:col-span-1">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Category</label>
+                    <select name="category" required class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition">
+                        <option value="Operations">Operations</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Flight">Flight</option>
+                        <option value="Accommodation">Accommodation</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2 col-span-2 md:col-span-1">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Amount ($)</label>
+                    <input type="number" name="amount" required class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition" placeholder="0.00">
+                </div>
+
+                <div class="space-y-2 col-span-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Description</label>
+                    <input type="text" name="description" required class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition" placeholder="e.g. Office electricity bill">
+                </div>
+
+                <div class="space-y-2 col-span-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Expense Date</label>
+                    <input type="date" name="expense_date" required value="${new Date().toISOString().split('T')[0]}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition">
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-6 border-t border-white/5">
+                <button type="button" onclick="window.closeModal()" class="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-400 hover:text-white transition">Cancel</button>
+                <button type="submit" class="bg-rose-500 hover:bg-rose-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-rose-500/20 transition">Log Expense</button>
+            </div>
+        </form>
+    `;
+
+    document.getElementById('expense-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+
+        try {
+            const res = await fetch('api/save-expense.php', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) { window.closeModal(); location.reload(); }
+            else { alert(data.message || 'Error saving expense'); }
+        } catch (err) { console.error(err); alert('Network error while saving'); }
+    });
+};
+
+window.deleteExpense = async (id) => {
+    if (confirm('Are you sure you want to delete this expense record?')) {
+        try {
+            const res = await fetch(`api/delete-expense.php?id=${id}`);
+            const data = await res.json();
+            if (data.success) { location.reload(); }
+        } catch (err) { console.error(err); }
+    }
 };
