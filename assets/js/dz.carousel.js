@@ -1080,27 +1080,55 @@ const LuxitCarousel = function () {
 		const carouselEl = document.querySelector(".trv-header-carousel");
 		if (!carouselEl) return;
 
-		new Swiper(carouselEl, {
+		const wrap        = carouselEl.closest('.hero-carousel-wrap');
+		const totalSlides = carouselEl.querySelectorAll('.hero-slide').length;
+		const counter     = wrap && wrap.querySelector('.hero-counter');
+		const progressBar = wrap && wrap.querySelector('.hero-progress-bar');
+		const thumbEls    = wrap ? Array.from(wrap.querySelectorAll('.hero-thumb')) : [];
+
+		const pad = n => String(n + 1).padStart(2, '0');
+		const total = String(totalSlides).padStart(2, '0');
+
+		const updateUI = (realIndex) => {
+			if (counter) counter.innerHTML = `<strong>${pad(realIndex)}</strong>&nbsp;/&nbsp;${total}`;
+
+			thumbEls.forEach((t, i) => t.classList.toggle('active', i === realIndex));
+
+			if (progressBar) {
+				progressBar.style.transition = 'none';
+				progressBar.style.width = '0%';
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+						progressBar.style.transition = 'width 5s linear';
+						progressBar.style.width = '100%';
+					});
+				});
+			}
+		};
+
+		const swiper = new Swiper(carouselEl, {
 			slidesPerView: 1,
 			spaceBetween: 0,
 			loop: true,
-			speed: 1500,
+			speed: 1200,
 			effect: "fade",
-			fadeEffect: {
-				crossFade: true,
-			},
+			fadeEffect: { crossFade: true },
 			autoplay: {
 				delay: 5000,
 				disableOnInteraction: false,
 			},
-			pagination: {
-				el: ".swiper-pagination",
-				clickable: true,
-			},
 			navigation: {
-				nextEl: ".swiper-button-next",
-				prevEl: ".swiper-button-prev",
+				nextEl: ".hero-next",
+				prevEl: ".hero-prev",
 			},
+			on: {
+				init(s)            { updateUI(s.realIndex); },
+				realIndexChange(s) { updateUI(s.realIndex); },
+			},
+		});
+
+		thumbEls.forEach((thumb, i) => {
+			thumb.addEventListener('click', () => swiper.slideToLoop(i));
 		});
 	};
 	

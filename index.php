@@ -6,73 +6,176 @@ include 'header.php';
 		<div id="smooth-content">
 			<!-- CONTENT START -->
 			<div class="page-content">
-				<!-- Banner Style One -->
-				<div class="trv-header-carousel swiper relative overflow-hidden">
-					<div class="swiper-wrapper">
-						<!-- Slide 1: Safari -->
-						<div class="swiper-slide">
-							<div class="h-170 sm:h-192 2xl:h-225 3xl:h-237.5 relative">
-								<img src="assets/images/header-carousel/safari.png" alt="Safari" class="absolute inset-0 object-cover w-full h-full">
-								<div class="absolute inset-0 flex items-center justify-center text-center" style="background-color: rgba(0,0,0,0.6);">
-									<div class="container mx-auto px-5 lg:px-20">
-										<div class="max-w-3xl mx-auto">
-											<span class="text-white text-2xl lg:text-4xl font-display block mb-4">Unforgettable Safaris</span>
-											<h1 class="text-white text-5xl lg:text-8xl font-display mb-6">Experience the Wild Heart of Africa</h1>
-											<p class="text-white text-lg lg:text-2xl mb-8">Discover our curated safari packages designed for nature lovers and adventurers.</p>
-											<div class="flex justify-center gap-4">
-												<a href="safari-packages.php" class="site-button butn-bg-shape">View Safaris</a>
-												<a href="contact.php" class="site-button outline !text-white !border-white">Get In Touch</a>
-											</div>
+				<!-- Hero Carousel Start -->
+				<style>
+				/* ── Hero Carousel ── */
+				.hero-carousel-wrap{position:relative;height:100vh;min-height:600px;max-height:960px;overflow:hidden;}
+				.hero-carousel-wrap .trv-header-carousel{height:100%;}
+
+				/* Slide */
+				.hero-slide{position:relative;height:100%;}
+				.hero-slide-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+				.hero-slide-overlay{position:absolute;inset:0;background:linear-gradient(105deg,rgba(4,28,22,.88) 0%,rgba(4,28,22,.55) 50%,rgba(4,28,22,.08) 100%);}
+
+				/* Content */
+				.hero-slide-content{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 6% 130px;}
+
+				/* Animated elements — start hidden, reveal on active slide */
+				.hero-eyebrow,.hero-title,.hero-desc,.hero-ctas{opacity:0;transform:translateY(32px);transition:opacity .75s ease,transform .75s ease;}
+				.swiper-slide-active .hero-eyebrow{opacity:1;transform:translateY(0);transition-delay:0ms;}
+				.swiper-slide-active .hero-title  {opacity:1;transform:translateY(0);transition-delay:190ms;}
+				.swiper-slide-active .hero-desc   {opacity:1;transform:translateY(0);transition-delay:370ms;}
+				.swiper-slide-active .hero-ctas   {opacity:1;transform:translateY(0);transition-delay:540ms;}
+
+				.hero-eyebrow{display:inline-flex;align-items:center;gap:10px;color:#FFD214;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin-bottom:18px;}
+				.hero-eyebrow::before{content:'';display:block;width:30px;height:2px;background:#FFD214;flex-shrink:0;}
+
+				.hero-title{color:#fff;line-height:1.08;font-size:clamp(2.2rem,5.2vw,5rem);font-weight:800;margin-bottom:22px;font-family:var(--font-display,Georgia,serif);}
+				.hero-title em{color:#FFD214;font-style:normal;}
+
+				.hero-desc{color:rgba(255,255,255,.72);font-size:clamp(.92rem,1.4vw,1.1rem);max-width:560px;line-height:1.72;margin:0 auto 36px;}
+
+				.hero-ctas{display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:center;}
+				.hero-cta-ghost{display:inline-flex;align-items:center;gap:9px;color:#fff;border:1px solid rgba(255,255,255,.45);border-radius:50px;padding:12px 26px;font-size:.86rem;font-weight:600;letter-spacing:.04em;transition:background .3s,border-color .3s;}
+				.hero-cta-ghost:hover{background:#006A72;border-color:#006A72;color:#fff;}
+				.hero-cta-ghost i{font-size:.75rem;transition:transform .3s;}
+				.hero-cta-ghost:hover i{transform:translateX(4px);}
+
+				/* Nav Bar */
+				.hero-nav-bar{position:absolute;bottom:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:20px 6% 26px;background:linear-gradient(0deg,rgba(4,28,22,.78) 0%,transparent 100%);}
+
+				/* Progress bar — pinned to top of nav bar */
+				.hero-progress-wrap{position:absolute;top:0;left:0;right:0;height:2px;background:rgba(255,255,255,.15);}
+				.hero-progress-bar{height:100%;width:0%;background:#FFD214;transition:width 5s linear;}
+
+				/* Counter */
+				.hero-counter{color:rgba(255,255,255,.55);font-size:.76rem;letter-spacing:.12em;font-weight:600;min-width:60px;font-variant-numeric:tabular-nums;}
+				.hero-counter strong{color:#fff;font-size:.92rem;}
+
+				/* Arrows */
+				.hero-arrows{display:flex;gap:10px;}
+				.hero-arrows button{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.07);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .3s,border-color .3s;font-size:.8rem;}
+				.hero-arrows button:hover{background:#006A72;border-color:#006A72;}
+
+				/* Thumbnails */
+				.hero-thumbs{display:flex;gap:8px;}
+				.hero-thumb{width:76px;height:48px;border-radius:8px;overflow:hidden;cursor:pointer;opacity:.4;border:2px solid transparent;transition:opacity .35s,border-color .35s,transform .35s;}
+				.hero-thumb img{width:100%;height:100%;object-fit:cover;}
+				.hero-thumb.active{opacity:1;border-color:#FFD214;transform:scale(1.06);}
+				.hero-thumb:hover:not(.active){opacity:.7;}
+
+				/* Scroll indicator */
+				.hero-scroll-indicator{position:absolute;right:28px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:12px;z-index:20;}
+				.hero-scroll-indicator span{color:rgba(255,255,255,.45);font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;writing-mode:vertical-rl;}
+				.hero-scroll-line{width:1px;height:60px;background:rgba(255,255,255,.18);position:relative;overflow:hidden;}
+				.hero-scroll-line::after{content:'';position:absolute;top:-60px;left:0;width:100%;height:60px;background:#FFD214;animation:heroScrollDown 2s ease-in-out infinite;}
+				@keyframes heroScrollDown{0%{top:-60px}100%{top:60px}}
+
+				/* Responsive */
+				@media(max-width:1023px){.hero-scroll-indicator{display:none;}.hero-slide-content{padding:0 5% 110px;}}
+				@media(max-width:640px){.hero-thumbs{display:none;}.hero-counter{display:none;}.hero-slide-content{padding:0 5% 90px;}.hero-title{font-size:clamp(1.9rem,8vw,2.6rem);}}
+				</style>
+
+				<div class="hero-carousel-wrap">
+					<div class="trv-header-carousel swiper">
+						<div class="swiper-wrapper">
+
+							<!-- Slide 1: Kenya Safari -->
+							<div class="swiper-slide hero-slide">
+								<img src="assets/images/header-carousel/safari.png" alt="Kenya Safari" class="hero-slide-img">
+								<div class="hero-slide-overlay"></div>
+								<div class="hero-slide-content">
+									<div>
+										<span class="hero-eyebrow">Kenya Safari Experience</span>
+										<h1 class="hero-title">Experience the <em>Wild Heart</em><br>of Africa</h1>
+										<p class="hero-desc">Discover our curated safari packages designed for nature lovers and adventurers seeking the ultimate wilderness encounter.</p>
+										<div class="hero-ctas">
+											<a href="safari-packages.php" class="site-button butn-bg-shape">View Safaris</a>
+											<a href="contact.php" class="hero-cta-ghost">Get In Touch <i class="fa fa-arrow-right"></i></a>
 										</div>
 									</div>
 								</div>
 							</div>
+
+							<!-- Slide 2: Maldives Escape -->
+							<div class="swiper-slide hero-slide">
+								<img src="assets/images/header-carousel/maldives.png" alt="Maldives Escape" class="hero-slide-img">
+								<div class="hero-slide-overlay"></div>
+								<div class="hero-slide-content">
+									<div>
+										<span class="hero-eyebrow">Luxury Island Retreats</span>
+										<h1 class="hero-title">Paradise Found<br>in the <em>Maldives</em></h1>
+										<p class="hero-desc">Float above turquoise lagoons in overwater villas — curated luxury escapes for travellers who demand the extraordinary.</p>
+										<div class="hero-ctas">
+											<a href="international-packages.php" class="site-button butn-bg-shape">Explore Deals</a>
+											<a href="contact.php" class="hero-cta-ghost">Inquire Now <i class="fa fa-arrow-right"></i></a>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- Slide 3: Mountain Adventure -->
+							<div class="swiper-slide hero-slide">
+								<img src="assets/images/header-carousel/mountains.png" alt="Mountain Adventure" class="hero-slide-img">
+								<div class="hero-slide-overlay"></div>
+								<div class="hero-slide-content">
+									<div>
+										<span class="hero-eyebrow">Adventure &amp; Trekking</span>
+										<h1 class="hero-title">Reach <em>New Heights</em><br>with Luxit</h1>
+										<p class="hero-desc">From the peaks of Kilimanjaro to misty highland trails — push your limits on expeditions crafted for true explorers.</p>
+										<div class="hero-ctas">
+											<a href="destinations.php" class="site-button butn-bg-shape">Discover Routes</a>
+											<a href="contact.php" class="hero-cta-ghost">Join the Journey <i class="fa fa-arrow-right"></i></a>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- Slide 4: African Heritage -->
+							<div class="swiper-slide hero-slide">
+								<img src="assets/images/background/adv-bg.jpg" alt="African Heritage" class="hero-slide-img">
+								<div class="hero-slide-overlay"></div>
+								<div class="hero-slide-content">
+									<div>
+										<span class="hero-eyebrow">Cultural Heritage Tours</span>
+										<h1 class="hero-title">Uncover Africa's<br><em>Rich Heritage</em></h1>
+										<p class="hero-desc">Walk ancient trade routes, meet local communities and immerse yourself in the vibrant cultures that define the African continent.</p>
+										<div class="hero-ctas">
+											<a href="local-packages.php" class="site-button butn-bg-shape">Explore Culture</a>
+											<a href="contact.php" class="hero-cta-ghost">Plan My Trip <i class="fa fa-arrow-right"></i></a>
+										</div>
+									</div>
+								</div>
+							</div>
+
+						</div><!-- /.swiper-wrapper -->
+					</div><!-- /.trv-header-carousel -->
+
+					<!-- Bottom Navigation Bar -->
+					<div class="hero-nav-bar">
+						<div class="hero-progress-wrap">
+							<div class="hero-progress-bar"></div>
 						</div>
-						<!-- Slide 2: Maldives -->
-						<div class="swiper-slide">
-							<div class="h-170 sm:h-192 2xl:h-225 3xl:h-237.5 relative">
-								<img src="assets/images/header-carousel/maldives.png" alt="Maldives" class="absolute inset-0 object-cover w-full h-full">
-								<div class="absolute inset-0 flex items-center justify-center text-center" style="background-color: rgba(0,0,0,0.6);">
-									<div class="container mx-auto px-5 lg:px-20">
-										<div class="max-w-3xl mx-auto">
-											<span class="text-white text-2xl lg:text-4xl font-display block mb-4">Luxury Escapes</span>
-											<h1 class="text-white text-5xl lg:text-8xl font-display mb-6">Paradise Found in the Maldives</h1>
-											<p class="text-white text-lg lg:text-2xl mb-8">Discover the world's most exclusive destinations in complete comfort and style.</p>
-											<div class="flex justify-center gap-4">
-												<a href="international-packages.php" class="site-button butn-bg-shape">Explore Deals</a>
-												<a href="contact.php" class="site-button outline !text-white !border-white">Inquire Now</a>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
+						<span class="hero-counter"><strong>01</strong>&nbsp;/&nbsp;04</span>
+						<div class="hero-arrows">
+							<button class="hero-prev" aria-label="Previous slide"><i class="fa fa-arrow-left"></i></button>
+							<button class="hero-next" aria-label="Next slide"><i class="fa fa-arrow-right"></i></button>
 						</div>
-						<!-- Slide 3: Mountains -->
-						<div class="swiper-slide">
-							<div class="h-170 sm:h-192 2xl:h-225 3xl:h-237.5 relative">
-								<img src="assets/images/header-carousel/mountains.png" alt="Mountains" class="absolute inset-0 object-cover w-full h-full">
-								<div class="absolute inset-0 flex items-center justify-center text-center" style="background-color: rgba(0,0,0,0.6);">
-									<div class="container mx-auto px-5 lg:px-20">
-										<div class="max-w-3xl mx-auto">
-											<span class="text-white text-2xl lg:text-4xl font-display block mb-4">Adventure Awaits</span>
-											<h1 class="text-white text-5xl lg:text-8xl font-display mb-6">Reach New Heights with Luxit</h1>
-											<p class="text-white text-lg lg:text-2xl mb-8">From the peaks of the Himalayas to the depths of the Great Barrier Reef.</p>
-											<div class="flex justify-center gap-4">
-												<a href="destinations.php" class="site-button butn-bg-shape">Discover Missions</a>
-												<a href="contact.php" class="site-button outline !text-white !border-white">Join the Journey</a>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
+						<div class="hero-thumbs">
+							<div class="hero-thumb active" data-index="0"><img src="assets/images/header-carousel/safari.png" alt="Safari"></div>
+							<div class="hero-thumb" data-index="1"><img src="assets/images/header-carousel/maldives.png" alt="Maldives"></div>
+							<div class="hero-thumb" data-index="2"><img src="assets/images/header-carousel/mountains.png" alt="Mountains"></div>
+							<div class="hero-thumb" data-index="3"><img src="assets/images/background/adv-bg.jpg" alt="Heritage"></div>
 						</div>
 					</div>
-					<!-- Navigation buttons -->
-					<!-- Navigation buttons removed per user request -->
-					<!-- Pagination -->
-					<div class="swiper-pagination"></div>
+
+					<!-- Scroll Indicator -->
+					<div class="hero-scroll-indicator">
+						<span>Scroll</span>
+						<div class="hero-scroll-line"></div>
+					</div>
 				</div>
-				<!-- Banner Style One End -->
+				<!-- Hero Carousel End -->
 				
 				<!-- SEARCH BAR START-->
 				<div class="bg-lightturquoise xl:pt-17.5 pt-12.5 px-5">
@@ -188,7 +291,7 @@ include 'header.php';
 												</div>
 												<div class="flex itmes-center justify-between">
 													<div class="trv-book">
-														<a href="tour-detail.php" class="site-button outline">Book Now</a>
+														<a href="#" class="site-button outline quick-book-btn">Book Now</a>
 													</div>
 													<div>
 														<span>(4.8 Review)</span>
@@ -233,7 +336,7 @@ include 'header.php';
 												</div>
 												<div class="flex itmes-center justify-between">
 													<div class="trv-book">
-														<a href="tour-detail.php" class="site-button outline">Book Now</a>
+														<a href="#" class="site-button outline quick-book-btn">Book Now</a>
 													</div>
 													<div>
 														<span>(4.8 Review)</span>
@@ -278,7 +381,7 @@ include 'header.php';
 												</div>
 												<div class="flex itmes-center justify-between">
 													<div class="trv-book">
-														<a href="tour-detail.php" class="site-button outline">Book Now</a>
+														<a href="#" class="site-button outline quick-book-btn">Book Now</a>
 													</div>
 													<div>
 														<span>(4.8 Review)</span>
@@ -323,7 +426,7 @@ include 'header.php';
 												</div>
 												<div class="flex itmes-center justify-between">
 													<div class="trv-book">
-														<a href="tour-detail.php" class="site-button outline">Book Now</a>
+														<a href="#" class="site-button outline quick-book-btn">Book Now</a>
 													</div>
 													<div>
 														<span>(4.8 Review)</span>
@@ -368,7 +471,7 @@ include 'header.php';
 												</div>
 												<div class="flex itmes-center justify-between">
 													<div class="trv-book">
-														<a href="tour-detail.php" class="site-button outline">Book Now</a>
+														<a href="#" class="site-button outline quick-book-btn">Book Now</a>
 													</div>
 													<div>
 														<span>(4.8 Review)</span>
@@ -413,7 +516,7 @@ include 'header.php';
 												</div>
 												<div class="flex itmes-center justify-between">
 													<div class="trv-book">
-														<a href="tour-detail.php" class="site-button outline">Book Now</a>
+														<a href="#" class="site-button outline quick-book-btn">Book Now</a>
 													</div>
 													<div>
 														<span>(4.8 Review)</span>
@@ -552,7 +655,7 @@ include 'header.php';
 											<div class="absolute bottom-0 left-0 right-0 p-6 bg-white text-center">
 												<h3 class="text-primary text-2xl font-bold mb-2">Majestic Iceland</h3>
 												<p class="text-secondary text-sm font-semibold italic">"The Land of Fire and Ice awaits you."</p>
-												<a href="tour-detail.php" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md">BOOK NOW</a>
+												<a href="#" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md quick-book-btn">BOOK NOW</a>
 											</div>
 										</div>
 									</div>
@@ -568,7 +671,7 @@ include 'header.php';
 											<div class="absolute bottom-0 left-0 right-0 p-6 bg-white text-center">
 												<h3 class="text-primary text-2xl font-bold mb-2">Spirit of Japan</h3>
 												<p class="text-secondary text-sm font-semibold italic">"Experience tradition with private local guides."</p>
-												<a href="tour-detail.php" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md">EXPLORE</a>
+												<a href="#" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md quick-book-btn">EXPLORE</a>
 											</div>
 										</div>
 									</div>
@@ -584,7 +687,7 @@ include 'header.php';
 											<div class="absolute bottom-0 left-0 right-0 p-6 bg-white text-center">
 												<h3 class="text-primary text-2xl font-bold mb-2">Maldives Paradise</h3>
 												<p class="text-secondary text-sm font-semibold italic">"Book for 2027 and lock in today's prices."</p>
-												<a href="tour-detail.php" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md">CLAIM DEAL</a>
+												<a href="#" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md quick-book-btn">CLAIM DEAL</a>
 											</div>
 										</div>
 									</div>
@@ -600,7 +703,7 @@ include 'header.php';
 											<div class="absolute bottom-0 left-0 right-0 p-6 bg-white text-center">
 												<h3 class="text-primary text-2xl font-bold mb-2">Swiss Alpine Magic</h3>
 												<p class="text-secondary text-sm font-semibold italic">"Unbeatable escapes starting at $499."</p>
-												<a href="tour-detail.php" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md">SNAG IT</a>
+												<a href="#" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md quick-book-btn">SNAG IT</a>
 											</div>
 										</div>
 									</div>
@@ -1617,6 +1720,185 @@ include 'header.php';
 				<!--ALL BLOGS SECTION END-->
 			</div>
 			<!-- CONTENT END -->
+
+			<!-- ═══════════════════════════════════════════
+			     QUICK BOOKING MODAL
+			     ═══════════════════════════════════════════ -->
+			<div id="qb-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;">
+				<div id="qb-panel" style="background:#fff;border-radius:24px;width:100%;max-width:520px;overflow:hidden;box-shadow:0 32px 80px rgba(0,106,114,.25);transform:translateY(20px);opacity:0;transition:transform .35s ease,opacity .35s ease;">
+					<!-- Panel header -->
+					<div style="background:#006A72;padding:24px 32px;display:flex;align-items:flex-start;justify-content:space-between;">
+						<div>
+							<p style="font-size:.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:5px;">Quick Booking</p>
+							<h3 id="qb-tour-name" style="color:#fff;font-size:1.4rem;font-weight:800;line-height:1.2;max-width:380px;"></h3>
+						</div>
+						<button id="qb-close" aria-label="Close" style="color:rgba(255,255,255,.6);background:none;border:none;font-size:1.8rem;line-height:1;cursor:pointer;margin-top:-2px;padding:0 0 0 16px;flex-shrink:0;" onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='rgba(255,255,255,.6)'">&times;</button>
+					</div>
+					<!-- Form -->
+					<div id="qb-form-wrap" style="padding:28px 32px;">
+						<form id="qb-form" novalidate autocomplete="off">
+							<input type="hidden" name="tour_name" id="qb-hidden-tour">
+							<input type="hidden" name="type" id="qb-hidden-type" value="book">
+							<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+								<div style="grid-column:span 2;">
+									<input name="full_name" required type="text" placeholder="Your Full Name *" style="width:100%;height:52px;padding:0 18px;border-radius:14px;border:2px solid #f0f4f4;outline:none;font-size:.9rem;box-sizing:border-box;transition:border-color .2s;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
+								</div>
+								<div>
+									<input name="email" required type="email" placeholder="Email Address *" style="width:100%;height:52px;padding:0 18px;border-radius:14px;border:2px solid #f0f4f4;outline:none;font-size:.9rem;box-sizing:border-box;transition:border-color .2s;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
+								</div>
+								<div>
+									<input name="phone" type="text" placeholder="Phone Number" style="width:100%;height:52px;padding:0 18px;border-radius:14px;border:2px solid #f0f4f4;outline:none;font-size:.9rem;box-sizing:border-box;transition:border-color .2s;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
+								</div>
+								<div>
+									<input name="travel_date" type="date" id="qb-date" style="width:100%;height:52px;padding:0 18px;border-radius:14px;border:2px solid #f0f4f4;outline:none;font-size:.9rem;color:#555;box-sizing:border-box;transition:border-color .2s;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
+								</div>
+								<div>
+									<input name="travelers" type="number" min="1" max="99" value="1" placeholder="Travelers" style="width:100%;height:52px;padding:0 18px;border-radius:14px;border:2px solid #f0f4f4;outline:none;font-size:.9rem;box-sizing:border-box;transition:border-color .2s;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
+								</div>
+								<div style="grid-column:span 2;">
+									<textarea name="message" rows="3" placeholder="Special requests or questions? (optional)" style="width:100%;padding:14px 18px;border-radius:14px;border:2px solid #f0f4f4;outline:none;font-size:.9rem;resize:none;box-sizing:border-box;transition:border-color .2s;font-family:inherit;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'"></textarea>
+								</div>
+							</div>
+							<p id="qb-error" style="color:#e53e3e;font-size:.82rem;margin-bottom:10px;display:none;"></p>
+							<div style="display:flex;gap:10px;">
+								<button type="submit" data-type="book" id="qb-btn-book" style="flex:1;height:52px;background:#006A72;color:#fff;border:none;border-radius:14px;font-weight:700;font-size:.88rem;cursor:pointer;transition:background .2s;letter-spacing:.03em;">
+									<i class="fa fa-calendar-check" style="margin-right:7px;"></i>Book Now
+								</button>
+								<button type="submit" data-type="enquire" id="qb-btn-enquire" style="flex:1;height:52px;background:#fff;color:#006A72;border:2px solid #006A72;border-radius:14px;font-weight:700;font-size:.88rem;cursor:pointer;transition:background .2s,color .2s;letter-spacing:.03em;" onmouseenter="this.style.background='#006A72';this.style.color='#fff'" onmouseleave="this.style.background='#fff';this.style.color='#006A72'">
+									<i class="fa fa-envelope" style="margin-right:7px;"></i>Send Enquiry
+								</button>
+							</div>
+						</form>
+					</div>
+					<!-- Success state -->
+					<div id="qb-success" style="padding:48px 32px;text-align:center;display:none;">
+						<div style="width:64px;height:64px;background:#f0fdf4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+							<i class="fa fa-check" style="color:#16a34a;font-size:1.5rem;"></i>
+						</div>
+						<h4 id="qb-success-msg" style="color:#006A72;font-size:1.1rem;font-weight:700;margin-bottom:8px;"></h4>
+						<p style="color:#6b7280;font-size:.85rem;margin-bottom:24px;">Our team will be in touch with you shortly.</p>
+						<button id="qb-close-success" class="site-button butn-bg-shape">Close</button>
+					</div>
+				</div>
+			</div>
+
+			<script>
+			(function () {
+				var overlay    = document.getElementById('qb-overlay');
+				var panel      = document.getElementById('qb-panel');
+				var tourNameEl = document.getElementById('qb-tour-name');
+				var hiddenTour = document.getElementById('qb-hidden-tour');
+				var hiddenType = document.getElementById('qb-hidden-type');
+				var form       = document.getElementById('qb-form');
+				var errorEl    = document.getElementById('qb-error');
+				var formWrap   = document.getElementById('qb-form-wrap');
+				var successEl  = document.getElementById('qb-success');
+				var successMsg = document.getElementById('qb-success-msg');
+				var dateInput  = document.getElementById('qb-date');
+				var lastType   = 'book'; // track which submit button was clicked
+
+				if (dateInput) dateInput.min = new Date().toISOString().split('T')[0];
+
+				function getTourName(btn) {
+					var slide = btn.closest('.swiper-slide');
+					if (!slide) return 'Selected Tour';
+					var h3 = slide.querySelector('h3');
+					if (!h3) return 'Selected Tour';
+					return h3.textContent.replace(/\s+/g, ' ').trim() || 'Selected Tour';
+				}
+
+				function resetButtons() {
+					var b = document.getElementById('qb-btn-book');
+					var e = document.getElementById('qb-btn-enquire');
+					b.disabled = false;
+					b.innerHTML = '<i class="fa fa-calendar-check" style="margin-right:7px;"></i>Book Now';
+					e.disabled = false;
+					e.innerHTML = '<i class="fa fa-envelope" style="margin-right:7px;"></i>Send Enquiry';
+				}
+
+				function openModal(tourName) {
+					form.reset();
+					hiddenTour.value = tourName;
+					if (dateInput) dateInput.min = new Date().toISOString().split('T')[0];
+					tourNameEl.textContent = tourName;
+					errorEl.style.display = 'none';
+					formWrap.style.display = 'block';
+					successEl.style.display = 'none';
+					resetButtons();
+					lastType = 'book';
+					panel.style.transform = 'translateY(20px)';
+					panel.style.opacity = '0';
+					overlay.style.display = 'flex';
+					document.body.style.overflow = 'hidden';
+					requestAnimationFrame(function () {
+						requestAnimationFrame(function () {
+							panel.style.transform = 'translateY(0)';
+							panel.style.opacity = '1';
+						});
+					});
+				}
+
+				function closeModal() {
+					panel.style.transform = 'translateY(20px)';
+					panel.style.opacity = '0';
+					setTimeout(function () {
+						overlay.style.display = 'none';
+						document.body.style.overflow = '';
+					}, 350);
+				}
+
+				// ── Event delegation: catches original AND Swiper-cloned buttons ──
+				document.addEventListener('click', function (e) {
+					var btn = e.target.closest('.quick-book-btn');
+					if (!btn) return;
+					e.preventDefault();
+					openModal(getTourName(btn));
+				});
+
+				// Track which submit button was last clicked
+				document.getElementById('qb-btn-book').addEventListener('click', function () { lastType = 'book'; });
+				document.getElementById('qb-btn-enquire').addEventListener('click', function () { lastType = 'enquire'; });
+
+				// Close handlers
+				document.getElementById('qb-close').addEventListener('click', closeModal);
+				document.getElementById('qb-close-success').addEventListener('click', closeModal);
+				overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+				document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+
+				// Form submit
+				form.addEventListener('submit', function (e) {
+					e.preventDefault();
+					hiddenType.value = lastType;
+					hiddenTour.value = tourNameEl.textContent;
+
+					var bookBtn    = document.getElementById('qb-btn-book');
+					var enquireBtn = document.getElementById('qb-btn-enquire');
+					bookBtn.disabled = true;
+					enquireBtn.disabled = true;
+					(lastType === 'book' ? bookBtn : enquireBtn).textContent = 'Submitting…';
+					errorEl.style.display = 'none';
+
+					fetch('booking-handler.php', { method: 'POST', body: new FormData(form) })
+						.then(function (r) { return r.json(); })
+						.then(function (res) {
+							if (res.success) {
+								formWrap.style.display = 'none';
+								successMsg.textContent = res.message;
+								successEl.style.display = 'block';
+							} else {
+								errorEl.textContent = res.error || 'Something went wrong. Please try again.';
+								errorEl.style.display = 'block';
+								resetButtons();
+							}
+						})
+						.catch(function () {
+							errorEl.textContent = 'Network error. Please try again.';
+							errorEl.style.display = 'block';
+							resetButtons();
+						});
+				});
+			})();
+			</script>
 			
 			<!-- FOOTER START -->
 <?php include 'footer.php'; ?>

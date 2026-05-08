@@ -692,7 +692,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ── Destinations mega-menu HTML ── */
   const destHTML = `<li class="lg:inline-block block max-lg:border-b max-lg:border-gray-200 relative group mm-parent">
-    <a class="lg:py-7.5 py-2 2xxl:px-5 lg:px-2 relative lg:inline-block block text-lg font-medium lg:text-white text-black hover:text-secondary" href="destinations.php">
+    <a class="lg:py-7.5 py-2 2xxl:px-5 lg:px-2 relative lg:inline-block block text-lg font-medium text-black hover:text-secondary" href="destinations.php">
       <span class="inline-block">Destinations</span>
       <i class="fas fa-chevron-right lg:!hidden !block size-7 !leading-7 text-center text-xs bg-black text-black float-end"></i>
     </a>
@@ -738,7 +738,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ── Tours mega-menu HTML ── */
   const toursHTML = `<li class="lg:inline-block block max-lg:border-b max-lg:border-gray-200 relative group mm-parent">
-    <a class="lg:py-7.5 py-2 xl:px-5 lg:px-2 relative lg:inline-block block text-lg font-medium lg:text-white text-black hover:text-secondary" href="javascript:void(0);">
+    <a class="lg:py-7.5 py-2 xl:px-5 lg:px-2 relative lg:inline-block block text-lg font-medium text-black hover:text-secondary" href="javascript:void(0);">
       <span class="inline-block">Tours</span>
       <i class="fas fa-chevron-right lg:!hidden !block size-7 !leading-7 text-center text-xs bg-black text-white float-end"></i>
     </a>
