@@ -39,22 +39,22 @@ let state = {
             // Version 3.0 Migration: Force new visual data
             if (!saved || saved.version !== '3.0') {
                 console.log('New state version (v3.0) detected. Refreshing visual assets...');
-                return { 
+                return {
                     ...window.MOCK_DATA,
-                    // If they had bookings/customers, keep them, but refresh the tours/destinations
-                    bookings: (saved && saved.bookings) ? saved.bookings : window.MOCK_DATA.bookings,
+                    bookings: window.MOCK_DATA.bookings,
                     customers: (saved && saved.customers) ? saved.customers : window.MOCK_DATA.customers
                 };
             }
-            
+
             // Comprehensive Deep Merge for existing v3.0 users
+            // Bookings always come fresh from DB (window.MOCK_DATA) to reflect new submissions
             const merged = {
                 ...window.MOCK_DATA,
                 ...saved,
                 analytics: { ...window.MOCK_DATA.analytics, ...(saved.analytics || {}) },
                 tours: Array.isArray(saved.tours) ? saved.tours : window.MOCK_DATA.tours,
                 destinations: Array.isArray(saved.destinations) ? saved.destinations : window.MOCK_DATA.destinations,
-                bookings: Array.isArray(saved.bookings) ? saved.bookings : window.MOCK_DATA.bookings,
+                bookings: window.MOCK_DATA.bookings,
                 customers: Array.isArray(saved.customers) ? saved.customers : window.MOCK_DATA.customers,
                 events: Array.isArray(saved.events) ? saved.events : window.MOCK_DATA.events,
                 activityFeed: Array.isArray(saved.activityFeed) ? saved.activityFeed : window.MOCK_DATA.activityFeed
@@ -1612,27 +1612,162 @@ window.closeModal = () => {
 };
 
 window.confirmBooking = (id) => {
-    state.data.bookings = state.data.bookings.map(b => 
-        b.id === id ? { ...b, status: 'Confirmed' } : b
-    );
-    saveState();
-    renderBookings();
+    fetch('/admin/api/update-booking-status.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `id=${encodeURIComponent(id)}&status=Confirmed`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            state.data.bookings = state.data.bookings.map(b =>
+                b.id === id ? { ...b, status: 'Confirmed' } : b
+            );
+            renderBookings();
+        } else {
+            alert('Failed to confirm booking. Please try again.');
+        }
+    })
+    .catch(() => alert('Network error. Please try again.'));
 };
 
 window.cancelBooking = (id) => {
-    state.data.bookings = state.data.bookings.map(b => 
-        b.id === id ? { ...b, status: 'Cancelled' } : b
-    );
-    saveState();
-    renderBookings();
+    fetch('/admin/api/update-booking-status.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `id=${encodeURIComponent(id)}&status=Cancelled`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            state.data.bookings = state.data.bookings.map(b =>
+                b.id === id ? { ...b, status: 'Cancelled' } : b
+            );
+            renderBookings();
+        } else {
+            alert('Failed to cancel booking. Please try again.');
+        }
+    })
+    .catch(() => alert('Network error. Please try again.'));
 };
 
 window.deleteBooking = (id) => {
     if (confirm('Delete this booking permanently?')) {
-        state.data.bookings = state.data.bookings.filter(b => b.id !== id);
-        saveState();
-        renderBookings();
+        fetch('/admin/api/delete-booking.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `id=${encodeURIComponent(id)}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                state.data.bookings = state.data.bookings.filter(b => b.id !== id);
+                renderBookings();
+            } else {
+                alert('Failed to delete booking. Please try again.');
+            }
+        })
+        .catch(() => alert('Network error. Please try again.'));
     }
+};
+
+window.viewBookingDetails = (id) => {
+    const booking = state.data.bookings.find(b => b.id === id);
+    if (!booking) return;
+
+    // Parse packed tour field: "[Booking] Tour Name | Phone: x | Travelers: N | Note: y"
+    const raw = booking.tour || '';
+    let type = 'Booking';
+    let tourName = raw;
+    let phone = '—';
+    let travelers = '—';
+    let note = '—';
+
+    const prefixMatch = raw.match(/^\[(Booking|Enquiry)\]\s*/);
+    if (prefixMatch) {
+        type = prefixMatch[1];
+        tourName = raw.slice(prefixMatch[0].length);
+    }
+
+    tourName.split('|').slice(1).map(s => s.trim()).forEach(seg => {
+        if (seg.startsWith('Phone:'))     phone     = seg.slice(6).trim();
+        else if (seg.startsWith('Travelers:')) travelers = seg.slice(10).trim();
+        else if (seg.startsWith('Note:'))  note      = seg.slice(5).trim();
+    });
+    tourName = tourName.split('|')[0].trim();
+
+    const statusClass = getBookingStatusClass(booking.status);
+    const typeColor = type === 'Enquiry' ? 'text-sky-400 bg-sky-400/10' : 'text-amber-400 bg-amber-400/10';
+
+    modalOverlay.classList.remove('hidden');
+    modalContent.innerHTML = `
+        <div class="p-8 space-y-6 max-w-lg w-full">
+            <div class="flex items-start justify-between border-b border-white/5 pb-4">
+                <div>
+                    <div class="flex items-center gap-3 mb-1">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${typeColor}">
+                            <i class="fas fa-${type === 'Enquiry' ? 'question-circle' : 'calendar-check'} mr-1.5"></i>
+                            ${type}
+                        </span>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${statusClass}">
+                            <i class="fas fa-circle mr-1.5 text-[6px]"></i>
+                            ${booking.status}
+                        </span>
+                    </div>
+                    <h2 class="text-xl font-bold text-white">${tourName}</h2>
+                    <p class="text-xs font-mono text-slate-500 mt-0.5">${booking.id}</p>
+                </div>
+                <button type="button" onclick="window.closeModal()" class="text-slate-500 hover:text-white text-lg mt-1">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div class="space-y-1">
+                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Client Name</p>
+                    <p class="text-white font-medium">${booking.user || '—'}</p>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Email</p>
+                    <p class="text-white font-medium break-all">${booking.email || '—'}</p>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Phone</p>
+                    <p class="text-white font-medium">${phone}</p>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Travelers</p>
+                    <p class="text-white font-medium">${travelers}</p>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Travel Date</p>
+                    <p class="text-white font-medium">${booking.date || '—'}</p>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Submitted</p>
+                    <p class="text-white font-medium">${booking.created_at ? new Date(booking.created_at).toLocaleDateString() : '—'}</p>
+                </div>
+            </div>
+
+            ${note !== '—' ? `
+            <div class="bg-white/5 rounded-xl p-4 space-y-1">
+                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Client Note</p>
+                <p class="text-sm text-slate-300">${note}</p>
+            </div>` : ''}
+
+            ${booking.status === 'Pending' ? `
+            <div class="flex gap-3 pt-2">
+                <button onclick="window.confirmBooking('${booking.id}'); window.closeModal();"
+                        class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition text-sm">
+                    <i class="fas fa-check mr-2"></i> Confirm
+                </button>
+                <button onclick="window.cancelBooking('${booking.id}'); window.closeModal();"
+                        class="flex-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 font-bold py-3 rounded-xl transition text-sm">
+                    <i class="fas fa-times mr-2"></i> Cancel
+                </button>
+            </div>` : ''}
+        </div>
+    `;
 };
 
 window.setBookingFilter = (filter) => {

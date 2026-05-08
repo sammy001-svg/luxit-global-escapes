@@ -219,7 +219,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     <script>
         window.MOCK_DATA = <?php echo json_encode($mock_data); ?>;
     </script>
-    <script src="/admin/js/main.js?v=5"></script>
+    <script src="/admin/js/main.js?v=6"></script>
     <script>
         if (!window.MOCK_DATA) {
             document.getElementById('content-area').innerHTML = '<div class="p-8 text-rose-500 font-bold">CRITICAL ERROR: Data could not be loaded from Database. Please check your .env settings.</div>';
