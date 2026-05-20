@@ -550,10 +550,7 @@ include 'header.php';
 									<!-- TITLE START-->
 									<div class="text-left 2xl:mb-15 mb-10">
 										<h2 class="xl:text-46 md:text-40 text-3xl mb-2.5">We <span class="text-citrusyellow">Recommend </span>Beautiful Destinations Every Month</h2>
-										<p class="2xl:mb-12.5 mb-7 sm:pr-8.75 text-base">Luxit Global Escapes is a multi-award-winning strategy and content creation
-											agency that specializes in travel marketing. They have one of the
-											world's largest and most influential online travel communities,
-											helping brands and tourism.
+										<p class="2xl:mb-12.5 mb-7 sm:pr-8.75 text-base">Luxit Global Escapes is a premier luxury tour operator specializing in bespoke safari packages, curated international journeys, and custom-tailored travel experiences. We help travelers explore the world's most spectacular destinations with hand-crafted itineraries and dedicated 24/7 guide support.
 										</p>
 									</div>
 									<!-- TITLE END-->
@@ -807,7 +804,7 @@ include 'header.php';
 										<!-- TITLE START-->
 											<div class="lg:mr-22.5 text-left mb-15">
 												<h2 class="!text-white xl:text-46 md:text-40 text-3xl mb-2.5">We offer Best <span class="text-citrusyellow">Services </span></h2>
-												<p class="text-paleaqua mb-12.5 text-base">Luxit Global Escapes is a multi-award-winning strategy and content creation agency that specializes in travel marketing. They have one of the world's largest and most influential online travel communities, helping brands and tourism.</p>
+												<p class="text-paleaqua mb-12.5 text-base">Luxit Global Escapes is a premier luxury tour operator specializing in bespoke safari packages, curated international journeys, and custom-tailored travel experiences across the globe. We design premium itineraries that connect you to extraordinary destinations, offering seamless service and unforgettable memories.</p>
 											</div>
 										<!-- TITLE END-->
 										<!--servce box-->

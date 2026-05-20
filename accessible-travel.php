@@ -629,32 +629,32 @@
 				</div>
 				<!-- FOOTER BLOCKS START -->
 				<div class="container">
-					<div class="sm:pt-20 pt-10 text-white/06 border-b border-primary">
+					<div class="sm:pt-20 pt-10 text-white border-b border-primary">
 						<div class="grid grid-cols-12">
 							<div class="lg:col-span-3 col-span-12 sm:px-3.75">
 								<div class="mb-10">
 									<div class="mb-10 text-center block max-w-48.25 after:table after:clear-both">
 										<a href="index.php"><img src="assets/images/luxit-africa-logo.png" alt="logo" width="193" height="81" loading="lazy"></a>
 									</div>
-									<p class="sm:pr-12.5 mb-4 text-base text-white/50">Luxit Global Escapes is a multi-award-winning strategy and content creation agency that specializes in travel marketing.</p>
+									<p class="sm:pr-12.5 mb-4 text-base text-white/50">Luxit Global Escapes is a premier luxury tour operator specializing in bespoke safari packages, curated international journeys, and custom-tailored travel experiences across the globe.</p>
 									<ul class="mt-5">
 										<li class="inline-flex xl:size-11.5 size-10.5 bg-citrusyellow xl:mr-2.5 mr-1.5 rounded-4xl justify-center items-center duration-500 hover:rounded-2lg group">
-											<a class="inline-flex size-9 bg-primary rounded-4xl justify-center items-center duration-500 text-white text-lg group-hover:rounded-2lg" href="https://x.com/Luxitafrica/status/1915682543342387701" target="_blank">
+											<a class="inline-flex size-9 bg-white rounded-4xl justify-center items-center duration-500 text-primary text-lg group-hover:rounded-2lg" href="https://x.com/Luxitafrica/status/1915682543342387701" target="_blank">
 												<i class="fa-brands fa-x-twitter group-hover:rotate-y-[360deg] group-hover:scale-[1.2] !inline-block duration-[0.5s] group-hover:text-citrusyellow"></i>
 											</a>
 										</li>
 										<li class="inline-flex xl:size-11.5 size-10.5 bg-citrusyellow xl:mr-2.5 mr-1.5 rounded-4xl justify-center items-center duration-500 hover:rounded-2lg group">
-											<a class="inline-flex size-9 bg-primary rounded-4xl justify-center items-center duration-500 text-white text-lg group-hover:rounded-2lg" href="https://www.facebook.com/luxitafrica" target="_blank">
+											<a class="inline-flex size-9 bg-white rounded-4xl justify-center items-center duration-500 text-primary text-lg group-hover:rounded-2lg" href="https://www.facebook.com/luxitafrica" target="_blank">
 												<i class="fa-brands fa-facebook group-hover:rotate-y-[360deg] group-hover:scale-[1.2] !inline-block duration-[0.5s] group-hover:text-citrusyellow"></i>
 											</a>
 										</li>
 										<li class="inline-flex xl:size-11.5 size-10.5 bg-citrusyellow xl:mr-2.5 mr-1.5 rounded-4xl justify-center items-center duration-500 hover:rounded-2lg group">
-											<a class="inline-flex size-9 bg-primary rounded-4xl justify-center items-center duration-500 text-white text-lg group-hover:rounded-2lg" href="https://www.instagram.com/p/DIoeX4NuF4S/" target="_blank">
+											<a class="inline-flex size-9 bg-white rounded-4xl justify-center items-center duration-500 text-primary text-lg group-hover:rounded-2lg" href="https://www.instagram.com/p/DIoeX4NuF4S/" target="_blank">
 												<i class="fa-brands fa-instagram group-hover:rotate-y-[360deg] group-hover:scale-[1.2] !inline-block duration-[0.5s] group-hover:text-citrusyellow"></i>
 											</a>
 										</li>
 										<li class="inline-flex xl:size-11.5 size-10.5 bg-citrusyellow xl:mr-2.5 mr-1.5 rounded-4xl justify-center items-center duration-500 hover:rounded-2lg group">
-											<a class="inline-flex size-9 bg-primary rounded-4xl justify-center items-center duration-500 text-white text-lg group-hover:rounded-2lg" href="https://www.tiktok.com/@luxitglobalescapes" target="_blank">
+											<a class="inline-flex size-9 bg-white rounded-4xl justify-center items-center duration-500 text-primary text-lg group-hover:rounded-2lg" href="https://www.tiktok.com/@luxitglobalescapes" target="_blank">
 												<i class="fa-brands fa-tiktok group-hover:rotate-y-[360deg] group-hover:scale-[1.2] !inline-block duration-[0.5s] group-hover:text-citrusyellow"></i>
 											</a>
 										</li>
@@ -829,7 +829,7 @@
 					<div class="mb-15">
 						<h3 class="text-28 !text-white mb-5">It's Time to Traveling</h3>
 						<h3 class="!text-secondary text-5xl mb-5 uppercase">Plan Your Next Holiday</h3>
-						<p class="text-base !text-white/50">Luxit Global Escapes is a multi-award-winning strategy and content creation agency that specializes in travel marketing.</p>   
+						<p class="text-base !text-white/50">Luxit Global Escapes is a premier luxury tour operator specializing in bespoke safari packages, curated international journeys, and custom-tailored travel experiences across the globe.</p>   
 					</div>
 					<h3 class="text-28 !text-white mb-5">Don't miss out on these offers!</h3>
 					<ul class="flex justify-between pb-10 mb-10 relative after:w-75 after:bg-white/15 after:h-px after:absolute after:left-1/2 after:bottom-0 after:-translate-x-1/2">
@@ -848,22 +848,22 @@
 					</ul>
 					<ul class="mt-5">
 						<li class="inline-flex size-11.5 bg-citrusyellow mr-2.5 rounded-4xl justify-center items-center duration-500 hover:rounded-2lg group">
-							<a class="inline-flex size-9 bg-primary rounded-full justify-center items-center duration-500 text-white text-lg" href="https://x.com/Luxitafrica/status/1915682543342387701">
+							<a class="inline-flex size-9 bg-white rounded-full justify-center items-center duration-500 text-primary text-lg" href="https://x.com/Luxitafrica/status/1915682543342387701">
 								<i class="fa-brands fa-x-twitter group-hover:rotate-y-[360deg] group-hover:scale-[1.2] !inline-block duration-[0.5s] group-hover:text-citrusyellow"></i>
 							</a>
 						</li>
 						<li class="inline-flex size-11.5 bg-citrusyellow mr-2.5 rounded-4xl justify-center items-center duration-500 hover:rounded-2lg group">
-							<a class="inline-flex size-9 bg-primary rounded-full justify-center items-center duration-500 text-white text-lg" href="https://www.facebook.com/luxitafrica">
+							<a class="inline-flex size-9 bg-white rounded-full justify-center items-center duration-500 text-primary text-lg" href="https://www.facebook.com/luxitafrica">
 								<i class="fa-brands fa-facebook group-hover:rotate-y-[360deg] group-hover:scale-[1.2] !inline-block duration-[0.5s] group-hover:text-citrusyellow"></i>
 							</a>
 						</li>
 						<li class="inline-flex size-11.5 bg-citrusyellow mr-2.5 rounded-4xl justify-center items-center duration-500 hover:rounded-2lg group">
-							<a class="inline-flex size-9 bg-primary rounded-full justify-center items-center duration-500 text-white text-lg" href="https://www.instagram.com/p/DIoeX4NuF4S/">
+							<a class="inline-flex size-9 bg-white rounded-full justify-center items-center duration-500 text-primary text-lg" href="https://www.instagram.com/p/DIoeX4NuF4S/">
 								<i class="fa-brands fa-instagram group-hover:rotate-y-[360deg] group-hover:scale-[1.2] !inline-block duration-[0.5s] group-hover:text-citrusyellow"></i>
 							</a>
 						</li>
 						<li class="inline-flex size-11.5 bg-citrusyellow mr-2.5 rounded-4xl justify-center items-center duration-500 hover:rounded-2lg group">
-							<a class="inline-flex size-9 bg-primary rounded-full justify-center items-center duration-500 text-white text-lg" href="https://www.tiktok.com/@luxitglobalescapes">
+							<a class="inline-flex size-9 bg-white rounded-full justify-center items-center duration-500 text-primary text-lg" href="https://www.tiktok.com/@luxitglobalescapes">
 								<i class="fa-brands fa-tiktok group-hover:rotate-y-[360deg] group-hover:scale-[1.2] !inline-block duration-[0.5s] group-hover:text-citrusyellow"></i>
 							</a>
 						</li>
