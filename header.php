@@ -215,126 +215,18 @@
 								</a>
 							</li>
 
-							<!-- ══ DESTINATIONS MEGA MENU ══ -->
-							<li class="lg:inline-block block max-lg:border-b max-lg:border-gray-200 relative group mm-parent">
-								<a class="lg:py-7.5 py-2 2xxl:px-5 lg:px-2 relative lg:inline-block block text-lg font-medium lg:text-white text-black hover:text-secondary" href="destinations.php">
+							<!-- ══ DESTINATIONS DROPDOWN ══ -->
+							<li class="lg:inline-block block max-lg:border-b max-lg:border-gray-200 relative group">
+								<a class="lg:py-7.5 py-2 xl:px-5 lg:px-2 relative lg:inline-block block text-lg font-medium lg:text-white text-black hover:text-secondary" href="destinations.php">
 									<span class="inline-block">Destinations</span>
 									<i class="fas fa-chevron-right lg:!hidden !block size-7 !leading-7 text-center text-xs bg-black text-black float-end"></i>
 								</a>
-								<div class="mega-menu max-lg:hidden lg:opacity-0 lg:invisible lg:translate-y-10 duration-500 lg:group-hover:opacity-100 lg:group-hover:visible lg:group-hover:translate-y-0">
-									<div class="mm-panel">
-										<!-- Top bar -->
-										<div class="mm-topbar">
-											<div style="display:flex;align-items:center;gap:8px;">
-												<i class="fas fa-globe-africa" style="color:#066168;font-size:14px;"></i>
-												<span class="mm-topbar-label">Explore World Destinations</span>
-											</div>
-											<a href="destinations.php" class="mm-topbar-link">
-												All Destinations <i class="fas fa-long-arrow-alt-right" style="font-size:11px;"></i>
-											</a>
-										</div>
-										<!-- Columns -->
-										<div class="mm-body mm-4col">
-
-											<!-- Africa -->
-											<div class="mm-col">
-												<div class="mm-col-head">
-													<span class="mm-icon" style="background:#f0fdf4;border:1px solid #bbf7d0;">
-														<i class="fas fa-leaf" style="color:#16a34a;"></i>
-													</span>
-													<div>
-														<p class="mm-col-title" style="color:#15803d;">Africa</p>
-														<p class="mm-col-count">13 destinations</p>
-													</div>
-												</div>
-												<div class="mm-divider" style="background:#86efac;"></div>
-												<span class="mm-moblabel">Africa</span>
-												<a class="mm-link" href="kenya.php">Kenya</a>
-												<a class="mm-link" href="uganda.php">Uganda</a>
-												<a class="mm-link" href="tanzania.php">Tanzania</a>
-												<a class="mm-link" href="seychelles.php">Seychelles</a>
-												<a class="mm-link" href="madagascar.php">Madagascar</a>
-												<a class="mm-link" href="zambia.php">Zambia</a>
-												<a class="mm-link" href="zimbabwe.php">Zimbabwe</a>
-												<a class="mm-link" href="rwanda.php">Rwanda</a>
-												<a class="mm-link" href="south-africa.php">South Africa</a>
-												<a class="mm-link" href="namibia.php">Namibia</a>
-												<a class="mm-link" href="botswana.php">Botswana</a>
-												<a class="mm-link" href="morocco.php">Morocco</a>
-												<a class="mm-link" href="egypt.php">Egypt</a>
-											</div>
-
-											<!-- Middle East -->
-											<div class="mm-col">
-												<div class="mm-col-head">
-													<span class="mm-icon" style="background:#fffbeb;border:1px solid #fde68a;">
-														<i class="fas fa-moon" style="color:#d97706;"></i>
-													</span>
-													<div>
-														<p class="mm-col-title" style="color:#b45309;">Middle East</p>
-														<p class="mm-col-count">3 destinations</p>
-													</div>
-												</div>
-												<div class="mm-divider" style="background:#fcd34d;"></div>
-												<span class="mm-moblabel">Middle East</span>
-												<a class="mm-link" href="dubai.php">Dubai</a>
-												<a class="mm-link" href="oman.php">Oman</a>
-												<a class="mm-link" href="jordan.php">Jordan</a>
-											</div>
-
-											<!-- Asia -->
-											<div class="mm-col">
-												<div class="mm-col-head">
-													<span class="mm-icon" style="background:#eff6ff;border:1px solid #bfdbfe;">
-														<i class="fas fa-torii-gate" style="color:#2563eb;"></i>
-													</span>
-													<div>
-														<p class="mm-col-title" style="color:#1d4ed8;">Asia</p>
-														<p class="mm-col-count">8 destinations</p>
-													</div>
-												</div>
-												<div class="mm-divider" style="background:#93c5fd;"></div>
-												<span class="mm-moblabel">Asia</span>
-												<a class="mm-link" href="thailand.php">Thailand</a>
-												<a class="mm-link" href="singapore.php">Singapore</a>
-												<a class="mm-link" href="philippines.php">Philippines</a>
-												<a class="mm-link" href="maldives.php">Maldives</a>
-												<a class="mm-link" href="china.php">China</a>
-												<a class="mm-link" href="malaysia.php">Malaysia</a>
-												<a class="mm-link" href="india.php">India</a>
-												<a class="mm-link" href="indonesia.php">Indonesia</a>
-											</div>
-
-											<!-- Europe -->
-											<div class="mm-col">
-												<div class="mm-col-head">
-													<span class="mm-icon" style="background:#faf5ff;border:1px solid #e9d5ff;">
-														<i class="fas fa-landmark" style="color:#7c3aed;"></i>
-													</span>
-													<div>
-														<p class="mm-col-title" style="color:#6d28d9;">Europe</p>
-														<p class="mm-col-count">5 destinations</p>
-													</div>
-												</div>
-												<div class="mm-divider" style="background:#c4b5fd;"></div>
-												<span class="mm-moblabel">Europe</span>
-												<a class="mm-link" href="spain.php">Spain</a>
-												<a class="mm-link" href="france.php">France</a>
-												<a class="mm-link" href="italy.php">Italy</a>
-												<a class="mm-link" href="greece.php">Greece</a>
-												<a class="mm-link" href="turkey.php">Turkey</a>
-											</div>
-
-										</div>
-										<!-- Bottom bar -->
-										<div class="mm-botbar">
-											<span class="mm-botbar-note"><i class="fas fa-shield-alt" style="color:#066168;margin-right:6px;"></i>IATA accredited &amp; fully licensed agency</span>
-											<a href="contact.php" class="mm-btn">
-												<i class="fas fa-headset" style="font-size:11px;"></i> Talk to an Expert
-											</a>
-										</div>
-									</div>
-								</div>
+								<ul class="lg:absolute bg-white lg:rounded-xxl block lg:left-0 w-full lg:w-55 lg:opacity-0 lg:invisible lg:translate-y-10 z-10 mt-0 text-left duration-500 lg:group-hover:opacity-100 lg:group-hover:visible lg:group-hover:translate-y-0 max-lg:hidden sub-menu">
+									<li class="relative border-b border-black/5"><a class="block relative text-sm text-primary font-semibold py-3 lg:px-5 duration-500 hover:text-secondary hover:pl-6.25" href="africa.php"><span>Africa</span></a></li>
+									<li class="relative border-b border-black/5"><a class="block relative text-sm text-primary font-semibold py-3 lg:px-5 duration-500 hover:text-secondary hover:pl-6.25" href="middle-east.php"><span>Middle East</span></a></li>
+									<li class="relative border-b border-black/5"><a class="block relative text-sm text-primary font-semibold py-3 lg:px-5 duration-500 hover:text-secondary hover:pl-6.25" href="asia.php"><span>Asia</span></a></li>
+									<li class="relative border-b border-black/5"><a class="block relative text-sm text-primary font-semibold py-3 lg:px-5 duration-500 hover:text-secondary hover:pl-6.25" href="europe.php"><span>Europe</span></a></li>
+								</ul>
 							</li>
 
 							<!-- ══ TOURS MEGA MENU ══ -->
