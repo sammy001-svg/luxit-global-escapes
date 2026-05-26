@@ -383,16 +383,18 @@ const Luxit = (function () {
   };
 
   function handleLightboxPopup() {
-    lc_lightbox(".elem", {
-      wrap_class: "lcl_fade_oc",
-      gallery: true,
-      thumb_attr: "data-lcl-thumb",
+    if (typeof lc_lightbox !== 'undefined') {
+      lc_lightbox(".elem", {
+        wrap_class: "lcl_fade_oc",
+        gallery: true,
+        thumb_attr: "data-lcl-thumb",
 
-      skin: "minimal",
-      radius: 0,
-      padding: 0,
-      border_w: 0,
-    });
+        skin: "minimal",
+        radius: 0,
+        padding: 0,
+        border_w: 0,
+      });
+    }
   }
 
   const handleTouchSpin = () => {
@@ -631,7 +633,7 @@ document.addEventListener("DOMContentLoaded", () => {
    Skips pages that already have header.php with .mm-parent
 ───────────────────────────────────────────────────────────── */
 (function injectMegaMenus() {
-  if (document.querySelector('.mm-parent')) return; // already done (index.php)
+  if (document.querySelector('.mm-destinations-done')) return; // already done
   const navUl = document.querySelector('.navbar-nav');
   if (!navUl) return;
 
@@ -691,7 +693,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.head.appendChild(s);
 
   /* ── Destinations mega-menu HTML ── */
-  const destHTML = `<li class="lg:inline-block block max-lg:border-b max-lg:border-gray-200 relative group mm-parent">
+  const destHTML = `<li class="lg:inline-block block max-lg:border-b max-lg:border-gray-200 relative group mm-parent mm-destinations-done">
     <a class="lg:py-7.5 py-2 2xxl:px-5 lg:px-2 relative lg:inline-block block text-lg font-medium text-black hover:text-secondary" href="destinations.php">
       <span class="inline-block">Destinations</span>
       <i class="fas fa-chevron-right lg:!hidden !block size-7 !leading-7 text-center text-xs bg-black text-black float-end"></i>
