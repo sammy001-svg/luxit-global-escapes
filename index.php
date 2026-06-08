@@ -1721,47 +1721,69 @@ include 'header.php';
 			<!-- ═══════════════════════════════════════════
 			     QUICK BOOKING MODAL
 			     ═══════════════════════════════════════════ -->
+			<style>
+			/* Modal responsive overrides */
+			#qb-overlay{overflow-y:auto;}
+			#qb-panel{max-height:calc(100dvh - 32px);overflow-y:auto;}
+			#qb-header-inner{padding:20px 20px;}
+			#qb-form-wrap{padding:20px 20px;}
+			#qb-form-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px;}
+			#qb-form-grid .qb-full{grid-column:span 1;}
+			#qb-form-grid .qb-half{grid-column:span 1;}
+			#qb-actions{display:flex;flex-direction:column;gap:10px;}
+			#qb-actions button{width:100%;height:50px;}
+			@media(min-width:480px){
+			  #qb-header-inner{padding:24px 32px;}
+			  #qb-form-wrap{padding:28px 32px;}
+			  #qb-form-grid{grid-template-columns:1fr 1fr;gap:12px;}
+			  #qb-form-grid .qb-full{grid-column:span 2;}
+			  #qb-actions{flex-direction:row;}
+			  #qb-actions button{width:auto;flex:1;}
+			}
+			.qb-input{width:100%;height:50px;padding:0 16px;border-radius:12px;border:2px solid #f0f4f4;outline:none;font-size:.9rem;box-sizing:border-box;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;background:#fff;}
+			.qb-input:focus{border-color:#006A72;box-shadow:0 0 0 3px rgba(0,106,114,.1);}
+			</style>
 			<div id="qb-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;">
-				<div id="qb-panel" style="background:#fff;border-radius:24px;width:100%;max-width:520px;overflow:hidden;box-shadow:0 32px 80px rgba(0,106,114,.25);transform:translateY(20px);opacity:0;transition:transform .35s ease,opacity .35s ease;">
+				<div id="qb-panel" style="background:#fff;border-radius:20px;width:100%;max-width:520px;box-shadow:0 32px 80px rgba(0,106,114,.25);transform:translateY(20px);opacity:0;transition:transform .35s ease,opacity .35s ease;">
 					<!-- Panel header -->
-					<div style="background:#006A72;padding:24px 32px;display:flex;align-items:flex-start;justify-content:space-between;">
+					<div id="qb-header-inner" style="background:#006A72;border-radius:20px 20px 0 0;display:flex;align-items:flex-start;justify-content:space-between;">
 						<div>
 							<p style="font-size:.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:5px;">Quick Booking</p>
-							<h3 id="qb-tour-name" style="color:#fff;font-size:1.4rem;font-weight:800;line-height:1.2;max-width:380px;"></h3>
+							<h3 id="qb-tour-name" style="color:#fff;font-size:1.2rem;font-weight:800;line-height:1.2;max-width:340px;"></h3>
 						</div>
-						<button id="qb-close" aria-label="Close" style="color:rgba(255,255,255,.6);background:none;border:none;font-size:1.8rem;line-height:1;cursor:pointer;margin-top:-2px;padding:0 0 0 16px;flex-shrink:0;" onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='rgba(255,255,255,.6)'">&times;</button>
+						<button id="qb-close" aria-label="Close" style="color:rgba(255,255,255,.6);background:rgba(255,255,255,.1);border:none;font-size:1.4rem;line-height:1;cursor:pointer;padding:6px 10px;border-radius:8px;flex-shrink:0;margin-left:12px;transition:background .2s;">×</button>
 					</div>
 					<!-- Form -->
-					<div id="qb-form-wrap" style="padding:28px 32px;">
+					<div id="qb-form-wrap">
 						<form id="qb-form" novalidate autocomplete="off">
 							<input type="hidden" name="tour_name" id="qb-hidden-tour">
 							<input type="hidden" name="type" id="qb-hidden-type" value="book">
-							<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
-								<div style="grid-column:span 2;">
-									<input name="full_name" required type="text" placeholder="Your Full Name *" style="width:100%;height:52px;padding:0 18px;border-radius:14px;border:2px solid #f0f4f4;outline:none;font-size:.9rem;box-sizing:border-box;transition:border-color .2s;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
+							<div id="qb-form-grid">
+								<div class="qb-full">
+									<input name="full_name" required type="text" placeholder="Your Full Name *" class="qb-input" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
 								</div>
-								<div>
-									<input name="email" required type="email" placeholder="Email Address *" style="width:100%;height:52px;padding:0 18px;border-radius:14px;border:2px solid #f0f4f4;outline:none;font-size:.9rem;box-sizing:border-box;transition:border-color .2s;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
+								<div class="qb-half">
+									<input name="email" required type="email" placeholder="Email Address *" class="qb-input" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
 								</div>
-								<div>
-									<input name="phone" type="text" placeholder="Phone Number" style="width:100%;height:52px;padding:0 18px;border-radius:14px;border:2px solid #f0f4f4;outline:none;font-size:.9rem;box-sizing:border-box;transition:border-color .2s;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
+								<div class="qb-half">
+									<input name="phone" type="tel" placeholder="Phone Number" class="qb-input" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
 								</div>
-								<div>
-									<input name="travel_date" type="date" id="qb-date" style="width:100%;height:52px;padding:0 18px;border-radius:14px;border:2px solid #f0f4f4;outline:none;font-size:.9rem;color:#555;box-sizing:border-box;transition:border-color .2s;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
+								<div class="qb-half">
+									<input name="travel_date" type="date" id="qb-date" class="qb-input" style="color:#555;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
 								</div>
-								<div>
-									<input name="travelers" type="number" min="1" max="99" value="1" placeholder="Travelers" style="width:100%;height:52px;padding:0 18px;border-radius:14px;border:2px solid #f0f4f4;outline:none;font-size:.9rem;box-sizing:border-box;transition:border-color .2s;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
+								<div class="qb-half">
+									<input name="travelers" type="number" min="1" max="99" value="1" placeholder="No. of Travelers" class="qb-input" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
 								</div>
-								<div style="grid-column:span 2;">
-									<textarea name="message" rows="3" placeholder="Special requests or questions? (optional)" style="width:100%;padding:14px 18px;border-radius:14px;border:2px solid #f0f4f4;outline:none;font-size:.9rem;resize:none;box-sizing:border-box;transition:border-color .2s;font-family:inherit;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'"></textarea>
+								<div class="qb-full">
+									<textarea name="message" rows="2" placeholder="Special requests? (optional)" class="qb-input" style="height:auto;padding:12px 16px;resize:none;font-family:inherit;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'"></textarea>
 								</div>
 							</div>
 							<p id="qb-error" style="color:#e53e3e;font-size:.82rem;margin-bottom:10px;display:none;"></p>
-							<div style="display:flex;gap:10px;">
-								<button type="submit" data-type="book" id="qb-btn-book" style="flex:1;height:52px;background:#006A72;color:#fff;border:none;border-radius:14px;font-weight:700;font-size:.88rem;cursor:pointer;transition:background .2s;letter-spacing:.03em;">
+							<div id="qb-actions">
+								<button type="submit" data-type="book" id="qb-btn-book" style="background:#006A72;color:#fff;border:none;border-radius:12px;font-weight:700;font-size:.88rem;cursor:pointer;transition:background .2s;letter-spacing:.03em;min-height:50px;">
 									<i class="fa fa-calendar-check" style="margin-right:7px;"></i>Book Now
 								</button>
-								<button type="submit" data-type="enquire" id="qb-btn-enquire" style="flex:1;height:52px;background:#fff;color:#006A72;border:2px solid #006A72;border-radius:14px;font-weight:700;font-size:.88rem;cursor:pointer;transition:background .2s,color .2s;letter-spacing:.03em;" onmouseenter="this.style.background='#006A72';this.style.color='#fff'" onmouseleave="this.style.background='#fff';this.style.color='#006A72'">
+								<button type="submit" data-type="enquire" id="qb-btn-enquire" style="background:#fff;color:#006A72;border:2px solid #006A72;border-radius:12px;font-weight:700;font-size:.88rem;cursor:pointer;transition:background .2s,color .2s;letter-spacing:.03em;min-height:50px;" onmouseenter="this.style.background='#006A72';this.style.color='#fff'" onmouseleave="this.style.background='#fff';this.style.color='#006A72'">
 									<i class="fa fa-envelope" style="margin-right:7px;"></i>Send Enquiry
 								</button>
 							</div>

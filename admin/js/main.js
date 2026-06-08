@@ -1444,34 +1444,50 @@ window.openTourModal = (tourId = null) => {
     };
 
 
-    document.getElementById('tour-form').onsubmit = (e) => {
+    document.getElementById('tour-form').onsubmit = async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
-        
-        const tourData = {
-            id: tour ? tour.id : Date.now(),
-            title: formData.get('title'),
-            image: formData.get('image'),
-            price: parseInt(formData.get('price')),
-            location: formData.get('location'),
-            duration: formData.get('duration'),
-            category: formData.get('category'),
-            status: formData.get('status'),
-            description: formData.get('description'),
-            showOnHome: formData.get('showOnHome') === 'on',
-            homeSection: formData.get('homeSection'),
-            rating: tour ? tour.rating : 5.0
-        };
+        if (tour) formData.append('id', tour.id);
 
-        if (tour) {
-            state.data.tours = state.data.tours.map(t => t.id === tour.id ? tourData : t);
-        } else {
-            state.data.tours.unshift(tourData);
+        const submitBtn = e.target.querySelector('[type="submit"]');
+        const origLabel = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+
+        try {
+            const res  = await fetch('api/save-tour.php', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error || 'Save failed');
+
+            const tourData = {
+                id:          data.id,
+                title:       formData.get('title'),
+                image:       data.image || formData.get('image'),
+                price:       parseInt(formData.get('price')),
+                location:    formData.get('location'),
+                duration:    formData.get('duration'),
+                category:    formData.get('category'),
+                status:      formData.get('status'),
+                description: formData.get('description'),
+                showOnHome:  formData.get('showOnHome') === 'on',
+                homeSection: formData.get('homeSection'),
+                rating:      tour ? tour.rating : 5.0
+            };
+
+            if (tour) {
+                state.data.tours = state.data.tours.map(t => t.id === tour.id ? tourData : t);
+            } else {
+                state.data.tours.unshift(tourData);
+            }
+
+            saveState();
+            renderTours();
+            window.closeModal();
+        } catch (err) {
+            alert('Error saving tour: ' + err.message);
+            submitBtn.disabled = false;
+            submitBtn.textContent = origLabel;
         }
-
-        saveState();
-        renderTours();
-        window.closeModal();
     };
 };
 
@@ -1482,14 +1498,20 @@ window.setTourStatusFilter = (status) => {
 };
 
 window.viewTourPublic = (id) => {
-    alert('This would open the public tour page: ' + id);
+    window.open('../tour-detail.php?id=' + id, '_blank');
 };
 
-window.deleteTour = (id) => {
-    if (confirm('Are you sure you want to delete this tour?')) {
+window.deleteTour = async (id) => {
+    if (!confirm('Are you sure you want to delete this tour? This cannot be undone.')) return;
+    try {
+        const res  = await fetch(`api/delete-tour.php?id=${id}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Delete failed');
         state.data.tours = state.data.tours.filter(t => t.id !== id);
         saveState();
         renderTours();
+    } catch (err) {
+        alert('Error deleting tour: ' + err.message);
     }
 };
 
