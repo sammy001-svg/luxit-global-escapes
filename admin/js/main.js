@@ -25,7 +25,7 @@ window.onerror = function(message, source, lineno, colno, error) {
 // State Management
 let state = {
     currentTab: 'dashboard',
-    version: '4.0',
+    version: '5.0',
     data: (() => {
         try {
             if (!window.MOCK_DATA) {
@@ -34,16 +34,17 @@ let state = {
             }
             // Always start from fresh DB data; only carry over UI-only state from localStorage
             const saved = (() => { try { return JSON.parse(localStorage.getItem('adminData')); } catch(e) { return null; } })();
-            if (!saved || saved.version !== '4.0') {
+            if (!saved || saved.version !== '5.0') {
                 localStorage.removeItem('adminData');
                 return { ...window.MOCK_DATA };
             }
-            // Keep DB sources fresh; only bookings and tours are allowed to be cached briefly
+            // Keep DB sources fresh; only tours are briefly cached for instant re-render after saves
             return {
                 ...window.MOCK_DATA,
                 bookings:    window.MOCK_DATA.bookings,
                 destinations: window.MOCK_DATA.destinations,
                 customers:   window.MOCK_DATA.customers,
+                blogPosts:   window.MOCK_DATA.blogPosts,
                 tours:       Array.isArray(saved.tours) ? saved.tours : window.MOCK_DATA.tours,
             };
         } catch (e) {
@@ -110,12 +111,13 @@ if (addNewBtn) {
         else if (state.currentTab === 'destinations') window.openDestinationModal();
         else if (state.currentTab === 'bookings') window.openBookingModal();
         else if (state.currentTab === 'customers') window.openCustomerModal();
+        else if (state.currentTab === 'blogs') window.openBlogModal();
         else if (state.currentTab === 'finance') {
             if (state.financeTab === 'quotations') window.openQuotationModal();
             else if (state.financeTab === 'invoices') window.openInvoiceModal();
             else if (state.financeTab === 'expenses') window.openExpenseModal();
         }
-        else alert('Please switch to a management tab to add new records.');
+        else showToast('Please switch to a management tab to add new records.', 'info');
     });
 }
 
@@ -128,6 +130,7 @@ const tabs = {
     customers: renderCustomers,
     finance: renderFinance,
     analytics: renderAnalytics,
+    blogs: renderBlogs,
     settings: renderSettings
 };
 
@@ -1097,6 +1100,305 @@ function renderSettings() {
         </div>
     `;
 }
+
+// ── Blog Management ───────────────────────────────────────────────────────────
+
+function renderBlogs() {
+    const blogs = (state.data.blogPosts || []).filter(b =>
+        b.title.toLowerCase().includes(state.searchQuery) ||
+        (b.author || '').toLowerCase().includes(state.searchQuery) ||
+        (b.category || '').toLowerCase().includes(state.searchQuery)
+    );
+
+    const published = (state.data.blogPosts || []).filter(b => b.status === 'Published').length;
+    const drafts    = (state.data.blogPosts || []).filter(b => b.status === 'Draft').length;
+
+    contentArea.innerHTML = `
+        <div class="space-y-8 animate-fade-in pb-12">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold">Blog Posts</h1>
+                    <p class="text-slate-500 mt-1">Create and manage articles that appear on your website</p>
+                </div>
+                <button onclick="window.openBlogModal()" class="bg-primary hover:bg-opacity-90 text-white px-6 py-2 rounded-xl text-sm font-bold transition shadow-lg shadow-primary/20">
+                    <i class="fas fa-pen-nib mr-2"></i> Write New Post
+                </button>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-3 gap-4">
+                <div class="glass-card rounded-2xl p-5 border border-white/5">
+                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Total Posts</p>
+                    <p class="text-3xl font-black text-white">${(state.data.blogPosts || []).length}</p>
+                </div>
+                <div class="glass-card rounded-2xl p-5 border border-white/5">
+                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Published</p>
+                    <p class="text-3xl font-black text-emerald-400">${published}</p>
+                </div>
+                <div class="glass-card rounded-2xl p-5 border border-white/5">
+                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Drafts</p>
+                    <p class="text-3xl font-black text-amber-400">${drafts}</p>
+                </div>
+            </div>
+
+            <!-- Blog Table -->
+            <div class="glass-card rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
+                ${blogs.length > 0 ? `
+                <table class="w-full admin-table text-left border-collapse">
+                    <thead>
+                        <tr class="bg-white/5">
+                            <th class="p-4 text-xs font-bold uppercase text-slate-500">Post</th>
+                            <th class="p-4 text-xs font-bold uppercase text-slate-500">Author</th>
+                            <th class="p-4 text-xs font-bold uppercase text-slate-500">Category</th>
+                            <th class="p-4 text-xs font-bold uppercase text-slate-500">Status</th>
+                            <th class="p-4 text-xs font-bold uppercase text-slate-500">Date</th>
+                            <th class="p-4 text-xs font-bold uppercase text-slate-500 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${blogs.map(b => `
+                        <tr class="border-t border-white/5 hover:bg-white/5 transition group">
+                            <td class="p-4">
+                                <div class="flex items-center gap-3">
+                                    ${b.image ? `<img src="${b.image.startsWith('assets') ? '../' + b.image : b.image}" class="w-12 h-12 rounded-xl object-cover border border-white/10 flex-shrink-0">` : `<div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0"><i class="fas fa-newspaper text-primary text-sm"></i></div>`}
+                                    <div>
+                                        <p class="font-bold text-sm text-white leading-tight line-clamp-2 max-w-xs">${b.title}</p>
+                                        <p class="text-[10px] text-slate-600 mt-0.5 font-mono">${b.slug || ''}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="p-4 text-sm text-slate-400">${b.author || 'Admin'}</td>
+                            <td class="p-4">
+                                <span class="px-2 py-1 rounded-md text-[10px] font-black uppercase bg-primary/10 text-primary">${b.category || 'Travel'}</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="px-2 py-1 rounded-md text-[10px] font-black uppercase ${b.status === 'Published' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-400/10 text-amber-400'}">${b.status}</span>
+                            </td>
+                            <td class="p-4 text-xs text-slate-500">${new Date(b.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}</td>
+                            <td class="p-4 text-right">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <a href="../blog-detail.php?slug=${b.slug}" target="_blank" class="p-2 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition" title="Preview"><i class="fas fa-eye text-xs"></i></a>
+                                    <button onclick="window.openBlogModal(${b.id})" class="p-2 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-lg transition" title="Edit"><i class="fas fa-edit text-xs"></i></button>
+                                    <button onclick="window.deleteBlog(${b.id})" class="p-2 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 rounded-lg transition" title="Delete"><i class="fas fa-trash text-xs"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                ` : `
+                <div class="py-20 text-center">
+                    <i class="fas fa-newspaper text-6xl text-slate-800 mb-6 block"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">No Blog Posts Yet</h3>
+                    <p class="text-slate-500 mb-6">Start writing to engage your audience and drive traffic to your site.</p>
+                    <button onclick="window.openBlogModal()" class="bg-primary text-white px-8 py-3 rounded-2xl font-bold shadow-xl shadow-primary/20 hover:scale-105 transition">Write Your First Post</button>
+                </div>
+                `}
+            </div>
+        </div>
+    `;
+}
+
+window.openBlogModal = (blogId = null) => {
+    const blog = blogId ? (state.data.blogPosts || []).find(b => b.id === blogId) : null;
+
+    modalOverlay.classList.remove('hidden');
+    modalContent.innerHTML = `
+        <form id="blog-form" class="p-8 space-y-6 max-h-[90vh] overflow-y-auto custom-scroll">
+            <div class="flex items-center justify-between sticky top-0 bg-dark-800 z-10 pb-4 border-b border-white/5">
+                <div>
+                    <h2 class="text-2xl font-bold">${blog ? 'Edit Blog Post' : 'Write New Post'}</h2>
+                    <p class="text-slate-500 text-xs mt-1">${blog ? 'Update your article details below' : 'Craft your article and publish when ready'}</p>
+                </div>
+                <button type="button" onclick="window.closeModal()" class="text-slate-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6 text-sm">
+                <!-- Title -->
+                <div class="space-y-2 col-span-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Post Title *</label>
+                    <input type="text" name="title" required value="${blog ? blog.title.replace(/"/g, '&quot;') : ''}"
+                        class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition"
+                        placeholder="e.g. Top 10 Safari Destinations in Africa">
+                </div>
+
+                <!-- Featured Image -->
+                <div class="space-y-2 col-span-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Featured Image</label>
+                    <div id="blog-image-dropzone" class="relative group cursor-pointer border-2 border-dashed border-white/10 rounded-2xl p-4 hover:border-primary/50 transition bg-dark-900/50">
+                        <input type="file" id="blog-image-input" accept="image/*" class="hidden">
+                        <div id="blog-image-preview-placeholder" class="flex flex-col items-center justify-center space-y-2 ${blog && blog.image ? 'hidden' : ''}">
+                            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                <i class="fas fa-cloud-upload-alt text-xl"></i>
+                            </div>
+                            <p class="text-xs font-bold text-slate-400">Click or drag to upload featured image</p>
+                            <p class="text-[10px] text-slate-600">JPG, PNG or WEBP (Max 5MB)</p>
+                        </div>
+                        <div id="blog-image-preview" class="relative ${blog && blog.image ? '' : 'hidden'}">
+                            <img src="${blog && blog.image ? (blog.image.startsWith('assets') ? '../' + blog.image : blog.image) : ''}" id="blog-preview-img" class="w-full h-48 object-cover rounded-xl border border-white/5 shadow-2xl">
+                            <button type="button" id="blog-remove-img" class="absolute top-2 right-2 bg-rose-500 text-white size-8 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                <i class="fas fa-trash-alt text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="hidden" name="image" id="blog-image-hidden" value="${blog ? (blog.image || '') : ''}">
+                </div>
+
+                <!-- Author & Category -->
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Author</label>
+                    <input type="text" name="author" value="${blog ? (blog.author || 'Admin').replace(/"/g, '&quot;') : 'Admin'}"
+                        class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition"
+                        placeholder="Your name">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Category</label>
+                    <select name="category" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition appearance-none">
+                        ${['Travel Tips', 'Culture', 'Planning', 'Photography', 'Adventure', 'Luxury', 'Food & Cuisine', 'News'].map(c => `
+                            <option value="${c}" ${blog && blog.category === c ? 'selected' : ''}>${c}</option>
+                        `).join('')}
+                    </select>
+                </div>
+
+                <!-- Tags & Status -->
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Tags <span class="text-slate-600 normal-case">(comma-separated)</span></label>
+                    <input type="text" name="tags" value="${blog ? (blog.tags || '').replace(/"/g, '&quot;') : ''}"
+                        class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition"
+                        placeholder="safari, kenya, wildlife">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Status</label>
+                    <div class="flex p-1 bg-dark-900 border border-white/10 rounded-xl">
+                        <label class="flex-1 text-center py-2.5 rounded-lg cursor-pointer text-xs font-bold transition ${(!blog || blog.status === 'Published') ? 'bg-emerald-500 text-white' : 'text-slate-500 hover:text-white'}">
+                            <input type="radio" name="status" value="Published" class="hidden" ${(!blog || blog.status === 'Published') ? 'checked' : ''}
+                                onchange="this.parentElement.parentElement.querySelectorAll('label').forEach(l=>{l.classList.remove('bg-emerald-500','bg-slate-700','text-white');l.classList.add('text-slate-500');}); this.parentElement.classList.remove('text-slate-500'); this.parentElement.classList.add('bg-emerald-500','text-white')">
+                            <i class="fas fa-globe mr-1"></i> Published
+                        </label>
+                        <label class="flex-1 text-center py-2.5 rounded-lg cursor-pointer text-xs font-bold transition ${blog && blog.status === 'Draft' ? 'bg-slate-700 text-white' : 'text-slate-500 hover:text-white'}">
+                            <input type="radio" name="status" value="Draft" class="hidden" ${blog && blog.status === 'Draft' ? 'checked' : ''}
+                                onchange="this.parentElement.parentElement.querySelectorAll('label').forEach(l=>{l.classList.remove('bg-emerald-500','bg-slate-700','text-white');l.classList.add('text-slate-500');}); this.parentElement.classList.remove('text-slate-500'); this.parentElement.classList.add('bg-slate-700','text-white')">
+                            <i class="fas fa-file-alt mr-1"></i> Draft
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Excerpt -->
+                <div class="space-y-2 col-span-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Excerpt <span class="text-slate-600 normal-case">(short summary shown in listings)</span></label>
+                    <textarea name="excerpt" rows="2" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition resize-none" placeholder="A brief summary of the post (1-2 sentences)...">${blog ? (blog.excerpt || '') : ''}</textarea>
+                </div>
+
+                <!-- Full Content -->
+                <div class="space-y-2 col-span-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Full Content <span class="text-slate-600 normal-case">(supports basic HTML)</span></label>
+                    <textarea name="content" rows="10" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition font-mono text-xs" placeholder="Write your article here. You can use HTML tags like &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;h2&gt;, etc.">${blog ? (blog.content || '') : ''}</textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-6 border-t border-white/5 sticky bottom-0 bg-dark-800 z-10">
+                <button type="button" onclick="window.closeModal()" class="px-8 py-3 rounded-xl text-slate-500 hover:text-white font-bold transition">Discard</button>
+                <button type="submit" class="bg-primary px-10 py-3 rounded-xl text-white font-bold shadow-xl shadow-primary/20 hover:scale-105 transition">
+                    ${blog ? 'Update Post' : 'Publish Post'}
+                </button>
+            </div>
+        </form>
+    `;
+
+    // Image upload handlers
+    const dropzone   = document.getElementById('blog-image-dropzone');
+    const fileInput  = document.getElementById('blog-image-input');
+    const placeholder = document.getElementById('blog-image-preview-placeholder');
+    const previewDiv  = document.getElementById('blog-image-preview');
+    const previewImg  = document.getElementById('blog-preview-img');
+    const hiddenInput = document.getElementById('blog-image-hidden');
+    const removeBtn   = document.getElementById('blog-remove-img');
+
+    dropzone.onclick = (e) => {
+        if (e.target !== removeBtn && !removeBtn.contains(e.target)) fileInput.click();
+    };
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            previewImg.src = ev.target.result;
+            hiddenInput.value = ev.target.result;
+            placeholder.classList.add('hidden');
+            previewDiv.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    };
+    removeBtn.onclick = (e) => {
+        e.stopPropagation();
+        previewImg.src = '';
+        hiddenInput.value = '';
+        fileInput.value = '';
+        placeholder.classList.remove('hidden');
+        previewDiv.classList.add('hidden');
+    };
+
+    // Form submit
+    document.getElementById('blog-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        if (blog) formData.append('id', blog.id);
+
+        const submitBtn = e.target.querySelector('[type="submit"]');
+        const origLabel = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+
+        try {
+            const res  = await fetch('api/save-blog.php', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error || 'Save failed');
+
+            const blogData = {
+                id:         data.id,
+                title:      formData.get('title'),
+                slug:       data.slug,
+                excerpt:    formData.get('excerpt'),
+                content:    formData.get('content'),
+                image:      data.image || formData.get('image'),
+                author:     formData.get('author'),
+                category:   formData.get('category'),
+                tags:       formData.get('tags'),
+                status:     formData.get('status'),
+                created_at: blog ? blog.created_at : new Date().toISOString(),
+            };
+
+            if (!state.data.blogPosts) state.data.blogPosts = [];
+            if (blog) {
+                state.data.blogPosts = state.data.blogPosts.map(b => b.id === blog.id ? blogData : b);
+            } else {
+                state.data.blogPosts.unshift(blogData);
+            }
+
+            showToast(blog ? 'Post updated successfully' : 'Post published successfully');
+            renderBlogs();
+            window.closeModal();
+        } catch (err) {
+            showToast('Error saving post: ' + err.message, 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = origLabel;
+        }
+    };
+};
+
+window.deleteBlog = async (id) => {
+    if (!confirm('Delete this blog post permanently? This cannot be undone.')) return;
+    try {
+        const res  = await fetch(`api/delete-blog.php?id=${id}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Delete failed');
+        state.data.blogPosts = (state.data.blogPosts || []).filter(b => b.id !== id);
+        showToast('Post deleted');
+        renderBlogs();
+    } catch (err) {
+        showToast('Error deleting post: ' + err.message, 'error');
+    }
+};
 
 // --- Helpers & UI Events ---
 

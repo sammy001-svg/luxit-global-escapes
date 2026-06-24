@@ -68,6 +68,9 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
                 <i class="fas fa-chart-line mr-3"></i> Analytics
             </a>
             <div class="pt-4 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-widest px-4">System</div>
+            <a href="#" class="sidebar-link" data-tab="blogs">
+                <i class="fas fa-newspaper mr-3"></i> Blog Posts
+            </a>
             <a href="#" class="sidebar-link" data-tab="settings">
                 <i class="fas fa-cog mr-3"></i> Settings
             </a>
@@ -196,6 +199,9 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 
     $expenses = safeQuery($pdo, "SELECT * FROM expenses ORDER BY expense_date DESC");
 
+    // Blog Posts
+    $blogPosts = safeQuery($pdo, "SELECT * FROM blog_posts ORDER BY created_at DESC");
+
     // ── Analytics ─────────────────────────────────────────────────────────────
     $totalRevenue       = 0;
     $currentMonthIncome = 0;
@@ -248,12 +254,13 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
             'invoices'   => $invoices,
             'expenses'   => $expenses,
         ],
+        'blogPosts'   => $blogPosts,
     ];
     ?>
     <script>
         window.MOCK_DATA = <?php echo json_encode($mock_data); ?>;
     </script>
-    <script src="js/main.js?v=8"></script>
+    <script src="js/main.js?v=9"></script>
     <script>
         if (!window.MOCK_DATA) {
             document.getElementById('content-area').innerHTML = '<div class="p-8 text-rose-500 font-bold">CRITICAL ERROR: Data could not be loaded from Database. Please check your .env settings.</div>';

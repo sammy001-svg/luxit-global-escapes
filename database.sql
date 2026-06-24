@@ -221,6 +221,35 @@ INSERT INTO `expenses` (`category`, `description`, `amount`, `expense_date`) VAL
 
 -- --------------------------------------------------------
 
+-- Table structure for table `blog_posts`
+CREATE TABLE `blog_posts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL,
+  `excerpt` text DEFAULT NULL,
+  `content` longtext DEFAULT NULL,
+  `image` varchar(255) DEFAULT NULL,
+  `author` varchar(100) DEFAULT 'Admin',
+  `category` varchar(100) DEFAULT 'Travel',
+  `tags` varchar(255) DEFAULT NULL,
+  `status` enum('Published','Draft') DEFAULT 'Draft',
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `slug` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Run this if blog_posts table doesn't exist in your live database:
+-- (Copy the full CREATE TABLE above and run it in phpMyAdmin)
+
+INSERT INTO `blog_posts` (`title`, `slug`, `excerpt`, `content`, `image`, `author`, `category`, `status`) VALUES
+('Resources for Your First Trip to an Overseas Vacation', 'first-trip-overseas-vacation', 'Planning your first international trip can be daunting. Here are key resources to make your journey smooth and memorable.', '<p>Planning your first international trip is one of the most exciting milestones in life. Whether you are heading to the beaches of Bali or the savannahs of Kenya, preparation is key to a seamless experience.</p><p>Start by researching your destination\'s entry requirements, including visa regulations and vaccination recommendations. Booking travel insurance is also strongly advisable for any international journey.</p><p>Pack smart — bring versatile clothing, a first-aid kit, and keep digital and physical copies of important documents like your passport and hotel bookings. Learning a few basic phrases in the local language can also make a huge difference.</p><p>Finally, connect with a reputable travel agency like Luxit Global Escapes to handle the complex logistics so you can focus on enjoying your adventure.</p>', 'assets/images/trv-blog/blog-sm/pic1.jpg', 'Aidan Butler', 'Travel Tips', 'Published'),
+('How to Get Acquainted with Natives in a Strange Land', 'acquainted-with-natives', 'Connecting authentically with local communities enriches your travel experience beyond any guidebook or tourist attraction.', '<p>One of the most rewarding aspects of travel is forming genuine connections with the people who call your destination home. Cultural exchange transforms a good holiday into a life-changing experience.</p><p>Start by showing respect for local customs and traditions. Dress appropriately, learn greetings in the local language, and always ask permission before photographing people or sacred sites.</p><p>Participate in community activities — visit local markets, try street food, or attend a traditional ceremony. These experiences offer authenticity that no resort can replicate.</p><p>Consider staying in locally-owned guesthouses or joining community-led tours. Your money goes directly to the community and you gain genuine insider knowledge about the destination.</p>', 'assets/images/trv-blog/blog-sm/pic2.jpg', 'Ricardo Bell', 'Culture', 'Published'),
+('Step by Step Guide to Planning Your Ideal Holiday', 'planning-ideal-holiday', 'From setting your budget to choosing the perfect destination, this comprehensive guide walks you through every step of planning a dream vacation.', '<p>A perfect holiday does not happen by accident — it is the result of thoughtful planning and smart choices at every stage.</p><p><strong>Step 1: Define Your Goals</strong><br>Ask yourself what kind of experience you want — relaxation, adventure, culture, or a combination. Your answer will narrow down destination choices significantly.</p><p><strong>Step 2: Set a Realistic Budget</strong><br>Factor in flights, accommodation, meals, activities, travel insurance, and a contingency fund of 10-15% of total budget.</p><p><strong>Step 3: Choose Your Destination</strong><br>Research destinations that match your goals and budget. Consider the best time to visit based on weather and local events.</p><p><strong>Step 4: Book Early</strong><br>Flights and accommodation booked 3-6 months in advance typically offer the best rates.</p><p><strong>Step 5: Work with a Travel Expert</strong><br>For complex multi-destination trips or luxury experiences, partnering with a specialist like Luxit Global Escapes ensures every detail is perfectly orchestrated.</p>', 'assets/images/trv-blog/blog-sm/pic3.jpg', 'Poul Ward', 'Planning', 'Published'),
+('The Top Travel Destinations for Photography Enthusiasts', 'top-destinations-photography', 'From golden savannahs to neon-lit city skylines, these destinations offer the most breathtaking backdrops for photographers of every skill level.', '<p>Photography and travel are natural companions. The world is full of extraordinary scenes waiting to be captured — from the sweeping plains of the Serengeti to the ancient temples of Kyoto.</p><p><strong>Kenya — Maasai Mara</strong><br>The Great Migration is arguably the most dramatic wildlife spectacle on earth. Thousands of wildebeest thundering across rivers makes for powerful, once-in-a-lifetime shots.</p><p><strong>Japan — Kyoto in Spring</strong><br>Cherry blossoms (sakura) frame ancient temples and wooden teahouses in soft pink. Golden hour in the Arashiyama bamboo grove is unmissable.</p><p><strong>UAE — Dubai at Night</strong><br>The futuristic skyline of Dubai, with the Burj Khalifa dominating the horizon, offers dramatic cityscapes day and night.</p><p><strong>Indonesia — Bali Rice Terraces</strong><br>The emerald-green terraced fields of Tegallalang, bathed in morning mist, are among the most photographed landscapes in Asia.</p>', 'assets/images/trv-blog/blog-lg/pic1.jpg', 'Joey Peterson', 'Photography', 'Published');
+
+-- --------------------------------------------------------
+
 -- Table structure for table `activity_feed`
 CREATE TABLE `activity_feed` (
   `id` int(11) NOT NULL AUTO_INCREMENT,

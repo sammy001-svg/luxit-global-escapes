@@ -350,16 +350,9 @@
 								</div>
 							</li>
 							<li class="lg:inline-block block max-lg:border-b max-lg:border-gray-200 relative group">
-								<a class="lg:py-7.5 py-2 xl:px-5 lg:px-2 relative lg:inline-block block text-lg font-medium lg:text-white text-black hover:text-secondary" href="javascript:void(0);">
+								<a class="lg:py-7.5 py-2 xl:px-5 lg:px-2 relative lg:inline-block block text-lg font-medium lg:text-white text-black hover:text-secondary" href="blog.php">
 									<span class="inline-block">Blogs</span>
-									<i class="fas fa-chevron-right lg:!hidden !block size-7 !leading-7 text-center text-xs bg-black text-white float-end"></i>
 								</a>
-								<ul class="lg:absolute bg-white lg:rounded-xxl block lg:left-0 w-full lg:w-55 lg:opacity-0 lg:invisible lg:translate-y-10 z-10 mt-0 text-left duration-500 lg:group-hover:opacity-100 lg:group-hover:visible lg:group-hover:translate-y-0 max-lg:hidden sub-menu">
-									<li class="relative border-b border-black/5"><a class="block relative text-sm text-primary font-semibold py-3 lg:px-5 duration-500 hover:text-primary hover:pl-6.25" href="blog-grid.php"><span>Blog Grid</span></a></li>
-									<li class="relative border-b border-black/5"><a class="block relative text-sm text-primary font-semibold py-3 lg:px-5 duration-500 hover:text-primary hover:pl-6.25" href="blog-grid-left.php"><span>Blog Grid Left</span></a></li>
-									<li class="relative border-b border-black/5"><a class="block relative text-sm text-primary font-semibold py-3 lg:px-5 duration-500 hover:text-primary hover:pl-6.25" href="blog-list-left.php"><span>Blog List</span></a></li>
-									<li class="relative border-b border-black/5"><a class="block relative text-sm text-primary font-semibold py-3 lg:px-5 duration-500 hover:text-primary hover:pl-6.25" href="blog-detail.php"><span>Blog Detail</span></a></li>
-								</ul>
 							</li>
 							<li class="lg:inline-block block max-lg:border-b max-lg:border-gray-200 relative group">
 								<a class="lg:py-7.5 py-2 xl:px-5 lg:px-2 relative lg:inline-block block text-lg font-medium lg:text-white text-black hover:text-secondary" href="contact.php">
