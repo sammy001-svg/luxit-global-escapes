@@ -1,3 +1,13 @@
+﻿<?php
+require_once 'includes/db.php';
+try {
+    $stmt = $pdo->prepare("SELECT * FROM tours WHERE status='Active' AND category='Safari' ORDER BY created_at DESC");
+    $stmt->execute();
+    $safariTours = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $safariTours = [];
+}
+?>
 <!DOCTYPE html><html lang="en"><head>
     <!-- Character Encoding -->
 	<meta charset="UTF-8">
@@ -402,95 +412,65 @@
 							</div>
 						</div>
 						<!-- TITLE END-->
+						<?php if (!empty($safariTours)) : ?>
 						<div>
 							<div class="swiper reviewtwo-slider !relative !z-1 !-mt-7.5 xl:!pb-29 !pb-22.5">
 								<div class="swiper-wrapper pt-7.5">
-									<!-- Serengeti -->
-									<div class="swiper-slide">
-										<div class="mx-3.75">
-											<div class="rounded-tl-3xl rounded-tr-3xl overflow-hidden relative">
-												<a href="javascript:void(0);"><img src="assets/about/images/destinations/style1/pic8.jpg" alt="Image" class="xl:h-80 h-64 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
-												<div class="absolute top-7.5 left-0 py-2 px-4 bg-primary text-white font-semibold text-xs rounded-tr-5xl rounded-br-5xl">
-													6 Days , 5 Nights
-												</div>
-												<div class="absolute bottom-0 left-0 right-0 py-3 px-6 bg-caribbeanlight/80 backdrop-blur">
-													<h3 class="text-xl font-medium text-white">Serengeti Great Migration</h3>
-												</div>
-											</div>
-											<div class="bg-white p-6 rounded-bl-3xl rounded-br-3xl shadow-[0px_10px_20px_rgba(0,106,114,0.1)]">
-												<div class="mb-4 flex items-center justify-between">
-													<div>
-														<span class="text-citrusyellow text-2xl font-black block">$350</span>
-														<span class="text-xs block">Per Day</span>
-													</div>
-													<div class="text-citrusyellow text-sm">
-														<i class="fa fa-star"></i> 5.0
-													</div>
-												</div>
-												<p class="text-sm mb-4">Witness the world's most spectacular wildlife event.</p>
-												<a href="javascript:void(0);" class="site-button outline !py-2 !px-4 !text-sm">Book Now</a>
-											</div>
+								<?php foreach ($safariTours as $tour) :
+									$tourImg  = !empty($tour['image']) ? htmlspecialchars($tour['image']) : 'assets/about/images/destinations/style1/pic8.jpg';
+									$tourLink = 'tour-detail.php?id=' . (int)$tour['id'];
+									$duration = !empty($tour['duration']) ? htmlspecialchars($tour['duration']) : '';
+									$price    = !empty($tour['price']) ? '$' . number_format((float)$tour['price']) : '';
+>
+								<div class="swiper-slide">
+									<div class="mx-3.75">
+										<div class="rounded-tl-3xl rounded-tr-3xl overflow-hidden relative">
+										<a href="<?php echo $tourLink; ?>"><img src="<?php echo $tourImg; ?>" alt="<?php echo htmlspecialchars($tour['name']); ?>" class="xl:h-80 h-64 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
+										<?php if ($duration) : ?>
+										<div class="absolute top-7.5 left-0 py-2 px-4 bg-primary text-white font-semibold text-xs rounded-tr-5xl rounded-br-5xl">
+										<?php echo $duration; ?>
+										</div>
+										<?php endif; ?>
+										<div class="absolute bottom-0 left-0 right-0 py-3 px-6 bg-caribbeanlight/80 backdrop-blur">
+										<h3 class="text-xl font-medium text-white"><?php echo htmlspecialchars($tour['name']); ?></h3>
 										</div>
 									</div>
-									<!-- Kruger -->
-									<div class="swiper-slide">
-										<div class="mx-3.75">
-											<div class="rounded-tl-3xl rounded-tr-3xl overflow-hidden relative">
-												<a href="javascript:void(0);"><img src="assets/about/images/destinations/style1/pic7.jpg" alt="Image" class="xl:h-80 h-64 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
-												<div class="absolute top-7.5 left-0 py-2 px-4 bg-primary text-white font-semibold text-xs rounded-tr-5xl rounded-br-5xl">
-													4 Days , 3 Nights
-												</div>
-												<div class="absolute bottom-0 left-0 right-0 py-3 px-6 bg-caribbeanlight/80 backdrop-blur">
-													<h3 class="text-xl font-medium text-white">Kruger National Park Safari</h3>
-												</div>
-											</div>
-											<div class="bg-white p-6 rounded-bl-3xl rounded-br-3xl shadow-[0px_10px_20px_rgba(0,106,114,0.1)]">
-												<div class="mb-4 flex items-center justify-between">
-													<div>
-														<span class="text-citrusyellow text-2xl font-black block">$280</span>
-														<span class="text-xs block">Per Day</span>
-													</div>
-													<div class="text-citrusyellow text-sm">
-														<i class="fa fa-star"></i> 4.9
-													</div>
-												</div>
-												<p class="text-sm mb-4">Unforgettable encounters with South Africa's majestic wildlife.</p>
-												<a href="javascript:void(0);" class="site-button outline !py-2 !px-4 !text-sm">Book Now</a>
-											</div>
+									<div class="bg-white p-6 rounded-bl-3xl rounded-br-3xl shadow-[0px_10px_20px_rgba(0,106,114,0.1)]">
+										<div class="mb-4 flex items-center justify-between">
+										<div>
+										<?php if ($price) : ?>
+										<span class="text-citrusyellow text-2xl font-black block"><?php echo $price; ?></span>
+										<span class="text-xs block">Per Person</span>
+										<?php else : ?>
+										<span class="text-citrusyellow text-2xl font-black block">Contact Us</span>
+										<span class="text-xs block">For Pricing</span>
+										<?php endif; ?>
 										</div>
-									</div>
-									<!-- Masai Mara -->
-									<div class="swiper-slide">
-										<div class="mx-3.75">
-											<div class="rounded-tl-3xl rounded-tr-3xl overflow-hidden relative">
-												<a href="javascript:void(0);"><img src="assets/about/images/destinations/style1/pic2.jpg" alt="Image" class="xl:h-80 h-64 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
-												<div class="absolute top-7.5 left-0 py-2 px-4 bg-primary text-white font-semibold text-xs rounded-tr-5xl rounded-br-5xl">
-													5 Days , 4 Nights
-												</div>
-												<div class="absolute bottom-0 left-0 right-0 py-3 px-6 bg-caribbeanlight/80 backdrop-blur">
-													<h3 class="text-xl font-medium text-white">Masai Mara Wilderness Tour</h3>
-												</div>
-											</div>
-											<div class="bg-white p-6 rounded-bl-3xl rounded-br-3xl shadow-[0px_10px_20px_rgba(0,106,114,0.1)]">
-												<div class="mb-4 flex items-center justify-between">
-													<div>
-														<span class="text-citrusyellow text-2xl font-black block">$320</span>
-														<span class="text-xs block">Per Day</span>
-													</div>
-													<div class="text-citrusyellow text-sm">
-														<i class="fa fa-star"></i> 5.0
-													</div>
-												</div>
-												<p class="text-sm mb-4">Discover the rich biodiversity of Kenya's premier reserve.</p>
-												<a href="javascript:void(0);" class="site-button outline !py-2 !px-4 !text-sm">Book Now</a>
-											</div>
+										<div class="text-citrusyellow text-sm">
+										<i class="fa fa-star"></i> 5.0
 										</div>
+										</div>
+										<?php if (!empty($tour['description'])) : ?>
+										<p class="text-sm mb-4 line-clamp-2"><?php echo htmlspecialchars(substr(strip_tags($tour['description']), 0, 100)); ?></p>
+										<?php endif; ?>
+										<a href="<?php echo $tourLink; ?>" class="site-button outline !py-2 !px-4 !text-sm">Book Now</a>
 									</div>
 								</div>
-								<div class="swiper-button-next"></div>
-								<div class="swiper-button-prev"></div>
+								</div>
+								<?php endforeach; ?>
+								</div>
+							<div class="swiper-button-next"></div>
+							<div class="swiper-button-prev"></div>
 							</div>
-						</div> 
+						</div>
+						<?php else : ?>
+						<div class="text-center py-20">
+							<i class="fas fa-binoculars text-primary text-6xl mb-6 block opacity-30"></i>
+							<h3 class="xl:text-30 text-2xl font-bold text-primary mb-3">No Safari Tours Available</h3>
+							<p class="text-base text-gray-500 mb-8">Our team is curating exciting safari packages. Check back soon!</p>
+							<a href="contact.php" class="site-button butn-bg-shape">Contact Us</a>
+						</div>
+						<?php endif; ?>
 					</div>
 					<div class="absolute -left-28.75 top-2/5 w-57.5 opacity-50 animate-slide-top2"><img src="assets/about/images/hotballon-Left.png" alt="image" width="233" height="333"></div>
 					<div class="absolute -right-13.75 top-2/5 w-27.5 animate-slide-top"><img src="assets/about/images/hotballon-right.png" alt="image" width="110" height="166"></div>

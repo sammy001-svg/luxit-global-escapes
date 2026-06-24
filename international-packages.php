@@ -1,3 +1,11 @@
+<?php
+require_once 'includes/db.php';
+try {
+    $intlTours = $pdo->query("SELECT * FROM tours WHERE status='Active' ORDER BY created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $intlTours = [];
+}
+?>
 <!DOCTYPE html><html lang="en"><head>
     <!-- Character Encoding -->
 	<meta charset="UTF-8">
@@ -403,94 +411,54 @@
 						</div>
 						<!-- TITLE END-->
 						<div>
+							<?php if (!empty($intlTours)) : ?>
 							<div class="swiper reviewtwo-slider !relative !z-1 !-mt-7.5 xl:!pb-29 !pb-22.5">
 								<div class="swiper-wrapper pt-7.5">
-									<!-- Paris -->
+									<?php foreach ($intlTours as $tour) :
+										$tImg  = !empty($tour['image']) ? htmlspecialchars($tour['image']) : 'assets/images/tour/style1/pic1.jpg';
+										$tLink = 'tour-detail.php?id=' . (int)$tour['id'];
+										$tDesc = !empty($tour['description']) ? htmlspecialchars(mb_substr($tour['description'], 0, 90)) : htmlspecialchars($tour['location']);
+									?>
 									<div class="swiper-slide">
 										<div class="mx-3.75">
 											<div class="rounded-tl-3xl rounded-tr-3xl overflow-hidden relative">
-												<a href="javascript:void(0);"><img src="assets/about/images/destinations/style1/pic1.jpg" alt="Image" class="xl:h-80 h-64 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
+												<a href="<?php echo $tLink; ?>"><img src="<?php echo $tImg; ?>" alt="<?php echo htmlspecialchars($tour['title']); ?>" class="xl:h-80 h-64 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
 												<div class="absolute top-7.5 left-0 py-2 px-4 bg-primary text-white font-semibold text-xs rounded-tr-5xl rounded-br-5xl">
-													7 Days , 6 Nights
+													<?php echo htmlspecialchars($tour['duration'] ?? ''); ?>
 												</div>
 												<div class="absolute bottom-0 left-0 right-0 py-3 px-6 bg-caribbeanlight/80 backdrop-blur">
-													<h3 class="text-xl font-medium text-white">Paris City of Lights</h3>
+													<h3 class="text-xl font-medium text-white"><?php echo htmlspecialchars($tour['title']); ?></h3>
 												</div>
 											</div>
 											<div class="bg-white p-6 rounded-bl-3xl rounded-br-3xl shadow-[0px_10px_20px_rgba(0,106,114,0.1)]">
 												<div class="mb-4 flex items-center justify-between">
 													<div>
-														<span class="text-citrusyellow text-2xl font-black block">$250</span>
-														<span class="text-xs block">Per Day</span>
+														<span class="text-citrusyellow text-2xl font-black block">$<?php echo number_format((float)$tour['price'], 0); ?></span>
+														<span class="text-xs block"><?php echo htmlspecialchars($tour['location']); ?></span>
 													</div>
 													<div class="text-citrusyellow text-sm">
-														<i class="fa fa-star"></i> 4.9
+														<i class="fa fa-star"></i> <?php echo number_format((float)($tour['rating'] ?? 4.5), 1); ?>
 													</div>
 												</div>
-												<p class="text-sm mb-4">Romance, art, and iconic architecture in France.</p>
-												<a href="javascript:void(0);" class="site-button outline !py-2 !px-4 !text-sm">Book Now</a>
+												<p class="text-sm mb-4"><?php echo $tDesc; ?></p>
+												<a href="<?php echo $tLink; ?>" class="site-button outline !py-2 !px-4 !text-sm">Book Now</a>
 											</div>
 										</div>
 									</div>
-									<!-- Dubai -->
-									<div class="swiper-slide">
-										<div class="mx-3.75">
-											<div class="rounded-tl-3xl rounded-tr-3xl overflow-hidden relative">
-												<a href="javascript:void(0);"><img src="assets/about/images/destinations/style1/pic3.jpg" alt="Image" class="xl:h-80 h-64 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
-												<div class="absolute top-7.5 left-0 py-2 px-4 bg-primary text-white font-semibold text-xs rounded-tr-5xl rounded-br-5xl">
-													5 Days , 4 Nights
-												</div>
-												<div class="absolute bottom-0 left-0 right-0 py-3 px-6 bg-caribbeanlight/80 backdrop-blur">
-													<h3 class="text-xl font-medium text-white">Dubai Luxury Experience</h3>
-												</div>
-											</div>
-											<div class="bg-white p-6 rounded-bl-3xl rounded-br-3xl shadow-[0px_10px_20px_rgba(0,106,114,0.1)]">
-												<div class="mb-4 flex items-center justify-between">
-													<div>
-														<span class="text-citrusyellow text-2xl font-black block">$300</span>
-														<span class="text-xs block">Per Day</span>
-													</div>
-													<div class="text-citrusyellow text-sm">
-														<i class="fa fa-star"></i> 5.0
-													</div>
-												</div>
-												<p class="text-sm mb-4">Ultra-modern skyscrapers and luxurious desert safaris.</p>
-												<a href="javascript:void(0);" class="site-button outline !py-2 !px-4 !text-sm">Book Now</a>
-											</div>
-										</div>
-									</div>
-									<!-- New York -->
-									<div class="swiper-slide">
-										<div class="mx-3.75">
-											<div class="rounded-tl-3xl rounded-tr-3xl overflow-hidden relative">
-												<a href="javascript:void(0);"><img src="assets/about/images/destinations/style1/pic6.jpg" alt="Image" class="xl:h-80 h-64 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
-												<div class="absolute top-7.5 left-0 py-2 px-4 bg-primary text-white font-semibold text-xs rounded-tr-5xl rounded-br-5xl">
-													6 Days , 5 Nights
-												</div>
-												<div class="absolute bottom-0 left-0 right-0 py-3 px-6 bg-caribbeanlight/80 backdrop-blur">
-													<h3 class="text-xl font-medium text-white">New York City Break</h3>
-												</div>
-											</div>
-											<div class="bg-white p-6 rounded-bl-3xl rounded-br-3xl shadow-[0px_10px_20px_rgba(0,106,114,0.1)]">
-												<div class="mb-4 flex items-center justify-between">
-													<div>
-														<span class="text-citrusyellow text-2xl font-black block">$280</span>
-														<span class="text-xs block">Per Day</span>
-													</div>
-													<div class="text-citrusyellow text-sm">
-														<i class="fa fa-star"></i> 4.8
-													</div>
-												</div>
-												<p class="text-sm mb-4">The city that never sleeps, from Times Square to Central Park.</p>
-												<a href="javascript:void(0);" class="site-button outline !py-2 !px-4 !text-sm">Book Now</a>
-											</div>
-										</div>
-									</div>
+									<?php endforeach; ?>
 								</div>
 								<div class="swiper-button-next"></div>
 								<div class="swiper-button-prev"></div>
 							</div>
-						</div> 
+							<?php else : ?>
+							<div class="text-center py-16">
+								<i class="fas fa-globe text-primary text-6xl mb-5 block opacity-30"></i>
+								<h3 class="text-2xl font-bold text-primary mb-2">International Packages Coming Soon</h3>
+								<p class="text-gray-500 mb-6 max-w-sm mx-auto">We're curating amazing international adventures. Contact us for custom packages.</p>
+								<a href="contact.php" class="site-button butn-bg-shape">Contact Us</a>
+							</div>
+							<?php endif; ?>
+						</div>
 					</div>
 					<div class="absolute -left-28.75 top-2/5 w-57.5 opacity-50 animate-slide-top2"><img src="assets/about/images/hotballon-Left.png" alt="image" width="233" height="333"></div>
 					<div class="absolute -right-13.75 top-2/5 w-27.5 animate-slide-top"><img src="assets/about/images/hotballon-right.png" alt="image" width="110" height="166"></div>
