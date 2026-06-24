@@ -1,0 +1,178 @@
+/* ══════════════════════════════════════════════════════════════
+   Luxit Global Escapes — Site-Wide Responsive Overrides
+   Loaded via header.php so applies to every page.
+   Breakpoints align with Tailwind defaults:
+     sm  ≥ 640px   md  ≥ 768px   lg  ≥ 1024px   xl  ≥ 1280px
+   ══════════════════════════════════════════════════════════════ */
+
+
+/* ── 0. Hard stop on horizontal scroll ───────────────────────
+   overflow-x:clip doesn't create a new stacking context so it
+   cannot break position:sticky (unlike overflow:hidden).         */
+html,
+.page-wraper { overflow-x: clip; }
+
+
+/* ══════════════════════════════════════════════════════════════
+   TOP INFO BAR  (header.php)
+   ══════════════════════════════════════════════════════════════ */
+/* The Tailwind gap-x-48 (192px) is already overridden in the
+   HTML with responsive gap classes, but this is a CSS fallback. */
+@media (max-width: 639px) {
+  .site-topbar-inner { gap: 0.75rem 1rem !important; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   DECORATIVE FLOATING CIRCLES  (all inner pages)
+   All 11 inner-page templates share .trv-we-recommend2-row.
+   Clip overflow so the -right-24 circle can't cause h-scroll
+   between 640 px–767 px (sm–md gap, where max-sm:hidden misses).
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  .trv-we-recommend2-row { overflow-x: clip; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   INNER PAGE BANNER  (about, packages, special-interest pages)
+   ══════════════════════════════════════════════════════════════ */
+/* Airplane decoration — hides at sm to avoid overflow */
+@media (max-width: 767px) {
+  .inr-plane-wrap { display: none !important; }
+}
+
+/* Hot-air balloon right side — its -right-15 / -right-10 can
+   poke off the right edge on narrow screens                      */
+@media (max-width: 479px) {
+  .inr-balloon-right { display: none !important; }
+}
+
+/* Banner height — prevent excessive vertical whitespace on phone */
+@media (max-width: 479px) {
+  .inr-banner-height { height: 18rem !important; min-height: 18rem !important; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   SEARCH BAR  (index.php)
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 479px) {
+  /* On very small phones, ensure outer padding doesn't create scroll */
+  .trv-search-outer { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   POPULAR TOURS CAROUSEL — card body (index.php + package pages)
+   ══════════════════════════════════════════════════════════════ */
+/* Price column is fixed w-20 (80px); title column is
+   w-[calc(100%-90px)]. On very narrow slides this still works
+   because the carousel limits visible width. No fix needed here. */
+
+
+/* ══════════════════════════════════════════════════════════════
+   "WHY CHOOSE US" BLOCK  (index.php)
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 639px) {
+  .why-choose-inner {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+  }
+  /* Phone number headline is intentionally large; scale it down */
+  .why-choose-phone-label {
+    font-size: 2.25rem !important;
+    line-height: 0.9 !important;
+  }
+  .why-choose-phone-number {
+    font-size: 1.5rem !important;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   3-STEP BOOKING SECTION  (index.php)
+   ══════════════════════════════════════════════════════════════ */
+/* Rotated "For Summer!" text overflows right edge on phones */
+@media (max-width: 639px) {
+  .summer-label-rotated { display: none !important; }
+}
+
+/* The step number badges sit at -left-8.5 / -left-12.5; clip parent */
+@media (max-width: 639px) {
+  .step-cards-col { overflow-x: clip; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   POPULAR SEARCH DESTINATION — huge city names  (index.php)
+   ══════════════════════════════════════════════════════════════ */
+/* text-40 in this Tailwind config = very large; scale for phones */
+@media (max-width: 639px) {
+  .pop-search-city { font-size: 2.25rem !important; line-height: 1 !important; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   TESTIMONIAL SECTION  (index.php)
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 479px) {
+  /* Image and text blocks constrained by their max-w classes;
+     make them full-width on tiny phones */
+  .testimonial-img-box { max-width: 100% !important; }
+  .testimonial-txt-box { max-width: 100% !important; margin-right: 0 !important; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   CONTACT PAGE
+   ══════════════════════════════════════════════════════════════ */
+/* Form inputs — overridden from h-20/px-8/text-xl to something
+   comfortable on a phone keyboard                               */
+@media (max-width: 767px) {
+  .cf-input {
+    height: 3.5rem !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+    font-size: 1rem !important;
+  }
+  .cf-textarea {
+    height: 8rem !important;
+    padding: 0.875rem 1.25rem !important;
+    font-size: 1rem !important;
+  }
+  .cf-submit {
+    height: 3.5rem !important;
+    font-size: 1.1rem !important;
+  }
+  .cf-panel { min-height: 0 !important; }
+}
+
+/* Map iframe */
+@media (max-width: 767px)  { .cf-map { height: 300px !important; } }
+@media (min-width: 768px) and (max-width: 1023px) { .cf-map { height: 460px !important; } }
+
+
+/* ══════════════════════════════════════════════════════════════
+   FOOTER
+   ══════════════════════════════════════════════════════════════ */
+/* Newsletter bar: on very narrow phones the subscribe button
+   position:absolute overflows; reflow to stacked layout        */
+@media (max-width: 479px) {
+  .newsletter-bar { height: auto !important; flex-direction: column; gap: 0.5rem; padding: 0.75rem; }
+  .newsletter-bar input  { height: 3rem; }
+  .newsletter-bar button { position: static !important; width: 100%; border-radius: 50px; height: 3rem; }
+}
+
+/* Instagram grid: w-[32%] with gap-2.5 overflows on 360-374px
+   viewports. Force 3 equal columns that always fit.             */
+@media (max-width: 639px) {
+  .footer-insta-grid li { width: calc(33.33% - 7px) !important; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   GENERAL UTILITY — title separator images
+   Already handled by global img{max-width:100%} in style.css,
+   but this ensures centering when the image is narrowed.        */
+.title-sep-img { display: block !important; margin-left: auto !important; margin-right: auto !important; }

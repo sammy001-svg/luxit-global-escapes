@@ -178,7 +178,7 @@ include 'header.php';
 				<!-- Hero Carousel End -->
 				
 				<!-- SEARCH BAR START-->
-				<div class="bg-lightturquoise xl:pt-17.5 pt-12.5 px-5">
+				<div class="trv-search-outer bg-lightturquoise xl:pt-17.5 pt-12.5 px-5">
 					<div class="max-w-250 mx-auto lg:h-25 p-1.75 bg-paleaqua lg:rounded-25xl rounded-2xl">
 						<div class="bg-white lg:rounded-25xl rounded-2xl sm:pt-3 sm:pr-3.25 sm:pb-2.25 sm:pl-10 p-5 h-full">
 							<form>
@@ -891,7 +891,7 @@ include 'header.php';
 										<div class="text-xs leading-3.5 text-primary inline-flex py-1.5 px-2.5 bg-white border border-primary/20 rounded-2lg">
 											<i class="fa-regular fa-flag mr-1"></i>250 Tour 
 										</div>
-										<a href="destinations.php" class="font-display text-40 text-citrusyellow leading-14.5 block hover:text-secondary duration-500">Paris</a>
+										<a href="destinations.php" class="pop-search-city font-display text-40 text-citrusyellow leading-14.5 block hover:text-secondary duration-500">Paris</a>
 									</div>
 								</div>
 								<div class="swiper-slide">
@@ -899,7 +899,7 @@ include 'header.php';
 										<div class="text-xs leading-3.5 text-primary inline-flex py-1.5 px-2.5 bg-white border border-primary/20 rounded-2lg">
 											<i class="fa-regular fa-flag mr-1"></i>65 Tour 
 										</div>
-										<a href="destinations.php" class="font-display text-40 text-primary leading-14.5 block hover:text-secondary duration-500">Thailand</a>
+										<a href="destinations.php" class="pop-search-city font-display text-40 text-primary leading-14.5 block hover:text-secondary duration-500">Thailand</a>
 									</div>
 								</div>
 								<div class="swiper-slide">
@@ -907,7 +907,7 @@ include 'header.php';
 										<div class="text-xs leading-3.5 text-primary inline-flex py-1.5 px-2.5 bg-white border border-primary/20 rounded-2lg">
 											<i class="fa-regular fa-flag mr-1"></i>175 Tour 
 										</div>
-										<a href="destinations.php" class="font-display text-40 text-citrusyellow leading-14.5 block hover:text-secondary duration-500">Bangkok</a>
+										<a href="destinations.php" class="pop-search-city font-display text-40 text-citrusyellow leading-14.5 block hover:text-secondary duration-500">Bangkok</a>
 									</div>
 								</div>
 								<div class="swiper-slide">
@@ -915,7 +915,7 @@ include 'header.php';
 										<div class="text-xs leading-3.5 text-primary inline-flex py-1.5 px-2.5 bg-white border border-primary/20 rounded-2lg">
 											<i class="fa-regular fa-flag mr-1"></i>130 Tour 
 										</div>
-										<a href="destinations.php" class="font-display text-40 text-primary leading-14.5 block hover:text-secondary duration-500">Dubai</a>
+										<a href="destinations.php" class="pop-search-city font-display text-40 text-primary leading-14.5 block hover:text-secondary duration-500">Dubai</a>
 									</div>
 								</div>
 								<div class="swiper-slide">
@@ -923,7 +923,7 @@ include 'header.php';
 										<div class="text-xs leading-3.5 text-primary inline-flex py-1.5 px-2.5 bg-white border border-primary/20 rounded-2lg">
 											<i class="fa-regular fa-flag mr-1"></i>140 Tour 
 										</div>
-										<a href="destinations.php" class="font-display text-40 text-citrusyellow leading-14.5 block hover:text-secondary duration-500">France</a>
+										<a href="destinations.php" class="pop-search-city font-display text-40 text-citrusyellow leading-14.5 block hover:text-secondary duration-500">France</a>
 									</div>
 								</div>
 								<div class="swiper-slide">
@@ -931,7 +931,7 @@ include 'header.php';
 										<div class="text-xs leading-3.5 text-primary inline-flex py-1.5 px-2.5 bg-white border border-primary/20 rounded-2lg">
 											<i class="fa-regular fa-flag mr-1"></i>350 Tour 
 										</div>
-										<a href="destinations.php" class="font-display text-40 text-primary leading-14.5 block hover:text-secondary duration-500">London</a>
+										<a href="destinations.php" class="pop-search-city font-display text-40 text-primary leading-14.5 block hover:text-secondary duration-500">London</a>
 									</div>
 								</div>
 								<div class="swiper-slide">
@@ -939,7 +939,7 @@ include 'header.php';
 										<div class="text-xs leading-3.5 text-primary inline-flex py-1.5 px-2.5 bg-white border border-primary/20 rounded-2lg">
 											<i class="fa-regular fa-flag mr-1"></i>250 Tour 
 										</div>
-										<a href="destinations.php" class="font-display text-40 text-citrusyellow leading-14.5 block hover:text-secondary duration-500">Paris</a>
+										<a href="destinations.php" class="pop-search-city font-display text-40 text-citrusyellow leading-14.5 block hover:text-secondary duration-500">Paris</a>
 									</div>
 								</div>
 								<div class="swiper-slide">
@@ -947,7 +947,7 @@ include 'header.php';
 										<div class="text-xs leading-3.5 text-primary inline-flex py-1.5 px-2.5 bg-white border border-primary/20 rounded-2lg">
 											<i class="fa-regular fa-flag mr-1"></i>65 Tour 
 										</div>
-										<a href="destinations.php" class="font-display text-40 text-primary leading-14.5 block hover:text-secondary duration-500">Thailand</a>
+										<a href="destinations.php" class="pop-search-city font-display text-40 text-primary leading-14.5 block hover:text-secondary duration-500">Thailand</a>
 									</div>
 								</div>
 								<div class="swiper-slide">
@@ -955,7 +955,7 @@ include 'header.php';
 										<div class="text-xs leading-3.5 text-primary inline-flex py-1.5 px-2.5 bg-white border border-primary/20 rounded-2lg">
 											<i class="fa-regular fa-flag mr-1"></i>175 Tour 
 										</div>
-										<a href="destinations.php" class="font-display text-40 text-citrusyellow leading-14.5 block hover:text-secondary duration-500">Bangkok</a>
+										<a href="destinations.php" class="pop-search-city font-display text-40 text-citrusyellow leading-14.5 block hover:text-secondary duration-500">Bangkok</a>
 									</div>
 								</div>
 								<div class="swiper-slide">
@@ -963,7 +963,7 @@ include 'header.php';
 										<div class="text-xs leading-3.5 text-primary inline-flex py-1.5 px-2.5 bg-white border border-primary/20 rounded-2lg">
 											<i class="fa-regular fa-flag mr-1"></i>130 Tour 
 										</div>
-										<a href="destinations.php" class="font-display text-40 text-primary leading-14.5 block hover:text-secondary duration-500">Dubai</a>
+										<a href="destinations.php" class="pop-search-city font-display text-40 text-primary leading-14.5 block hover:text-secondary duration-500">Dubai</a>
 									</div>
 								</div>
 								<div class="swiper-slide">
@@ -971,7 +971,7 @@ include 'header.php';
 										<div class="text-xs leading-3.5 text-primary inline-flex py-1.5 px-2.5 bg-white border border-primary/20 rounded-2lg">
 											<i class="fa-regular fa-flag mr-1"></i>140 Tour 
 										</div>
-										<a href="destinations.php" class="font-display text-40 text-citrusyellow leading-14.5 block hover:text-secondary duration-500">France</a>
+										<a href="destinations.php" class="pop-search-city font-display text-40 text-citrusyellow leading-14.5 block hover:text-secondary duration-500">France</a>
 									</div>
 								</div>
 								<div class="swiper-slide">
@@ -979,7 +979,7 @@ include 'header.php';
 										<div class="text-xs leading-3.5 text-primary inline-flex py-1.5 px-2.5 bg-white border border-primary/20 rounded-2lg">
 											<i class="fa-regular fa-flag mr-1"></i>350 Tour 
 										</div>
-										<a href="destinations.php" class="font-display text-40 text-primary leading-14.5 block hover:text-secondary duration-500">London</a>
+										<a href="destinations.php" class="pop-search-city font-display text-40 text-primary leading-14.5 block hover:text-secondary duration-500">London</a>
 									</div>
 								</div>
 							</div>
@@ -1171,7 +1171,7 @@ include 'header.php';
 														</div>
 													</div>
 												</div>
-												<div class="md:mr-6.25">
+												<div class="step-cards-col md:mr-6.25">
 													<div class="mb-5 bg-white border border-paleaqua p-2.5 sm:pl-12.5 pl-10.5 shadow-[0px_27px_35.9px_rgba(41,137,145,0.2)] rounded-tr-50xl rounded-br-50xl relative sm:ml-12.5 ml-6.5">
 														<div class="flex items-center justify-between">
 															<div class="sm:size-20 size-15 sm:min-w-20 min-w-15 items-center justify-center flex bg-primary rounded-xl font-base sm:text-42 text-36 text-white font-black absolute sm:-left-12.5 -left-8.5 top-1/2 -translate-y-1/2">
@@ -1232,7 +1232,7 @@ include 'header.php';
 											<img src="assets/images/cloud-2.png" alt="Image" class="absolute right-0 top-10 z-3 animate-smooth-up-down2" width="297" height="225" loading="lazy">
 											<div class="2xl:absolute after:absolute after:bottom-[-30%] after:left-1/2 after:-translate-1/2 sm:after:size-125 after:size-80 after:rounded-full after:bg-eggshell after:-z-1">
 												<img src="assets/images/Girl-Image.png" alt="img" class="mr-20 relative z-5" width="440" height="577" loading="lazy">
-												<span class="text-primary font-display sm:text-40 text-36 flex items-baseline absolute 2xl:left-[85%] sm:left-[90%] left-[78%] text-left rotate-[-90deg] origin-[0_0] sm:pl-12.5">For <b class="text-citrusyellow text-98 font-normal leading-[1]">Summer!</b></span>
+												<span class="summer-label-rotated text-primary font-display sm:text-40 text-36 flex items-baseline absolute 2xl:left-[85%] sm:left-[90%] left-[78%] text-left rotate-[-90deg] origin-[0_0] sm:pl-12.5">For <b class="text-citrusyellow text-98 font-normal leading-[1]">Summer!</b></span>
 											</div>
 										</div>
 									</div>
@@ -1240,7 +1240,7 @@ include 'header.php';
 							</div>
 						</div>
 						<div class="overflow-hidden rounded-br-25xl rounded-bl-25xl bg-primary pt-27.5 pb-17.5 bg-[url(../images/w-cho-top.png),url(../images/w-cho-btm.png)] bg-no-repeat [background-position:top_left,bottom_left] flex flex-wrap items-center justify-between">
-							<div class="max-w-122.5 xl:ml-45 ml-10 mb-7.5">
+							<div class="why-choose-inner max-w-122.5 xl:ml-45 sm:ml-10 ml-5 mb-7.5">
 								<h3 class="!font-display !text-40 mb-7.5 !text-white">
 									Why Choose Us!
 								</h3>
@@ -1275,8 +1275,8 @@ include 'header.php';
 									<img src="assets/images/24-Image.png" alt="image" width="147" height="163" loading="lazy">
 								</div>
 								<div>
-									<h3 class="!font-black xl:!text-58 !text-40 !leading-[0.75] mb-2.5 uppercase !text-white !font-base">Call Us</h3>
-									<span class="block font-bold xl:text-38 text-28 leading-[1.2] uppercase text-secondary">+254 737 800900</span>
+									<h3 class="why-choose-phone-label !font-black xl:!text-58 sm:!text-40 !text-3xl !leading-[0.75] mb-2.5 uppercase !text-white !font-base">Call Us</h3>
+									<span class="why-choose-phone-number block font-bold xl:text-38 sm:text-28 text-xl leading-[1.2] uppercase text-secondary">+254 737 800900</span>
 								</div>
 							</div>
 						</div>
@@ -1311,10 +1311,10 @@ include 'header.php';
 										<!--1-->
 										<div class="swiper-slide">
 											<div class="md:flex items-center bg-white">
-												<div class="mb-0 relative lg:max-w-93.75 max-w-62.5 z-1 lg:mr-23.75 md:mr-7.5 max-md:mx-auto max-md:mb-7.5 before:absolute before:size-95 before:rounded-full before:bg-citrusyellow before:opacity-10 before:-right-23.5 before:top-1/2 before:-translate-y-1/2 before:-z-1 after:absolute after:size-82.5 after:rounded-full after:bg-primary after:-right-10.5 after:top-1/2 after:-translate-y-1/2 after:-z-1 max-lg:after:hidden max-lg:before:hidden">
+												<div class="testimonial-img-box mb-0 relative lg:max-w-93.75 max-w-62.5 z-1 lg:mr-23.75 md:mr-7.5 max-md:mx-auto max-md:mb-7.5 before:absolute before:size-95 before:rounded-full before:bg-citrusyellow before:opacity-10 before:-right-23.5 before:top-1/2 before:-translate-y-1/2 before:-z-1 after:absolute after:size-82.5 after:rounded-full after:bg-primary after:-right-10.5 after:top-1/2 after:-translate-y-1/2 after:-z-1 max-lg:after:hidden max-lg:before:hidden">
 													<img src="assets/images/trv-testimonial2/pic1.jpg" alt="Image" class="rounded-3xl" width="375" height="489" loading="lazy">
 												</div>
-												<div class="lg:max-w-122.5 max-w-85 ml-auto max-lg:mr-auto max-md:mx-auto">
+												<div class="testimonial-txt-box lg:max-w-122.5 max-w-85 ml-auto max-lg:mr-auto max-md:mx-auto">
 													<div class="flex items-center justify-between mb-6.25 max-sm:flex-col max-sm:text-center sm:items-start">
 														<div>
 															<h2 class="!font-display lg:!text-36 !text-28 !font-normal text-primary mb-0">Amelia Warner</h2>
@@ -1340,10 +1340,10 @@ include 'header.php';
 										<!--2-->
 										<div class="swiper-slide">
 											<div class="md:flex items-center bg-white">
-												<div class="mb-0 relative lg:max-w-93.75 max-w-62.5 z-1 lg:mr-23.75 md:mr-7.5 max-md:mx-auto max-md:mb-7.5 before:absolute before:size-95 before:rounded-full before:bg-citrusyellow before:opacity-10 before:-right-23.5 before:top-1/2 before:-translate-y-1/2 before:-z-1 after:absolute after:size-82.5 after:rounded-full after:bg-primary after:-right-10.5 after:top-1/2 after:-translate-y-1/2 after:-z-1 max-lg:after:hidden max-lg:before:hidden">
+												<div class="testimonial-img-box mb-0 relative lg:max-w-93.75 max-w-62.5 z-1 lg:mr-23.75 md:mr-7.5 max-md:mx-auto max-md:mb-7.5 before:absolute before:size-95 before:rounded-full before:bg-citrusyellow before:opacity-10 before:-right-23.5 before:top-1/2 before:-translate-y-1/2 before:-z-1 after:absolute after:size-82.5 after:rounded-full after:bg-primary after:-right-10.5 after:top-1/2 after:-translate-y-1/2 after:-z-1 max-lg:after:hidden max-lg:before:hidden">
 													<img src="assets/images/trv-testimonial2/pic2.jpg" alt="Image" class="rounded-3xl" width="375" height="489" loading="lazy">
 												</div>
-												<div class="lg:max-w-122.5 max-w-85 ml-auto max-lg:mr-auto max-md:mx-auto">
+												<div class="testimonial-txt-box lg:max-w-122.5 max-w-85 ml-auto max-lg:mr-auto max-md:mx-auto">
 													<div class="flex items-center justify-between mb-6.25 max-sm:flex-col max-sm:text-center sm:items-start">
 														<div>
 															<h2 class="!font-display lg:!text-36 !text-28 !font-normal text-primary mb-0">Kavin Martin</h2>
@@ -1369,10 +1369,10 @@ include 'header.php';
 										<!--3-->
 										<div class="swiper-slide">
 											<div class="md:flex items-center bg-white">
-												<div class="mb-0 relative lg:max-w-93.75 max-w-62.5 z-1 lg:mr-23.75 md:mr-7.5 max-md:mx-auto max-md:mb-7.5 before:absolute before:size-95 before:rounded-full before:bg-citrusyellow before:opacity-10 before:-right-23.5 before:top-1/2 before:-translate-y-1/2 before:-z-1 after:absolute after:size-82.5 after:rounded-full after:bg-primary after:-right-10.5 after:top-1/2 after:-translate-y-1/2 after:-z-1 max-lg:after:hidden max-lg:before:hidden">
+												<div class="testimonial-img-box mb-0 relative lg:max-w-93.75 max-w-62.5 z-1 lg:mr-23.75 md:mr-7.5 max-md:mx-auto max-md:mb-7.5 before:absolute before:size-95 before:rounded-full before:bg-citrusyellow before:opacity-10 before:-right-23.5 before:top-1/2 before:-translate-y-1/2 before:-z-1 after:absolute after:size-82.5 after:rounded-full after:bg-primary after:-right-10.5 after:top-1/2 after:-translate-y-1/2 after:-z-1 max-lg:after:hidden max-lg:before:hidden">
 													<img src="assets/images/trv-testimonial2/pic3.jpg" alt="Image" class="rounded-3xl" width="375" height="489" loading="lazy">
 												</div>
-												<div class="lg:max-w-122.5 max-w-85 ml-auto max-lg:mr-auto max-md:mx-auto">
+												<div class="testimonial-txt-box lg:max-w-122.5 max-w-85 ml-auto max-lg:mr-auto max-md:mx-auto">
 													<div class="flex items-center justify-between mb-6.25 max-sm:flex-col max-sm:text-center sm:items-start">
 														<div>
 															<h2 class="!font-display lg:!text-36 !text-28 !font-normal text-primary mb-0">Antonio</h2>
@@ -1398,10 +1398,10 @@ include 'header.php';
 									   <!--1-->
 										<div class="swiper-slide">
 											<div class="md:flex items-center bg-white">
-												<div class="mb-0 relative lg:max-w-93.75 max-w-62.5 z-1 lg:mr-23.75 md:mr-7.5 max-md:mx-auto max-md:mb-7.5 before:absolute before:size-95 before:rounded-full before:bg-citrusyellow before:opacity-10 before:-right-23.5 before:top-1/2 before:-translate-y-1/2 before:-z-1 after:absolute after:size-82.5 after:rounded-full after:bg-primary after:-right-10.5 after:top-1/2 after:-translate-y-1/2 after:-z-1 max-lg:after:hidden max-lg:before:hidden">
+												<div class="testimonial-img-box mb-0 relative lg:max-w-93.75 max-w-62.5 z-1 lg:mr-23.75 md:mr-7.5 max-md:mx-auto max-md:mb-7.5 before:absolute before:size-95 before:rounded-full before:bg-citrusyellow before:opacity-10 before:-right-23.5 before:top-1/2 before:-translate-y-1/2 before:-z-1 after:absolute after:size-82.5 after:rounded-full after:bg-primary after:-right-10.5 after:top-1/2 after:-translate-y-1/2 after:-z-1 max-lg:after:hidden max-lg:before:hidden">
 													<img src="assets/images/trv-testimonial2/pic1.jpg" alt="Image" class="rounded-3xl" width="375" height="489" loading="lazy">
 												</div>
-												<div class="lg:max-w-122.5 max-w-85 ml-auto max-lg:mr-auto max-md:mx-auto">
+												<div class="testimonial-txt-box lg:max-w-122.5 max-w-85 ml-auto max-lg:mr-auto max-md:mx-auto">
 													<div class="flex items-center justify-between mb-6.25 max-sm:flex-col max-sm:text-center sm:items-start">
 														<div>
 															<h2 class="!font-display lg:!text-36 !text-28 !font-normal text-primary mb-0">Amelia Warner</h2>
@@ -1427,10 +1427,10 @@ include 'header.php';
 										<!--2-->
 										<div class="swiper-slide">
 											<div class="md:flex items-center bg-white">
-												<div class="mb-0 relative lg:max-w-93.75 max-w-62.5 z-1 lg:mr-23.75 md:mr-7.5 max-md:mx-auto max-md:mb-7.5 before:absolute before:size-95 before:rounded-full before:bg-citrusyellow before:opacity-10 before:-right-23.5 before:top-1/2 before:-translate-y-1/2 before:-z-1 after:absolute after:size-82.5 after:rounded-full after:bg-primary after:-right-10.5 after:top-1/2 after:-translate-y-1/2 after:-z-1 max-lg:after:hidden max-lg:before:hidden">
+												<div class="testimonial-img-box mb-0 relative lg:max-w-93.75 max-w-62.5 z-1 lg:mr-23.75 md:mr-7.5 max-md:mx-auto max-md:mb-7.5 before:absolute before:size-95 before:rounded-full before:bg-citrusyellow before:opacity-10 before:-right-23.5 before:top-1/2 before:-translate-y-1/2 before:-z-1 after:absolute after:size-82.5 after:rounded-full after:bg-primary after:-right-10.5 after:top-1/2 after:-translate-y-1/2 after:-z-1 max-lg:after:hidden max-lg:before:hidden">
 													<img src="assets/images/trv-testimonial2/pic2.jpg" alt="Image" class="rounded-3xl" width="375" height="489" loading="lazy">
 												</div>
-												<div class="lg:max-w-122.5 max-w-85 ml-auto max-lg:mr-auto max-md:mx-auto">
+												<div class="testimonial-txt-box lg:max-w-122.5 max-w-85 ml-auto max-lg:mr-auto max-md:mx-auto">
 													<div class="flex items-center justify-between mb-6.25 max-sm:flex-col max-sm:text-center sm:items-start">
 														<div>
 															<h2 class="!font-display lg:!text-36 !text-28 !font-normal text-primary mb-0">Kavin Martin</h2>
@@ -1456,10 +1456,10 @@ include 'header.php';
 										<!--3-->
 										<div class="swiper-slide">
 											<div class="md:flex items-center bg-white">
-												<div class="mb-0 relative lg:max-w-93.75 max-w-62.5 z-1 lg:mr-23.75 md:mr-7.5 max-md:mx-auto max-md:mb-7.5 before:absolute before:size-95 before:rounded-full before:bg-citrusyellow before:opacity-10 before:-right-23.5 before:top-1/2 before:-translate-y-1/2 before:-z-1 after:absolute after:size-82.5 after:rounded-full after:bg-primary after:-right-10.5 after:top-1/2 after:-translate-y-1/2 after:-z-1 max-lg:after:hidden max-lg:before:hidden">
+												<div class="testimonial-img-box mb-0 relative lg:max-w-93.75 max-w-62.5 z-1 lg:mr-23.75 md:mr-7.5 max-md:mx-auto max-md:mb-7.5 before:absolute before:size-95 before:rounded-full before:bg-citrusyellow before:opacity-10 before:-right-23.5 before:top-1/2 before:-translate-y-1/2 before:-z-1 after:absolute after:size-82.5 after:rounded-full after:bg-primary after:-right-10.5 after:top-1/2 after:-translate-y-1/2 after:-z-1 max-lg:after:hidden max-lg:before:hidden">
 													<img src="assets/images/trv-testimonial2/pic3.jpg" alt="Image" class="rounded-3xl" width="375" height="489" loading="lazy">
 												</div>
-												<div class="lg:max-w-122.5 max-w-85 ml-auto max-lg:mr-auto max-md:mx-auto">
+												<div class="testimonial-txt-box lg:max-w-122.5 max-w-85 ml-auto max-lg:mr-auto max-md:mx-auto">
 													<div class="flex items-center justify-between mb-6.25 max-sm:flex-col max-sm:text-center sm:items-start">
 														<div>
 															<h2 class="!font-display lg:!text-36 !text-28lg:!text-36 !text-28 !font-normal text-primary mb-0">Antonio</h2>
@@ -1486,10 +1486,10 @@ include 'header.php';
 										<!--2-->
 										<div class="swiper-slide">
 											<div class="md:flex items-center bg-white">
-												<div class="mb-0 relative lg:max-w-93.75 max-w-62.5 z-1 lg:mr-23.75 md:mr-7.5 max-md:mx-auto max-md:mb-7.5 before:absolute before:size-95 before:rounded-full before:bg-citrusyellow before:opacity-10 before:-right-23.5 before:top-1/2 before:-translate-y-1/2 before:-z-1 after:absolute after:size-82.5 after:rounded-full after:bg-primary after:-right-10.5 after:top-1/2 after:-translate-y-1/2 after:-z-1 max-lg:after:hidden max-lg:before:hidden">
+												<div class="testimonial-img-box mb-0 relative lg:max-w-93.75 max-w-62.5 z-1 lg:mr-23.75 md:mr-7.5 max-md:mx-auto max-md:mb-7.5 before:absolute before:size-95 before:rounded-full before:bg-citrusyellow before:opacity-10 before:-right-23.5 before:top-1/2 before:-translate-y-1/2 before:-z-1 after:absolute after:size-82.5 after:rounded-full after:bg-primary after:-right-10.5 after:top-1/2 after:-translate-y-1/2 after:-z-1 max-lg:after:hidden max-lg:before:hidden">
 													<img src="assets/images/trv-testimonial2/pic2.jpg" alt="Image" class="rounded-3xl" width="375" height="489" loading="lazy">
 												</div>
-												<div class="lg:max-w-122.5 max-w-85 ml-auto max-lg:mr-auto max-md:mx-auto">
+												<div class="testimonial-txt-box lg:max-w-122.5 max-w-85 ml-auto max-lg:mr-auto max-md:mx-auto">
 													<div class="flex items-center justify-between mb-6.25 max-sm:flex-col max-sm:text-center sm:items-start">
 														<div>
 															<h2 class="!font-display lg:!text-36 !text-28 !font-normal text-primary mb-0">Kavin Martin</h2>
@@ -1515,10 +1515,10 @@ include 'header.php';
 										<!--3-->
 										<div class="swiper-slide">
 											<div class="md:flex items-center bg-white">
-												<div class="mb-0 relative lg:max-w-93.75 max-w-62.5 z-1 lg:mr-23.75 md:mr-7.5 max-md:mx-auto max-md:mb-7.5 before:absolute before:size-95 before:rounded-full before:bg-citrusyellow before:opacity-10 before:-right-23.5 before:top-1/2 before:-translate-y-1/2 before:-z-1 after:absolute after:size-82.5 after:rounded-full after:bg-primary after:-right-10.5 after:top-1/2 after:-translate-y-1/2 after:-z-1 max-lg:after:hidden max-lg:before:hidden">
+												<div class="testimonial-img-box mb-0 relative lg:max-w-93.75 max-w-62.5 z-1 lg:mr-23.75 md:mr-7.5 max-md:mx-auto max-md:mb-7.5 before:absolute before:size-95 before:rounded-full before:bg-citrusyellow before:opacity-10 before:-right-23.5 before:top-1/2 before:-translate-y-1/2 before:-z-1 after:absolute after:size-82.5 after:rounded-full after:bg-primary after:-right-10.5 after:top-1/2 after:-translate-y-1/2 after:-z-1 max-lg:after:hidden max-lg:before:hidden">
 													<img src="assets/images/trv-testimonial2/pic3.jpg" alt="Image" class="rounded-3xl" width="375" height="489" loading="lazy">
 												</div>
-												<div class="lg:max-w-122.5 max-w-85 ml-auto max-lg:mr-auto max-md:mx-auto">
+												<div class="testimonial-txt-box lg:max-w-122.5 max-w-85 ml-auto max-lg:mr-auto max-md:mx-auto">
 													<div class="flex items-center justify-between mb-6.25 max-sm:flex-col max-sm:text-center sm:items-start">
 														<div>
 															<h2 class="!font-display lg:!text-36 !text-28 !font-normal text-primary mb-0">Antonio</h2>

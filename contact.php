@@ -52,6 +52,7 @@
 
 	<!-- style -->
 	<link rel="stylesheet" href="assets/Contact/css/style.css">
+	<link rel="stylesheet" href="assets/css/responsive.css">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Afacad:ital,wght@0,400..700;1,400..700&family=Figtree:ital,wght@0,300..900;1,300..900&family=Kaushan+Script&display=swap" rel="stylesheet">
@@ -269,7 +270,7 @@
 			<div class="page-content">
 				<div class="relative bg-cover bg-center w-full bg-white overflow-hidden" style="background-image: url('assets/Contact/images/background/inr-banner.jpg');">
 						<div class="bg-black/60 absolute left-0 top-0 size-full"></div>
-						<div class="flex w-full lg:h-160 md:h-135 h-100 pb-10 items-baseline mx-auto">
+						<div class="inr-banner-height flex w-full lg:h-160 md:h-135 h-100 pb-10 items-baseline mx-auto">
 							<div class="relative md:mt-60 mt-45 flex items-center justify-center w-full flex-col z-5">
 								<div>
 									<h2 class="lg:text-60 md:text-52 text-28 relative text-white">Contact Us</h2>
@@ -290,11 +291,11 @@
 								<img src="assets/Contact/images/inr-banner-cloud.png" alt="Image" class="h-47.5">
 							</div>
 						</div>
-						<div class="absolute w-1/2 right-0 top-0 bottom-0 z-1">
+						<div class="inr-plane-wrap absolute w-1/2 right-0 top-0 bottom-0 z-1">
 							<div class="mt-60 animate-slide-right"><img src="assets/Contact/images/airplane.png" alt="Image" class="animate-slide-top-fast" width="378" height="146"></div>
 						</div>
 						<div class="absolute right-11.25 bottom-16.25 animate-slide-top2"><img src="assets/Contact/images/hotballon-Left.png" alt="Image" class="md:w-21 w-10" width="84" height="121"></div>
-						<div class="absolute md:-right-15 -right-10 top-41.25 animate-slide-top"><img src="assets/Contact/images/hotballon-right.png" alt="Image" class="md:w-37.5 w-20" width="230" height="333"></div>
+						<div class="inr-balloon-right absolute md:-right-15 -right-10 top-41.25 animate-slide-top"><img src="assets/Contact/images/hotballon-right.png" alt="Image" class="md:w-37.5 w-20" width="230" height="333"></div>
 					</div>
 				<!-- INNER PAGE BANNER END -->
 				
@@ -308,28 +309,28 @@
 								</div>
 							</div>
 							<div class="lg:col-span-6 col-span-12">
-								<div class="bg-paleaqua sm:p-16 p-7 rounded-6xl flex flex-col justify-center gap-y-12" style="min-height: 720px;">
-									<div class="md:mb-0 mb-0">
-										<h2 class="xl:text-64 md:text-52 text-4xl mb-6 font-bold">Get In <span class="text-citrusyellow">Touch</span></h2>
-										<p class="text-xl text-primary/70 max-w-lg leading-relaxed">We are here to help you. Send us a message and we will get back to you as soon as possible.</p>
+								<div class="cf-panel bg-paleaqua sm:p-16 p-7 rounded-6xl flex flex-col justify-center gap-y-8 sm:gap-y-12">
+									<div>
+										<h2 class="xl:text-64 md:text-52 sm:text-4xl text-3xl mb-4 font-bold">Get In <span class="text-citrusyellow">Touch</span></h2>
+										<p class="sm:text-xl text-base text-primary/70 max-w-lg leading-relaxed">We are here to help you. Send us a message and we will get back to you as soon as possible.</p>
 									</div>
 									<form class="dzForm" action="assets/script/contact.php">
 										<div class="dzFormMsg"></div>
-										<div class="grid grid-cols-12 xl:gap-y-8 gap-x-6 gap-y-6">
+										<div class="grid grid-cols-12 xl:gap-y-8 gap-x-6 gap-y-4 sm:gap-y-6">
 											<div class="sm:col-span-6 col-span-12">
-												<input name="dzName" required type="text" class="w-full h-20 px-8 rounded-3xl bg-white border-2 border-primary/5 outline-none focus:border-citrusyellow duration-300 placeholder:text-primary/40 text-xl shadow-sm" placeholder="Your Name" style="font-size: 1.25rem;">
+												<input name="dzName" required type="text" class="cf-input w-full sm:h-20 h-14 sm:px-8 px-5 rounded-3xl bg-white border-2 border-primary/5 outline-none focus:border-citrusyellow duration-300 placeholder:text-primary/40 sm:text-xl text-base shadow-sm" placeholder="Your Name">
 											</div>
 											<div class="sm:col-span-6 col-span-12">
-												<input name="dzEmail" required type="email" class="w-full h-20 px-8 rounded-3xl bg-white border-2 border-primary/5 outline-none focus:border-citrusyellow duration-300 placeholder:text-primary/40 text-xl shadow-sm" placeholder="Email Address" style="font-size: 1.25rem;">
-											</div>
-											<div class="sm:col-span-12 col-span-12">
-												<input name="dzPhoneNumber" required type="text" class="w-full h-20 px-8 rounded-3xl bg-white border-2 border-primary/5 outline-none focus:border-citrusyellow duration-300 placeholder:text-primary/40 text-xl shadow-sm" placeholder="Phone Number" style="font-size: 1.25rem;">
+												<input name="dzEmail" required type="email" class="cf-input w-full sm:h-20 h-14 sm:px-8 px-5 rounded-3xl bg-white border-2 border-primary/5 outline-none focus:border-citrusyellow duration-300 placeholder:text-primary/40 sm:text-xl text-base shadow-sm" placeholder="Email Address">
 											</div>
 											<div class="col-span-12">
-												<textarea name="dzMessage" required class="w-full h-52 p-8 rounded-3xl bg-white border-2 border-primary/5 outline-none focus:border-citrusyellow duration-300 placeholder:text-primary/40 text-xl shadow-sm" placeholder="Your Message" style="font-size: 1.25rem;"></textarea>
+												<input name="dzPhoneNumber" required type="tel" class="cf-input w-full sm:h-20 h-14 sm:px-8 px-5 rounded-3xl bg-white border-2 border-primary/5 outline-none focus:border-citrusyellow duration-300 placeholder:text-primary/40 sm:text-xl text-base shadow-sm" placeholder="Phone Number">
 											</div>
-											<div class="col-span-12 mt-4">
-												<button type="submit" name="submit" class="site-button butn-bg-shape w-full h-20 text-2xl font-bold shadow-lg" style="font-size: 1.5rem; background-color: #a3e635; color: #000;">Send Message</button>
+											<div class="col-span-12">
+												<textarea name="dzMessage" required class="cf-textarea w-full sm:h-52 h-36 sm:p-8 p-4 rounded-3xl bg-white border-2 border-primary/5 outline-none focus:border-citrusyellow duration-300 placeholder:text-primary/40 sm:text-xl text-base shadow-sm" placeholder="Your Message"></textarea>
+											</div>
+											<div class="col-span-12 mt-2">
+												<button type="submit" name="submit" class="cf-submit site-button butn-bg-shape w-full sm:h-20 h-14 sm:text-2xl text-lg font-bold shadow-lg justify-center flex">Send Message</button>
 											</div>
 										</div>
 									</form>
@@ -342,7 +343,7 @@
 				<!-- MAP SECTION START -->
 				<div class="xl:pt-30 pt-12.5 md:pb-30 pb-12.5">
 					<div class="container">
-						<div class="relative rounded-6xl overflow-hidden shadow-xl border-8 border-paleaqua" style="height: 750px;">
+						<div class="cf-map relative rounded-6xl overflow-hidden shadow-xl border-8 border-paleaqua" style="height: clamp(280px, 55vw, 750px);">
 							<iframe 
 								width="100%" 
 								height="100%" 

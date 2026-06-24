@@ -52,6 +52,7 @@
 
 	<!-- style -->
 	<link rel="stylesheet" href="assets/css/style.css">
+	<link rel="stylesheet" href="assets/css/responsive.css">
 	<style>
 	/* ═══════════════════════════════════════
 	   MEGA MENU — Desktop layout & hover
@@ -167,7 +168,7 @@
 <div class="cursor2"></div>
 <div class="page-wraper">
 	<div class="bg-white text-black py-3 block border-b border-black/5 relative" style="z-index: 1001;">
-		<div class="container mx-auto px-8.75 flex flex-wrap justify-center items-center text-[12px] font-medium tracking-wide gap-x-48 gap-y-2">
+		<div class="site-topbar-inner container mx-auto sm:px-8.75 px-4 flex flex-wrap justify-center items-center text-[12px] font-medium tracking-wide md:gap-x-48 sm:gap-x-10 gap-x-4 gap-y-1.5">
 			<div class="flex items-center">
 				<i class="fas fa-map-marker-alt text-secondary mr-2 text-sm"></i>
 				<span>Karen, Nairobi-Kenya</span>
@@ -176,7 +177,7 @@
 				<i class="fas fa-phone-alt text-secondary mr-2 text-sm"></i>
 				<a href="tel:+254737800900" class="hover:text-white transition duration-300">+254 737 800 900</a>
 			</div>
-			<div class="flex items-center">
+			<div class="hidden sm:flex items-center">
 				<i class="fas fa-envelope text-secondary mr-2 text-sm"></i>
 				<a href="mailto:info@luxitglobalescapes.com" class="hover:text-white transition duration-300 lowercase">info@luxitglobalescapes.com</a>
 			</div>

@@ -52,6 +52,7 @@
 
 	<!-- style -->
 	<link rel="stylesheet" href="assets/css/style.css">
+	<link rel="stylesheet" href="assets/css/responsive.css">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Afacad:ital,wght@0,400..700;1,400..700&family=Figtree:ital,wght@0,300..900;1,300..900&family=Kaushan+Script&display=swap" rel="stylesheet">
@@ -271,7 +272,7 @@
 				<!-- INNER PAGE BANNER -->
 				<div class="relative bg-cover bg-center w-full bg-white overflow-hidden" style="background-image: url('assets/images/header-banners/destination-africa.png');">
 						<div class="bg-black/60 absolute left-0 top-0 size-full"></div>
-						<div class="flex w-full lg:h-160 md:h-135 h-100 pb-10 items-baseline mx-auto">
+						<div class="inr-banner-height flex w-full lg:h-160 md:h-135 h-100 pb-10 items-baseline mx-auto">
 							<div class="relative md:mt-60 mt-45 flex items-center justify-center w-full flex-col z-5">
 								<div>
 									<h2 class='lg:text-60 md:text-52 text-28 relative text-white'>Madagascar</h2>
@@ -292,11 +293,11 @@
 								<img src="assets/destination/images/inr-banner-cloud.png" alt="Image" class="h-47.5">
 							</div>
 						</div>
-						<div class="absolute w-1/2 right-0 top-0 bottom-0 z-1">
+						<div class="inr-plane-wrap absolute w-1/2 right-0 top-0 bottom-0 z-1">
 							<div class="mt-60 animate-slide-right"><img src="assets/destination/images/airplane.png" alt="Image" class="animate-slide-top-fast" width="378" height="146"></div>
 						</div>
 						<div class="absolute right-11.25 bottom-16.25 animate-slide-top2"><img src="assets/destination/images/hotballon-Left.png" alt="Image" class="md:w-21 w-10" width="84" height="121"></div>
-						<div class="absolute md:-right-15 -right-10 top-41.25 animate-slide-top"><img src="assets/destination/images/hotballon-right.png" alt="Image" class="md:w-37.5 w-20" width="230" height="333"></div>
+						<div class="inr-balloon-right absolute md:-right-15 -right-10 top-41.25 animate-slide-top"><img src="assets/destination/images/hotballon-right.png" alt="Image" class="md:w-37.5 w-20" width="230" height="333"></div>
 					</div>
 				<!-- INNER PAGE BANNER END -->
 				<!-- MADAGASCAR CONTENT START -->
