@@ -28,9 +28,9 @@ CREATE TABLE `admins` (
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Seed data for `admins` (Password is 'password')
+-- Seed data for `admins`
 INSERT INTO `admins` (`username`, `email`, `password`) VALUES
-('admin', 'admin@luxitglobalescapes.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
+('admin', 'admin@luxitglobalescapes.com', '$2y$10$t6VP2iatksbMDiWFVbThHuOx/IdXG5/vUa2xMgSuhhG8Ll6SHcZgu');
 
 -- --------------------------------------------------------
 
@@ -69,13 +69,20 @@ CREATE TABLE `tours` (
   `price` decimal(10,2) NOT NULL,
   `duration` varchar(100) DEFAULT NULL,
   `rating` decimal(2,1) DEFAULT 4.5,
-  `status` enum('Active', 'Inactive') DEFAULT 'Active',
+  `status` enum('Active', 'Draft', 'Inactive') DEFAULT 'Active',
   `category` varchar(50) DEFAULT NULL,
   `image` varchar(255) DEFAULT NULL,
   `description` text,
+  `show_on_home` tinyint(1) DEFAULT 0,
+  `home_section` varchar(100) DEFAULT NULL,
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Run this if the tours table already exists in your database:
+-- ALTER TABLE `tours` MODIFY `status` enum('Active','Draft','Inactive') DEFAULT 'Active';
+-- ALTER TABLE `tours` ADD COLUMN `show_on_home` tinyint(1) DEFAULT 0;
+-- ALTER TABLE `tours` ADD COLUMN `home_section` varchar(100) DEFAULT NULL;
 
 INSERT INTO `tours` (`title`, `location`, `price`, `duration`, `rating`, `status`, `category`, `image`, `description`) VALUES
 ('Bali Luxury Escape', 'Bali, Indonesia', 472.00, '8 Days / 3 Nights', 4.8, 'Active', 'Luxury', 'assets/images/tour/style1/pic1.jpg', 'Nusa Penida is a stunning island located just southeast of Bali.'),

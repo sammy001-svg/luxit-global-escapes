@@ -25,41 +25,27 @@ window.onerror = function(message, source, lineno, colno, error) {
 // State Management
 let state = {
     currentTab: 'dashboard',
-    version: '3.0',
+    version: '4.0',
     data: (() => {
         try {
-            console.log('Checking for window.MOCK_DATA...');
             if (!window.MOCK_DATA) {
                 console.error('window.MOCK_DATA NOT FOUND!');
                 return { tours: [], destinations: [], bookings: [], customers: [] };
             }
-            
-            const saved = JSON.parse(localStorage.getItem('adminData'));
-            
-            // Version 3.0 Migration: Force new visual data
-            if (!saved || saved.version !== '3.0') {
-                console.log('New state version (v3.0) detected. Refreshing visual assets...');
-                return {
-                    ...window.MOCK_DATA,
-                    bookings: window.MOCK_DATA.bookings,
-                    customers: (saved && saved.customers) ? saved.customers : window.MOCK_DATA.customers
-                };
+            // Always start from fresh DB data; only carry over UI-only state from localStorage
+            const saved = (() => { try { return JSON.parse(localStorage.getItem('adminData')); } catch(e) { return null; } })();
+            if (!saved || saved.version !== '4.0') {
+                localStorage.removeItem('adminData');
+                return { ...window.MOCK_DATA };
             }
-
-            // Comprehensive Deep Merge for existing v3.0 users
-            // Bookings always come fresh from DB (window.MOCK_DATA) to reflect new submissions
-            const merged = {
+            // Keep DB sources fresh; only bookings and tours are allowed to be cached briefly
+            return {
                 ...window.MOCK_DATA,
-                ...saved,
-                analytics: { ...window.MOCK_DATA.analytics, ...(saved.analytics || {}) },
-                tours: Array.isArray(saved.tours) ? saved.tours : window.MOCK_DATA.tours,
-                destinations: Array.isArray(saved.destinations) ? saved.destinations : window.MOCK_DATA.destinations,
-                bookings: window.MOCK_DATA.bookings,
-                customers: Array.isArray(saved.customers) ? saved.customers : window.MOCK_DATA.customers,
-                events: Array.isArray(saved.events) ? saved.events : window.MOCK_DATA.events,
-                activityFeed: Array.isArray(saved.activityFeed) ? saved.activityFeed : window.MOCK_DATA.activityFeed
+                bookings:    window.MOCK_DATA.bookings,
+                destinations: window.MOCK_DATA.destinations,
+                customers:   window.MOCK_DATA.customers,
+                tours:       Array.isArray(saved.tours) ? saved.tours : window.MOCK_DATA.tours,
             };
-            return merged;
         } catch (e) {
             console.error('State initialization failed:', e);
             return window.MOCK_DATA || {};
@@ -86,6 +72,28 @@ window.hardReset = () => {
         location.reload();
     }
 };
+
+// ── Toast Notification System ─────────────────────────────────────────────────
+function showToast(message, type = 'success') {
+    const existing = document.getElementById('admin-toast');
+    if (existing) existing.remove();
+
+    const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+    const colors = { success: 'bg-emerald-500', error: 'bg-rose-500', info: 'bg-primary' };
+
+    const toast = document.createElement('div');
+    toast.id = 'admin-toast';
+    toast.className = `fixed bottom-6 right-6 z-[99999] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-bold text-white ${colors[type] || colors.success} translate-y-0 opacity-100 transition-all duration-300`;
+    toast.innerHTML = `<i class="fas ${icons[type] || icons.success} text-base"></i><span>${message}</span>`;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(1rem)';
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
+}
+window.showToast = showToast;
 
 // Selectors
 const contentArea = document.getElementById('content-area');
@@ -330,7 +338,7 @@ function renderTours() {
                 </div>
                 <div class="flex items-center space-x-4">
                     <div class="flex items-center bg-slate-800/50 p-1 rounded-xl border border-white/5">
-                        ${['All', 'Active', 'Draft'].map(s => `
+                        ${['All', 'Active', 'Draft', 'Inactive'].map(s => `
                             <button onclick="window.setTourStatusFilter('${s}')" 
                                     class="px-4 py-1.5 rounded-lg text-xs font-bold transition ${state.tourStatusFilter === s ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-white'}">
                                 ${s}
@@ -1011,7 +1019,7 @@ function renderInvoices(invoices) {
                             <td class="p-4 text-right">
                                 <div class="flex items-center justify-end space-x-2">
                                     <button onclick="window.location.href='view-invoice.php?id=${i.id}'" class="p-2 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-lg transition" title="View & Download PDF"><i class="fas fa-eye text-xs"></i></button>
-                                    <button class="p-2 hover:bg-emerald-500/10 text-slate-400 hover:text-emerald-500 rounded-lg transition" title="Mark as Paid"><i class="fas fa-check-double text-xs"></i></button>
+                                    ${i.status !== 'Paid' ? `<button onclick="window.markInvoicePaid('${i.id}')" class="p-2 hover:bg-emerald-500/10 text-slate-400 hover:text-emerald-500 rounded-lg transition" title="Mark as Paid"><i class="fas fa-check-double text-xs"></i></button>` : ''}
                                 </div>
                             </td>
                         </tr>
@@ -1376,14 +1384,14 @@ window.openTourModal = (tourId = null) => {
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Home Page Visibility</label>
                     <div class="flex items-center space-x-3 p-3.5 bg-dark-900 border border-white/10 rounded-xl">
                         <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" name="showOnHome" class="sr-only peer" ${tour && tour.showOnHome ? 'checked' : ''} onchange="document.getElementById('home-section-container').classList.toggle('opacity-50', !this.checked); document.getElementById('home-section-container').classList.toggle('pointer-events-none', !this.checked)">
+                            <input type="checkbox" name="showOnHome" class="sr-only peer" ${tour && (tour.show_on_home || tour.showOnHome) ? 'checked' : ''} onchange="document.getElementById('home-section-container').classList.toggle('opacity-50', !this.checked); document.getElementById('home-section-container').classList.toggle('pointer-events-none', !this.checked)">
                             <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                         </label>
                         <span class="text-xs font-bold text-slate-400">Featured on Home</span>
                     </div>
                 </div>
 
-                <div id="home-section-container" class="space-y-2 col-span-2 transition-opacity ${(!tour || !tour.showOnHome) ? 'opacity-50 pointer-events-none' : ''}">
+                <div id="home-section-container" class="space-y-2 col-span-2 transition-opacity ${(!tour || (!tour.show_on_home && !tour.showOnHome)) ? 'opacity-50 pointer-events-none' : ''}">
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Home Page Section</label>
                     <select name="homeSection" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition appearance-none">
                         ${['Explore Popular Tours', 'We Recommend', 'Marketing Carousel', 'Main Header Slider'].map(s => `
@@ -1469,8 +1477,8 @@ window.openTourModal = (tourId = null) => {
                 category:    formData.get('category'),
                 status:      formData.get('status'),
                 description: formData.get('description'),
-                showOnHome:  formData.get('showOnHome') === 'on',
-                homeSection: formData.get('homeSection'),
+                show_on_home: formData.get('showOnHome') === 'on' ? 1 : 0,
+                home_section: formData.get('homeSection'),
                 rating:      tour ? tour.rating : 5.0
             };
 
@@ -1481,10 +1489,11 @@ window.openTourModal = (tourId = null) => {
             }
 
             saveState();
+            showToast(tour ? 'Tour updated successfully' : 'Tour created successfully');
             renderTours();
             window.closeModal();
         } catch (err) {
-            alert('Error saving tour: ' + err.message);
+            showToast('Error saving tour: ' + err.message, 'error');
             submitBtn.disabled = false;
             submitBtn.textContent = origLabel;
         }
@@ -1509,9 +1518,10 @@ window.deleteTour = async (id) => {
         if (!data.success) throw new Error(data.error || 'Delete failed');
         state.data.tours = state.data.tours.filter(t => t.id !== id);
         saveState();
+        showToast('Tour deleted');
         renderTours();
     } catch (err) {
-        alert('Error deleting tour: ' + err.message);
+        showToast('Error deleting tour: ' + err.message, 'error');
     }
 };
 
@@ -1583,49 +1593,32 @@ window.openDestinationModal = (destId = null) => {
             const result = await response.json();
             
             if (result.success) {
-                // Update local state and re-render
-                location.reload(); // Simplest way to sync DB hierarchy for now
+                showToast(dest ? 'Destination updated' : 'Destination added');
+                location.reload();
             } else {
-                alert('Error: ' + result.error);
+                showToast('Error: ' + result.error, 'error');
             }
         } catch (err) {
-            // Fallback for prototype if API not yet ready
-            console.warn('API not found, using local state update');
-            const destData = {
-                id: dest ? dest.id : Date.now(),
-                name: formData.get('name'),
-                parent_id: formData.get('parent_id') || null,
-                region: formData.get('region'),
-                description: formData.get('description'),
-                image: dest ? dest.image : '/img/dest/default.jpg'
-            };
-            if (dest) state.data.destinations = state.data.destinations.map(d => d.id == dest.id ? destData : d);
-            else state.data.destinations.unshift(destData);
-            saveState();
-            renderDestinations();
-            window.closeModal();
+            showToast('Network error while saving destination', 'error');
+            console.error(err);
         }
     };
 };
 
 window.deleteDestination = async (id) => {
-    if (confirm('Are you sure you want to delete this destination? All nested sub-locations will also be deleted.')) {
-        try {
-            const response = await fetch(`api/delete-destination.php?id=${id}`);
-            const result = await response.json();
-            
-            if (result.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + result.error);
-            }
-        } catch (err) {
-            console.error('Delete failed:', err);
-            // Fallback for local state
-            state.data.destinations = state.data.destinations.filter(d => d.id != id);
-            saveState();
-            renderDestinations();
+    if (!confirm('Are you sure you want to delete this destination? All nested sub-locations will also be deleted.')) return;
+    try {
+        const response = await fetch(`api/delete-destination.php?id=${id}`);
+        const result = await response.json();
+        if (result.success) {
+            showToast('Destination deleted');
+            location.reload();
+        } else {
+            showToast('Error: ' + result.error, 'error');
         }
+    } catch (err) {
+        showToast('Network error while deleting destination', 'error');
+        console.error(err);
     }
 };
 
@@ -1633,64 +1626,63 @@ window.closeModal = () => {
     modalOverlay.classList.add('hidden');
 };
 
-window.confirmBooking = (id) => {
-    fetch('/admin/api/update-booking-status.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `id=${encodeURIComponent(id)}&status=Confirmed`
-    })
-    .then(r => r.json())
-    .then(data => {
+window.confirmBooking = async (id) => {
+    try {
+        const res = await fetch('api/update-booking-status.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `id=${encodeURIComponent(id)}&status=Confirmed`
+        });
+        const data = await res.json();
         if (data.success) {
             state.data.bookings = state.data.bookings.map(b =>
-                b.id === id ? { ...b, status: 'Confirmed' } : b
+                b.id == id ? { ...b, status: 'Confirmed' } : b
             );
+            showToast('Booking confirmed successfully');
             renderBookings();
         } else {
-            alert('Failed to confirm booking. Please try again.');
+            showToast(data.error || 'Failed to confirm booking', 'error');
         }
-    })
-    .catch(() => alert('Network error. Please try again.'));
+    } catch (e) { showToast('Network error. Please try again.', 'error'); }
 };
 
-window.cancelBooking = (id) => {
-    fetch('/admin/api/update-booking-status.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `id=${encodeURIComponent(id)}&status=Cancelled`
-    })
-    .then(r => r.json())
-    .then(data => {
+window.cancelBooking = async (id) => {
+    try {
+        const res = await fetch('api/update-booking-status.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `id=${encodeURIComponent(id)}&status=Cancelled`
+        });
+        const data = await res.json();
         if (data.success) {
             state.data.bookings = state.data.bookings.map(b =>
-                b.id === id ? { ...b, status: 'Cancelled' } : b
+                b.id == id ? { ...b, status: 'Cancelled' } : b
             );
+            showToast('Booking cancelled');
             renderBookings();
         } else {
-            alert('Failed to cancel booking. Please try again.');
+            showToast(data.error || 'Failed to cancel booking', 'error');
         }
-    })
-    .catch(() => alert('Network error. Please try again.'));
+    } catch (e) { showToast('Network error. Please try again.', 'error'); }
 };
 
-window.deleteBooking = (id) => {
-    if (confirm('Delete this booking permanently?')) {
-        fetch('/admin/api/delete-booking.php', {
+window.deleteBooking = async (id) => {
+    if (!confirm('Delete this booking permanently?')) return;
+    try {
+        const res = await fetch('api/delete-booking.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `id=${encodeURIComponent(id)}`
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                state.data.bookings = state.data.bookings.filter(b => b.id !== id);
-                renderBookings();
-            } else {
-                alert('Failed to delete booking. Please try again.');
-            }
-        })
-        .catch(() => alert('Network error. Please try again.'));
-    }
+        });
+        const data = await res.json();
+        if (data.success) {
+            state.data.bookings = state.data.bookings.filter(b => b.id != id);
+            showToast('Booking deleted');
+            renderBookings();
+        } else {
+            showToast(data.error || 'Failed to delete booking', 'error');
+        }
+    } catch (e) { showToast('Network error. Please try again.', 'error'); }
 };
 
 window.viewBookingDetails = (id) => {
@@ -1857,46 +1849,32 @@ window.openCustomerModal = (id = null) => {
             const result = await response.json();
             
             if (result.success) {
+                showToast(cust ? 'Client profile updated' : 'New client registered');
                 location.reload();
             } else {
-                alert('Error: ' + result.error);
+                showToast('Error: ' + result.error, 'error');
             }
         } catch (err) {
-            console.error('Save failed:', err);
-            // Local fallback
-            const custData = {
-                id: cust ? cust.id : 'CU-' + Math.floor(1000 + Math.random() * 9000),
-                name: formData.get('name'),
-                email: formData.get('email'),
-                country: formData.get('country'),
-                bookings: cust ? cust.bookings : 0,
-                joined: cust ? cust.joined : new Date().toISOString().split('T')[0]
-            };
-            if (cust) state.data.customers = state.data.customers.map(c => c.id == id ? custData : c);
-            else state.data.customers.unshift(custData);
-            saveState();
-            renderCustomers();
-            window.closeModal();
+            showToast('Network error while saving client', 'error');
+            console.error(err);
         }
     };
 };
 
 window.deleteCustomer = async (id) => {
-    if (confirm('Are you sure you want to delete this client? This will NOT delete their bookings, but they will be unlinked.')) {
-        try {
-            const response = await fetch(`api/delete-customer.php?id=${id}`);
-            const result = await response.json();
-            if (result.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + result.error);
-            }
-        } catch (err) {
-            console.error('Delete failed:', err);
-            state.data.customers = state.data.customers.filter(c => c.id != id);
-            saveState();
-            renderCustomers();
+    if (!confirm('Are you sure you want to delete this client? This will NOT delete their bookings, but they will be unlinked.')) return;
+    try {
+        const response = await fetch(`api/delete-customer.php?id=${id}`);
+        const result = await response.json();
+        if (result.success) {
+            showToast('Client deleted');
+            location.reload();
+        } else {
+            showToast('Error: ' + result.error, 'error');
         }
+    } catch (err) {
+        showToast('Network error while deleting client', 'error');
+        console.error(err);
     }
 };
 
@@ -1976,7 +1954,6 @@ window.openBookingModal = () => {
             const result = await response.json();
             
             if (result.success) {
-                // For prototype, we also update local state to avoid full reload
                 const newBooking = {
                     id: result.booking_id,
                     user: formData.get('user_name'),
@@ -1984,18 +1961,20 @@ window.openBookingModal = () => {
                     tour: formData.get('tour_name'),
                     date: formData.get('booking_date'),
                     amount: parseFloat(formData.get('amount')),
-                    status: formData.get('status')
+                    status: formData.get('status'),
+                    created_at: new Date().toISOString()
                 };
                 state.data.bookings.unshift(newBooking);
                 saveState();
+                showToast('Booking created successfully');
                 renderBookings();
                 window.closeModal();
             } else {
-                alert('Error creating booking: ' + result.error);
+                showToast('Error creating booking: ' + result.error, 'error');
             }
         } catch (error) {
+            showToast('Server error. Please check connection.', 'error');
             console.error('Failed to create booking:', error);
-            alert('Server error. Please check connection.');
         }
     };
 };
@@ -2060,9 +2039,9 @@ window.openQuotationModal = (quoteId = null) => {
         try {
             const res = await fetch('api/save-quotation.php', { method: 'POST', body: formData });
             const data = await res.json();
-            if (data.success) { window.closeModal(); location.reload(); }
-            else { alert(data.message || 'Error saving quotation'); }
-        } catch (err) { console.error(err); alert('Network error while saving'); }
+            if (data.success) { showToast(quoteId ? 'Quotation updated' : 'Quotation created'); window.closeModal(); location.reload(); }
+            else { showToast(data.message || 'Error saving quotation', 'error'); }
+        } catch (err) { console.error(err); showToast('Network error while saving', 'error'); }
     });
 };
 
@@ -2126,9 +2105,9 @@ window.openInvoiceModal = (invoiceId = null) => {
         try {
             const res = await fetch('api/save-invoice.php', { method: 'POST', body: formData });
             const data = await res.json();
-            if (data.success) { window.closeModal(); location.reload(); }
-            else { alert(data.message || 'Error saving invoice'); }
-        } catch (err) { console.error(err); alert('Network error while saving'); }
+            if (data.success) { showToast(invoiceId ? 'Invoice updated' : 'Invoice created'); window.closeModal(); location.reload(); }
+            else { showToast(data.message || 'Error saving invoice', 'error'); }
+        } catch (err) { console.error(err); showToast('Network error while saving', 'error'); }
     });
 };
 
@@ -2187,18 +2166,32 @@ window.openExpenseModal = () => {
         try {
             const res = await fetch('api/save-expense.php', { method: 'POST', body: formData });
             const data = await res.json();
-            if (data.success) { window.closeModal(); location.reload(); }
-            else { alert(data.message || 'Error saving expense'); }
-        } catch (err) { console.error(err); alert('Network error while saving'); }
+            if (data.success) { showToast('Expense recorded'); window.closeModal(); location.reload(); }
+            else { showToast(data.message || 'Error saving expense', 'error'); }
+        } catch (err) { console.error(err); showToast('Network error while saving', 'error'); }
     });
 };
 
 window.deleteExpense = async (id) => {
-    if (confirm('Are you sure you want to delete this expense record?')) {
-        try {
-            const res = await fetch(`api/delete-expense.php?id=${id}`);
-            const data = await res.json();
-            if (data.success) { location.reload(); }
-        } catch (err) { console.error(err); }
-    }
+    if (!confirm('Are you sure you want to delete this expense record?')) return;
+    try {
+        const res = await fetch(`api/delete-expense.php?id=${id}`);
+        const data = await res.json();
+        if (data.success) { showToast('Expense deleted'); location.reload(); }
+        else { showToast(data.error || 'Failed to delete expense', 'error'); }
+    } catch (err) { showToast('Network error', 'error'); console.error(err); }
+};
+
+window.markInvoicePaid = async (id) => {
+    if (!confirm('Mark this invoice as Paid?')) return;
+    try {
+        const res = await fetch('api/update-invoice-status.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `id=${encodeURIComponent(id)}&status=Paid`
+        });
+        const data = await res.json();
+        if (data.success) { showToast('Invoice marked as Paid'); location.reload(); }
+        else { showToast(data.error || 'Failed to update invoice', 'error'); }
+    } catch (err) { showToast('Network error', 'error'); console.error(err); }
 };

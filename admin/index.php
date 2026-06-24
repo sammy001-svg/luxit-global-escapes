@@ -81,10 +81,10 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
         <div class="p-4 border-t border-white/5">
             <div class="flex items-center justify-between p-2 rounded-xl bg-white/5">
                 <div class="flex items-center space-x-3 overflow-hidden">
-                    <div class="w-10 h-10 rounded-full bg-primary flex-shrink-0 flex items-center justify-center font-bold">A</div>
+                    <div class="w-10 h-10 rounded-full bg-primary flex-shrink-0 flex items-center justify-center font-bold text-white"><?php echo strtoupper(substr($_SESSION['admin_username'] ?? 'A', 0, 1)); ?></div>
                     <div class="overflow-hidden">
-                        <p class="text-sm font-medium truncate">Admin User</p>
-                        <p class="text-xs text-slate-500 truncate">admin@luxit.com</p>
+                        <p class="text-sm font-medium truncate"><?php echo htmlspecialchars($_SESSION['admin_username'] ?? 'Admin'); ?></p>
+                        <p class="text-xs text-slate-500 truncate"><?php echo htmlspecialchars($_SESSION['admin_email'] ?? ''); ?></p>
                     </div>
                 </div>
                 <a href="logout.php" class="text-slate-400 hover:text-rose-500 transition ml-2" title="Logout">
@@ -131,7 +131,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     require_once '../includes/db.php';
 
     // Fetch Tours
-    $stmt = $pdo->query("SELECT * FROM tours");
+    $stmt = $pdo->query("SELECT id, title, location, price, duration, rating, status, category, image, description, show_on_home, home_section, created_at FROM tours ORDER BY created_at DESC");
     $tours = $stmt->fetchAll();
 
     // Fetch Destinations
@@ -219,7 +219,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     <script>
         window.MOCK_DATA = <?php echo json_encode($mock_data); ?>;
     </script>
-    <script src="/admin/js/main.js?v=7"></script>
+    <script src="/admin/js/main.js?v=8"></script>
     <script>
         if (!window.MOCK_DATA) {
             document.getElementById('content-area').innerHTML = '<div class="p-8 text-rose-500 font-bold">CRITICAL ERROR: Data could not be loaded from Database. Please check your .env settings.</div>';

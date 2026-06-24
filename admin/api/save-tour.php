@@ -13,10 +13,12 @@ $location    = trim($_POST['location']    ?? '');
 $price       = (float)($_POST['price']    ?? 0);
 $duration    = trim($_POST['duration']    ?? '');
 $category    = trim($_POST['category']    ?? 'Adventure');
-$status      = trim($_POST['status']      ?? 'Active');
+$status      = in_array(trim($_POST['status'] ?? ''), ['Active', 'Draft', 'Inactive']) ? trim($_POST['status']) : 'Active';
 $description = trim($_POST['description'] ?? '');
 $rating      = (float)($_POST['rating']   ?? 5.0);
 $imageRaw    = $_POST['image'] ?? '';
+$showOnHome  = isset($_POST['showOnHome']) && $_POST['showOnHome'] === 'on' ? 1 : 0;
+$homeSection = trim($_POST['homeSection'] ?? '');
 
 if (empty($title) || empty($location) || $price <= 0) {
     echo json_encode(['success' => false, 'error' => 'Title, destination, and price are required.']);
@@ -69,17 +71,17 @@ if (empty($imagePath) && $id) {
 try {
     if ($id) {
         $stmt = $pdo->prepare(
-            "UPDATE tours SET title=?, location=?, price=?, duration=?, category=?, status=?, description=?, rating=?, image=?
+            "UPDATE tours SET title=?, location=?, price=?, duration=?, category=?, status=?, description=?, rating=?, image=?, show_on_home=?, home_section=?
              WHERE id=?"
         );
-        $stmt->execute([$title, $location, $price, $duration, $category, $status, $description, $rating, $imagePath, $id]);
+        $stmt->execute([$title, $location, $price, $duration, $category, $status, $description, $rating, $imagePath, $showOnHome, $homeSection, $id]);
         $newId = $id;
     } else {
         $stmt = $pdo->prepare(
-            "INSERT INTO tours (title, location, price, duration, category, status, description, rating, image)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO tours (title, location, price, duration, category, status, description, rating, image, show_on_home, home_section)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
-        $stmt->execute([$title, $location, $price, $duration, $category, $status, $description, $rating, $imagePath]);
+        $stmt->execute([$title, $location, $price, $duration, $category, $status, $description, $rating, $imagePath, $showOnHome, $homeSection]);
         $newId = (int)$pdo->lastInsertId();
     }
 
