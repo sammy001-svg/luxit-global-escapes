@@ -40,12 +40,16 @@ CREATE TABLE `destinations` (
   `parent_id` int(11) DEFAULT NULL,
   `name` varchar(100) NOT NULL,
   `region` varchar(50) DEFAULT NULL,
+  `description` text DEFAULT NULL,
   `tours_count` int(11) DEFAULT 0,
   `visits` int(11) DEFAULT 0,
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`parent_id`) REFERENCES `destinations`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Run this if the destinations table already exists in your database:
+-- ALTER TABLE `destinations` ADD COLUMN `description` text DEFAULT NULL;
 
 INSERT INTO `destinations` (`id`, `parent_id`, `name`, `region`, `tours_count`, `visits`) VALUES
 (1, NULL, 'Kenya', 'Africa', 12, 1250),

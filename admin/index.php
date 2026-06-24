@@ -130,96 +130,130 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     <?php
     require_once '../includes/db.php';
 
-    // Fetch Tours
-    $stmt = $pdo->query("SELECT id, title, location, price, duration, rating, status, category, image, description, show_on_home, home_section, created_at FROM tours ORDER BY created_at DESC");
-    $tours = $stmt->fetchAll();
+    // Helper: run a query safely; returns [] on any DB error so a missing
+    // table or column never kills the whole page.
+    function safeQuery(PDO $pdo, string $sql): array {
+        try {
+            return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('Admin panel query error: ' . $e->getMessage());
+            return [];
+        }
+    }
 
-    // Fetch Destinations
-    $stmt = $pdo->query("SELECT id, name, region, parent_id, tours_count, visits FROM destinations");
-    $destinations = $stmt->fetchAll();
+    // ── Fetch all data ────────────────────────────────────────────────────────
 
-    // Fetch Bookings
-    $stmt = $pdo->query("SELECT id, user_name as user, email, tour_name as tour, booking_date as date, amount, status, created_at FROM bookings ORDER BY created_at DESC");
-    $bookings = $stmt->fetchAll();
+    // Tours
+    $tours = safeQuery($pdo, "SELECT * FROM tours ORDER BY created_at DESC");
 
-    // Fetch Customers
-    $stmt = $pdo->query("SELECT id, name, email, country, bookings_count as bookings, joined_date as joined FROM customers");
-    $customers = $stmt->fetchAll();
+    // Destinations
+    $destinations = safeQuery($pdo, "SELECT * FROM destinations ORDER BY name ASC");
 
-    // Fetch Events
-    $stmt = $pdo->query("SELECT id, title, event_date as date, type FROM events");
-    $events = $stmt->fetchAll();
+    // Bookings — alias columns the JS expects
+    $bookings = safeQuery($pdo,
+        "SELECT id,
+                user_name   AS user,
+                email,
+                tour_name   AS tour,
+                booking_date AS date,
+                amount,
+                status,
+                created_at
+         FROM bookings ORDER BY created_at DESC");
 
-    // Fetch Activity Feed
-    $stmt = $pdo->query("SELECT id, user, action, target, activity_time as time FROM activity_feed ORDER BY created_at DESC");
-    $activityFeed = $stmt->fetchAll();
+    // Customers — alias columns the JS expects
+    $customers = safeQuery($pdo,
+        "SELECT id,
+                name,
+                email,
+                country,
+                bookings_count AS bookings,
+                joined_date    AS joined
+         FROM customers ORDER BY joined_date DESC");
 
-    // Fetch Finance Data
-    $stmt = $pdo->query("SELECT q.*, c.name as customer_name FROM quotations q JOIN customers c ON q.customer_id = c.id ORDER BY q.created_at DESC");
-    $quotations = $stmt->fetchAll();
+    // Events — alias event_date so JS can use .date
+    $events = safeQuery($pdo,
+        "SELECT id, title, event_date AS date, type
+         FROM events ORDER BY event_date ASC");
 
-    $stmt = $pdo->query("SELECT i.*, c.name as customer_name FROM invoices i JOIN customers c ON i.customer_id = c.id ORDER BY i.created_at DESC");
-    $invoices = $stmt->fetchAll();
+    // Activity Feed — alias activity_time so JS can use .time
+    $activityFeed = safeQuery($pdo,
+        "SELECT id, user, action, target, activity_time AS time
+         FROM activity_feed ORDER BY created_at DESC LIMIT 20");
 
-    $stmt = $pdo->query("SELECT * FROM expenses ORDER BY expense_date DESC");
-    $expenses = $stmt->fetchAll();
+    // Finance — LEFT JOINs so rows without a matching customer still appear
+    $quotations = safeQuery($pdo,
+        "SELECT q.*, COALESCE(c.name, 'Unknown') AS customer_name
+         FROM quotations q
+         LEFT JOIN customers c ON q.customer_id = c.id
+         ORDER BY q.created_at DESC");
 
-    // Calculate Analytics
-    $totalRevenue = 0;
+    $invoices = safeQuery($pdo,
+        "SELECT i.*, COALESCE(c.name, 'Unknown') AS customer_name
+         FROM invoices i
+         LEFT JOIN customers c ON i.customer_id = c.id
+         ORDER BY i.created_at DESC");
+
+    $expenses = safeQuery($pdo, "SELECT * FROM expenses ORDER BY expense_date DESC");
+
+    // ── Analytics ─────────────────────────────────────────────────────────────
+    $totalRevenue       = 0;
     $currentMonthIncome = 0;
-    $newBookingsToday = 0;
-    $today = date('Y-m-d');
-    $currentMonth = date('Y-m');
+    $newBookingsToday   = 0;
+    $today              = date('Y-m-d');
+    $currentMonth       = date('Y-m');
 
     foreach ($bookings as $b) {
         if ($b['status'] === 'Confirmed') {
             $totalRevenue += $b['amount'];
-            if (isset($b['date']) && strpos($b['date'], $currentMonth) === 0) {
+            if (strpos((string)$b['date'], $currentMonth) === 0) {
                 $currentMonthIncome += $b['amount'];
             }
         }
-        if (isset($b['created_at']) && strpos($b['created_at'], $today) === 0) {
+        if (strpos((string)($b['created_at'] ?? ''), $today) === 0) {
             $newBookingsToday++;
         }
     }
 
-    // Popular Tours with Revenue
-    $stmt = $pdo->query("SELECT tour_name as name, COUNT(*) as bookings, SUM(amount) as revenue FROM bookings GROUP BY tour_name ORDER BY bookings DESC LIMIT 5");
-    $popularTours = $stmt->fetchAll();
+    $popularTours = safeQuery($pdo,
+        "SELECT tour_name as name, COUNT(*) as bookings, SUM(amount) as revenue
+         FROM bookings GROUP BY tour_name ORDER BY bookings DESC LIMIT 5");
 
-    // Monthly Stats (Last 6 months)
-    $stmt = $pdo->query("SELECT DATE_FORMAT(booking_date, '%b') as month, SUM(amount) as revenue FROM bookings WHERE status = 'Confirmed' GROUP BY month, DATE_FORMAT(booking_date, '%m') ORDER BY DATE_FORMAT(booking_date, '%m') ASC LIMIT 6");
-    $monthlyStats = $stmt->fetchAll();
+    $monthlyStats = safeQuery($pdo,
+        "SELECT DATE_FORMAT(booking_date, '%b') as month, SUM(amount) as revenue
+         FROM bookings WHERE status = 'Confirmed'
+         GROUP BY month, DATE_FORMAT(booking_date, '%m')
+         ORDER BY DATE_FORMAT(booking_date, '%m') ASC LIMIT 6");
 
     $analytics = [
-        'totalRevenue' => $totalRevenue,
-        'currentMonthIncome' => $currentMonthIncome,
-        'totalBookings' => count($bookings),
-        'newBookingsToday' => $newBookingsToday,
-        'activeTours' => count(array_filter($tours, fn($t) => $t['status'] === 'Active')),
-        'popularTours' => $popularTours,
-        'monthlyStats' => $monthlyStats
+        'totalRevenue'       => (float)$totalRevenue,
+        'currentMonthIncome' => (float)$currentMonthIncome,
+        'totalBookings'      => count($bookings),
+        'newBookingsToday'   => $newBookingsToday,
+        'activeTours'        => count(array_filter($tours, fn($t) => $t['status'] === 'Active')),
+        'popularTours'       => $popularTours,
+        'monthlyStats'       => $monthlyStats,
     ];
 
     $mock_data = [
-        'tours' => $tours,
-        'destinations' => $destinations,
-        'bookings' => $bookings,
-        'customers' => $customers,
-        'analytics' => $analytics,
-        'events' => $events,
-        'activityFeed' => $activityFeed,
-        'finance' => [
+        'tours'       => $tours,
+        'destinations'=> $destinations,
+        'bookings'    => $bookings,
+        'customers'   => $customers,
+        'analytics'   => $analytics,
+        'events'      => $events,
+        'activityFeed'=> $activityFeed,
+        'finance'     => [
             'quotations' => $quotations,
-            'invoices' => $invoices,
-            'expenses' => $expenses
-        ]
+            'invoices'   => $invoices,
+            'expenses'   => $expenses,
+        ],
     ];
     ?>
     <script>
         window.MOCK_DATA = <?php echo json_encode($mock_data); ?>;
     </script>
-    <script src="/admin/js/main.js?v=8"></script>
+    <script src="js/main.js?v=8"></script>
     <script>
         if (!window.MOCK_DATA) {
             document.getElementById('content-area').innerHTML = '<div class="p-8 text-rose-500 font-bold">CRITICAL ERROR: Data could not be loaded from Database. Please check your .env settings.</div>';
