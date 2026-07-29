@@ -14,8 +14,16 @@ if (!$id) {
 }
 
 try {
+    // Capture the label before the row goes away so the activity log reads as
+    // a description rather than a bare id.
+    $label = $pdo->prepare("SELECT `description` FROM expenses WHERE id = ?");
+    $label->execute([$id]);
+    $name = (string)($label->fetchColumn() ?: ("#" . $id));
+
     $stmt = $pdo->prepare("DELETE FROM expenses WHERE id = ?");
     $stmt->execute([$id]);
+
+    logActivity($pdo, 'deleted an expense', $name);
     echo json_encode(['success' => true]);
 } catch (PDOException $e) {
     adminJsonDbError($e, 'delete-expense');
