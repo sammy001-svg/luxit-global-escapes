@@ -94,6 +94,77 @@ if (!empty($created)) {
     }
 }
 
+// ── Column migrations ────────────────────────────────────────────────────────
+// Columns added to existing tables after the initial release. Each is applied
+// only if absent, so this is safe to run repeatedly.
+$columnMigrations = [
+    ['tours', 'show_on_home',  "tinyint(1) DEFAULT 0"],
+    ['tours', 'home_section',  "varchar(100) DEFAULT NULL"],
+    ['tours', 'package_pages', "varchar(100) DEFAULT NULL"],
+    ['tours', 'promo_badge',   "varchar(100) DEFAULT NULL"],
+    ['tours', 'promo_style',   "varchar(20) DEFAULT 'primary'"],
+    ['tours', 'promo_tagline', "varchar(255) DEFAULT NULL"],
+];
+
+echo "\nChecking for missing columns...\n";
+$addedColumns = [];
+
+foreach ($columnMigrations as [$table, $column, $definition]) {
+    try {
+        $exists = $pdo->prepare(
+            "SELECT COUNT(*) FROM information_schema.columns
+             WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?"
+        );
+        $exists->execute([$table, $column]);
+        if ((int)$exists->fetchColumn() > 0) continue;
+
+        $pdo->exec("ALTER TABLE `$table` ADD COLUMN `$column` $definition");
+        $addedColumns[] = "$table.$column";
+        echo "  ADDED $table.$column\n";
+    } catch (PDOException $e) {
+        echo "  FAILED $table.$column — " . $e->getMessage() . "\n";
+    }
+}
+if (empty($addedColumns)) echo "  (all columns present)\n";
+
+// ── Backfill package_pages ───────────────────────────────────────────────────
+// Existing tours have no page assignment. Without a backfill every package
+// page would render empty after this migration, so reproduce the old implicit
+// routing once: Safari by category, Local by location keyword, else International.
+try {
+    $unassigned = $pdo->query(
+        "SELECT id, location, category FROM tours WHERE package_pages IS NULL OR package_pages = ''"
+    )->fetchAll(PDO::FETCH_ASSOC);
+
+    if (!empty($unassigned)) {
+        echo "\nBackfilling package_pages for " . count($unassigned) . " existing tours...\n";
+
+        $localKeywords = ['Kenya','Tanzania','Uganda','Rwanda','Mombasa','Seychelles','Zanzibar',
+                          'Madagascar','Zambia','Zimbabwe','Namibia','Botswana','Africa',
+                          'South Africa','Morocco','Egypt','Safari','Nairobi'];
+
+        $update = $pdo->prepare("UPDATE tours SET package_pages = ? WHERE id = ?");
+
+        foreach ($unassigned as $t) {
+            $pages = [];
+            if (strcasecmp((string)$t['category'], 'Safari') === 0) $pages[] = 'Safari';
+
+            foreach ($localKeywords as $kw) {
+                if (stripos((string)$t['location'], $kw) !== false) { $pages[] = 'Local'; break; }
+            }
+
+            // Anything not clearly local/safari kept its old home on the
+            // international page, which listed every active tour.
+            if (empty($pages)) $pages[] = 'International';
+
+            $update->execute([implode(',', array_unique($pages)), $t['id']]);
+            echo "  #{$t['id']} {$t['location']} -> " . implode(', ', array_unique($pages)) . "\n";
+        }
+    }
+} catch (PDOException $e) {
+    echo "  Backfill skipped — " . $e->getMessage() . "\n";
+}
+
 // ── Summary ──────────────────────────────────────────────────────────────────
 echo "\n" . str_repeat('=', 60) . "\n";
 echo "Created:   " . (empty($created) ? '(nothing — schema already current)' : implode(', ', $created)) . "\n";

@@ -1,10 +1,9 @@
 <?php
 require_once 'includes/db.php';
-try {
-    $intlTours = $pdo->query("SELECT * FROM tours WHERE status='Active' ORDER BY created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $intlTours = [];
-}
+require_once 'includes/packages.php';
+
+// Packages the admin has assigned to the International page.
+$intlTours = getPackagesForPage($pdo, 'International');
 ?>
 <!DOCTYPE html><html lang="en"><head>
     <!-- Character Encoding -->

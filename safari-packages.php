@@ -1,12 +1,9 @@
 ﻿<?php
 require_once 'includes/db.php';
-try {
-    $stmt = $pdo->prepare("SELECT * FROM tours WHERE status='Active' AND category='Safari' ORDER BY created_at DESC");
-    $stmt->execute();
-    $safariTours = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $safariTours = [];
-}
+require_once 'includes/packages.php';
+
+// Packages the admin has assigned to the Safari page.
+$safariTours = getPackagesForPage($pdo, 'Safari');
 ?>
 <!DOCTYPE html><html lang="en"><head>
     <!-- Character Encoding -->
@@ -421,18 +418,18 @@ try {
 									$tourLink = 'tour-detail.php?id=' . (int)$tour['id'];
 									$duration = !empty($tour['duration']) ? htmlspecialchars($tour['duration']) : '';
 									$price    = !empty($tour['price']) ? '$' . number_format((float)$tour['price']) : '';
->
+								?>
 								<div class="swiper-slide">
 									<div class="mx-3.75">
 										<div class="rounded-tl-3xl rounded-tr-3xl overflow-hidden relative">
-										<a href="<?php echo $tourLink; ?>"><img src="<?php echo $tourImg; ?>" alt="<?php echo htmlspecialchars($tour['name']); ?>" class="xl:h-80 h-64 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
+										<a href="<?php echo $tourLink; ?>"><img src="<?php echo $tourImg; ?>" alt="<?php echo htmlspecialchars($tour['title']); ?>" class="xl:h-80 h-64 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
 										<?php if ($duration) : ?>
 										<div class="absolute top-7.5 left-0 py-2 px-4 bg-primary text-white font-semibold text-xs rounded-tr-5xl rounded-br-5xl">
 										<?php echo $duration; ?>
 										</div>
 										<?php endif; ?>
 										<div class="absolute bottom-0 left-0 right-0 py-3 px-6 bg-caribbeanlight/80 backdrop-blur">
-										<h3 class="text-xl font-medium text-white"><?php echo htmlspecialchars($tour['name']); ?></h3>
+										<h3 class="text-xl font-medium text-white"><?php echo htmlspecialchars($tour['title']); ?></h3>
 										</div>
 									</div>
 									<div class="bg-white p-6 rounded-bl-3xl rounded-br-3xl shadow-[0px_10px_20px_rgba(0,106,114,0.1)]">

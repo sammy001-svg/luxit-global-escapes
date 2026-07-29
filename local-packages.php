@@ -1,18 +1,11 @@
 <?php
 require_once 'includes/db.php';
-// Local = Africa / East Africa / Indian Ocean destinations
-$localKeywords = ['Kenya','Tanzania','Uganda','Rwanda','Mombasa','Seychelles','Zanzibar',
-                  'Madagascar','Zambia','Zimbabwe','Namibia','Botswana','Africa',
-                  'South Africa','Morocco','Egypt','Safari','Nairobi'];
-$likeClause = implode(' OR ', array_fill(0, count($localKeywords), 'location LIKE ?'));
-$likeParams = array_map(fn($k) => "%$k%", $localKeywords);
-try {
-    $stmt = $pdo->prepare("SELECT * FROM tours WHERE status='Active' AND ($likeClause) ORDER BY created_at DESC");
-    $stmt->execute($likeParams);
-    $localTours = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $localTours = [];
-}
+require_once 'includes/packages.php';
+
+// Packages the admin has assigned to the Local page. This replaces the old
+// guess based on matching the location text against a hardcoded keyword list,
+// which silently dropped any destination not on that list.
+$localTours = getPackagesForPage($pdo, 'Local');
 ?>
 <!DOCTYPE html><html lang="en"><head>
     <!-- Character Encoding -->

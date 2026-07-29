@@ -43,6 +43,7 @@ let state = {
     })(),
     searchQuery: '',
     tourStatusFilter: 'All',
+    tourPageFilter: 'All',
     bookingFilter: 'All',
     financeTab: 'quotations',
     isRefreshing: false
@@ -381,56 +382,114 @@ function renderStatCard(title, value, icon, iconColor) {
     `;
 }
 
+// Pages a package can be published to. Kept in one place so the filter bar,
+// the card badges and the edit modal cannot drift apart.
+const PACKAGE_PAGES = [
+    { key: 'International', label: 'International', icon: 'fa-globe',    file: 'international-packages.php' },
+    { key: 'Local',         label: 'Local',         icon: 'fa-location-dot', file: 'local-packages.php' },
+    { key: 'Safari',        label: 'Safari',        icon: 'fa-binoculars', file: 'safari-packages.php' },
+];
+
+const HOME_SECTIONS = ['Explore Popular Tours', 'Marketing Highlights'];
+
+// package_pages is stored as a comma-separated string; treat it as a set.
+function tourPages(tour) {
+    return String(tour.package_pages || '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+}
+
 function renderTours() {
     const { tours } = state.data;
     const filteredTours = tours.filter(t => {
         const matchesSearch = t.title.toLowerCase().includes(state.searchQuery) || t.location.toLowerCase().includes(state.searchQuery);
         const matchesStatus = state.tourStatusFilter === 'All' || t.status === state.tourStatusFilter;
-        return matchesSearch && matchesStatus;
+        const matchesPage   = state.tourPageFilter === 'All' || tourPages(t).includes(state.tourPageFilter);
+        return matchesSearch && matchesStatus && matchesPage;
     });
 
     const stats = {
-        total: tours.length,
+        total:  tours.length,
         active: tours.filter(t => t.status === 'Active').length,
-        value: tours.filter(t => t.status === 'Active').reduce((sum, t) => sum + t.price, 0)
+        value:  tours.filter(t => t.status === 'Active').reduce((sum, t) => sum + Number(t.price || 0), 0),
+        onHome: tours.filter(t => Number(t.show_on_home) === 1 && t.status === 'Active').length,
     };
+
+    // A package with no page assignment is invisible on the public site. This is
+    // the single most common reason "it doesn't show up", so surface it loudly.
+    const orphans = tours.filter(t => t.status === 'Active' && tourPages(t).length === 0);
+    const orphanWarning = orphans.length ? `
+        <div class="rounded-2xl p-5 bg-amber-500/10 border border-amber-500/40 text-amber-300 space-y-2">
+            <p class="font-bold flex items-center"><i class="fas fa-triangle-exclamation mr-2"></i>
+                ${orphans.length} active package${orphans.length > 1 ? 's are' : ' is'} not assigned to any page</p>
+            <p class="text-sm text-amber-300/80">
+                ${orphans.map(o => `<button onclick="window.openTourModal(${o.id})" class="underline hover:text-white">${o.title}</button>`).join(', ')}
+                — these will not appear anywhere on the public site until you tick a package page.
+            </p>
+        </div>` : '';
 
     contentArea.innerHTML = `
         <div class="space-y-8 animate-fade-in pb-12">
-            <div class="flex items-center justify-between">
+            <div class="flex items-start justify-between flex-wrap gap-4">
                 <div>
                     <h1 class="text-3xl font-bold">Tour Packages</h1>
-                    <p class="text-slate-500 mt-1">Manage your travel products and portfolio</p>
+                    <p class="text-slate-500 mt-1">Manage your travel products and control where each one appears on the website</p>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <div class="flex items-center bg-slate-800/50 p-1 rounded-xl border border-white/5">
-                        ${['All', 'Active', 'Draft', 'Inactive'].map(s => `
-                            <button onclick="window.setTourStatusFilter('${s}')" 
-                                    class="px-4 py-1.5 rounded-lg text-xs font-bold transition ${state.tourStatusFilter === s ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-white'}">
-                                ${s}
-                            </button>
-                        `).join('')}
-                    </div>
-                    <button onclick="window.openTourModal()" class="bg-primary hover:bg-opacity-90 text-white px-6 py-2 rounded-xl text-sm font-bold transition shadow-lg shadow-primary/20">
-                        <i class="fas fa-plus mr-2"></i> Create Package
-                    </button>
-                </div>
+                <button onclick="window.openTourModal()" class="bg-primary hover:bg-opacity-90 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition shadow-lg shadow-primary/20">
+                    <i class="fas fa-plus mr-2"></i> Create Package
+                </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            ${orphanWarning}
+
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="glass-card p-6 rounded-2xl border border-white/5 bg-gradient-to-br from-primary/5 to-transparent">
                     <p class="text-xs text-slate-400 font-bold uppercase mb-2">Portfolio Value</p>
                     <p class="text-2xl font-bold">$${stats.value.toLocaleString()}</p>
-                    <p class="text-[10px] text-slate-500 mt-1">Sum of all active package prices</p>
+                    <p class="text-[10px] text-slate-500 mt-1">Sum of active package prices</p>
                 </div>
                 <div class="glass-card p-6 rounded-2xl border border-white/5">
                     <p class="text-xs text-slate-400 font-bold uppercase mb-2">Active Packages</p>
                     <p class="text-2xl font-bold text-emerald-400">${stats.active}</p>
+                    <p class="text-[10px] text-slate-500 mt-1">Live on the website</p>
                 </div>
                 <div class="glass-card p-6 rounded-2xl border border-white/5">
-                    <p class="text-xs text-slate-400 font-bold uppercase mb-2">Draft Mode</p>
-                    <p class="text-2xl font-bold text-slate-400">${stats.total - stats.active}</p>
+                    <p class="text-xs text-slate-400 font-bold uppercase mb-2">Featured on Home</p>
+                    <p class="text-2xl font-bold text-secondary">${stats.onHome}</p>
+                    <p class="text-[10px] text-slate-500 mt-1">Shown on the homepage</p>
                 </div>
+                <div class="glass-card p-6 rounded-2xl border border-white/5">
+                    <p class="text-xs text-slate-400 font-bold uppercase mb-2">Drafts</p>
+                    <p class="text-2xl font-bold text-slate-400">${stats.total - stats.active}</p>
+                    <p class="text-[10px] text-slate-500 mt-1">Hidden from the public</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-6 flex-wrap">
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Status</span>
+                    <div class="flex items-center bg-slate-800/50 p-1 rounded-xl border border-white/5">
+                        ${['All', 'Active', 'Draft', 'Inactive'].map(s => `
+                            <button onclick="window.setTourStatusFilter('${s}')"
+                                    class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${state.tourStatusFilter === s ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-white'}">
+                                ${s}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Page</span>
+                    <div class="flex items-center bg-slate-800/50 p-1 rounded-xl border border-white/5">
+                        ${['All', ...PACKAGE_PAGES.map(p => p.key)].map(p => `
+                            <button onclick="window.setTourPageFilter('${p}')"
+                                    class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${state.tourPageFilter === p ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-white'}">
+                                ${p}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+                <span class="text-xs text-slate-500 ml-auto">${filteredTours.length} of ${tours.length} package${tours.length === 1 ? '' : 's'}</span>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -455,7 +514,7 @@ function renderTours() {
                                     <span class="text-slate-400 flex items-center font-medium">
                                         <i class="fas fa-map-marker-alt mr-2 text-primary opacity-70"></i>${tour.location}
                                     </span>
-                                    <span class="font-bold text-secondary text-lg">$${tour.price}</span>
+                                    <span class="font-bold text-secondary text-lg">$${Number(tour.price).toLocaleString()}</span>
                                 </div>
                                 <div class="flex items-center text-xs text-slate-500">
                                     <i class="fas fa-tag mr-2 opacity-50"></i>
@@ -465,10 +524,37 @@ function renderTours() {
                                         ${renderStars(tour.rating)}
                                     </div>
                                 </div>
+
+                                <!-- Where this package is published -->
+                                <div class="pt-3 border-t border-white/5 space-y-2">
+                                    <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Appears on</p>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        ${tourPages(tour).length
+                                            ? tourPages(tour).map(p => {
+                                                const meta = PACKAGE_PAGES.find(x => x.key === p);
+                                                return `<span class="px-2 py-1 rounded-md text-[10px] font-bold bg-primary/15 text-primary border border-primary/20">
+                                                            <i class="fas ${meta ? meta.icon : 'fa-file'} mr-1"></i>${p}
+                                                        </span>`;
+                                              }).join('')
+                                            : `<span class="px-2 py-1 rounded-md text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/20">
+                                                   <i class="fas fa-eye-slash mr-1"></i>No page — hidden
+                                               </span>`}
+                                        ${Number(tour.show_on_home) === 1 ? `
+                                            <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-secondary/15 text-secondary border border-secondary/20" title="${tour.home_section || 'Homepage'}">
+                                                <i class="fas fa-house mr-1"></i>${tour.home_section === 'Marketing Highlights' ? 'Promo' : 'Home'}
+                                            </span>` : ''}
+                                        ${tour.promo_badge ? `
+                                            <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/20">
+                                                <i class="fas fa-bullhorn mr-1"></i>${tour.promo_badge}
+                                            </span>` : ''}
+                                    </div>
+                                </div>
                             </div>
-                            
+
                             <div class="flex items-center justify-between pt-5 border-t border-white/5">
-                                <button onclick="window.viewTourPublic('${tour.id}')" class="text-xs font-bold text-slate-400 hover:text-white transition">Preview Link</button>
+                                <button onclick="window.viewTourPublic('${tour.id}')" class="text-xs font-bold text-slate-400 hover:text-white transition">
+                                    <i class="fas fa-arrow-up-right-from-square mr-1.5"></i>View live
+                                </button>
                                 <div class="flex space-x-2">
                                     <button class="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-primary/10 rounded-xl text-slate-400 hover:text-primary transition" title="Edit" onclick="window.openTourModal(${tour.id})">
                                         <i class="fas fa-edit text-sm"></i>
@@ -1734,31 +1820,93 @@ window.openTourModal = (tourId = null) => {
                     </div>
                 </div>
                 <div class="space-y-2">
-                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Home Page Visibility</label>
-                    <div class="flex items-center space-x-3 p-3.5 bg-dark-900 border border-white/10 rounded-xl">
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" name="showOnHome" class="sr-only peer" ${tour && (tour.show_on_home || tour.showOnHome) ? 'checked' : ''} onchange="document.getElementById('home-section-container').classList.toggle('opacity-50', !this.checked); document.getElementById('home-section-container').classList.toggle('pointer-events-none', !this.checked)">
-                            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                        </label>
-                        <span class="text-xs font-bold text-slate-400">Featured on Home</span>
-                    </div>
-                </div>
-
-                <div id="home-section-container" class="space-y-2 col-span-2 transition-opacity ${(!tour || (!tour.show_on_home && !tour.showOnHome)) ? 'opacity-50 pointer-events-none' : ''}">
-                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Home Page Section</label>
-                    <select name="homeSection" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition appearance-none">
-                        ${['Explore Popular Tours', 'We Recommend', 'Marketing Carousel', 'Main Header Slider'].map(s => `
-                            <option value="${s}" ${tour && tour.homeSection === s ? 'selected' : ''}>${s}</option>
-                        `).join('')}
-                    </select>
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Rating</label>
+                    <input type="number" name="rating" step="0.1" min="0" max="5" value="${tour ? (tour.rating || 5.0) : 5.0}"
+                           class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition">
                 </div>
 
                 <div class="space-y-2 col-span-2">
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Description</label>
                     <textarea name="description" rows="4" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="Short highlights and key features...">${tour ? (tour.description || '') : ''}</textarea>
                 </div>
+
+                <!-- ── Where this package appears ─────────────────────────── -->
+                <div class="col-span-2 pt-4 mt-2 border-t border-white/5 space-y-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Publishing</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Controls where this package shows up on the public website.</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Package Pages <span class="text-rose-400">*</span></label>
+                        <div class="grid grid-cols-3 gap-3">
+                            ${PACKAGE_PAGES.map(p => {
+                                const checked = tour ? tourPages(tour).includes(p.key) : false;
+                                return `
+                                <label class="cursor-pointer">
+                                    <input type="checkbox" name="packagePages[]" value="${p.key}" class="sr-only peer" ${checked ? 'checked' : ''}>
+                                    <div class="p-3.5 rounded-xl border text-center transition peer-checked:border-primary peer-checked:bg-primary/10 border-white/10 bg-dark-900 hover:border-white/20">
+                                        <i class="fas ${p.icon} block mb-1.5 text-slate-400 peer-checked:text-primary"></i>
+                                        <span class="text-xs font-bold text-slate-300">${p.label}</span>
+                                        <span class="block text-[9px] text-slate-600 mt-0.5">${p.file}</span>
+                                    </div>
+                                </label>`;
+                            }).join('')}
+                        </div>
+                        <p class="text-[10px] text-slate-500">Tick every page this package belongs on. A package with none selected will not appear anywhere.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Homepage</label>
+                            <div class="flex items-center space-x-3 p-3.5 bg-dark-900 border border-white/10 rounded-xl">
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="showOnHome" id="show-on-home-toggle" class="sr-only peer" ${tour && Number(tour.show_on_home) === 1 ? 'checked' : ''}
+                                           onchange="window.toggleHomeSection(this.checked)">
+                                    <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                </label>
+                                <span class="text-xs font-bold text-slate-400">Feature on homepage</span>
+                            </div>
+                        </div>
+
+                        <div id="home-section-container" class="space-y-2 transition-opacity ${(!tour || Number(tour.show_on_home) !== 1) ? 'opacity-40 pointer-events-none' : ''}">
+                            <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Homepage Section</label>
+                            <select name="homeSection" id="home-section-select" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition appearance-none"
+                                    onchange="window.togglePromoFields(this.value)">
+                                ${HOME_SECTIONS.map(s => `
+                                    <option value="${s}" ${tour && tour.home_section === s ? 'selected' : ''}>${s}</option>
+                                `).join('')}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Promo fields only matter for the Marketing Highlights carousel -->
+                    <div id="promo-fields" class="space-y-4 rounded-xl border border-white/10 bg-dark-900/50 p-4 transition-opacity ${(tour && tour.home_section === 'Marketing Highlights' && Number(tour.show_on_home) === 1) ? '' : 'opacity-40 pointer-events-none'}">
+                        <p class="text-xs font-bold text-slate-300"><i class="fas fa-bullhorn mr-1.5 text-secondary"></i>Promotion — shown on the homepage Marketing Highlights carousel</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Badge Text</label>
+                                <input type="text" name="promoBadge" value="${tour ? (tour.promo_badge || '').replace(/"/g, '&quot;') : ''}"
+                                       class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 text-sm outline-none focus:border-primary transition" placeholder="e.g. Flash Sale: 40% OFF">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Badge Colour</label>
+                                <select name="promoStyle" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 text-sm outline-none focus:border-primary transition appearance-none">
+                                    ${[['primary','Teal'],['secondary','Yellow'],['citrus','Citrus'],['red','Red']].map(([v, l]) => `
+                                        <option value="${v}" ${tour && tour.promo_style === v ? 'selected' : ''}>${l}</option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                            <div class="space-y-2 col-span-2">
+                                <label class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Tagline</label>
+                                <input type="text" name="promoTagline" value="${tour ? (tour.promo_tagline || '').replace(/"/g, '&quot;') : ''}"
+                                       class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 text-sm outline-none focus:border-primary transition" placeholder="e.g. The Land of Fire and Ice awaits you.">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
+
             <div class="flex justify-end space-x-3 pt-6 border-t border-white/5 sticky bottom-0 bg-dark-800 z-10">
                 <button type="button" onclick="window.closeModal()" class="px-8 py-3 rounded-xl text-slate-500 hover:text-white font-bold transition">Discard</button>
                 <button type="submit" class="bg-primary px-10 py-3 rounded-xl text-white font-bold shadow-xl shadow-primary/20 hover:scale-105 transition">
@@ -1835,6 +1983,31 @@ window.openTourModal = (tourId = null) => {
 window.setTourStatusFilter = (status) => {
     state.tourStatusFilter = status;
     renderTours();
+};
+
+window.setTourPageFilter = (page) => {
+    state.tourPageFilter = page;
+    renderTours();
+};
+
+// The homepage section dropdown is meaningless unless the package is featured,
+// and the promo fields only apply to the Marketing Highlights carousel.
+window.toggleHomeSection = (enabled) => {
+    const container = document.getElementById('home-section-container');
+    if (container) {
+        container.classList.toggle('opacity-40', !enabled);
+        container.classList.toggle('pointer-events-none', !enabled);
+    }
+    const select = document.getElementById('home-section-select');
+    window.togglePromoFields(enabled && select ? select.value : '');
+};
+
+window.togglePromoFields = (section) => {
+    const promo = document.getElementById('promo-fields');
+    if (!promo) return;
+    const active = section === 'Marketing Highlights';
+    promo.classList.toggle('opacity-40', !active);
+    promo.classList.toggle('pointer-events-none', !active);
 };
 
 window.viewTourPublic = (id) => {

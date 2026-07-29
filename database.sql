@@ -83,14 +83,21 @@ CREATE TABLE `tours` (
   `description` text,
   `show_on_home` tinyint(1) DEFAULT 0,
   `home_section` varchar(100) DEFAULT NULL,
+  -- Which public package pages this tour appears on. Comma-separated list of
+  -- International / Local / Safari. Replaces the old implicit routing that
+  -- guessed the page from the location text.
+  `package_pages` varchar(100) DEFAULT NULL,
+  -- Optional promotion shown in the homepage Marketing Highlights carousel.
+  `promo_badge` varchar(100) DEFAULT NULL,
+  `promo_style` varchar(20) DEFAULT 'primary',
+  `promo_tagline` varchar(255) DEFAULT NULL,
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Run this if the tours table already exists in your database:
--- ALTER TABLE `tours` MODIFY `status` enum('Active','Draft','Inactive') DEFAULT 'Active';
--- ALTER TABLE `tours` ADD COLUMN `show_on_home` tinyint(1) DEFAULT 0;
--- ALTER TABLE `tours` ADD COLUMN `home_section` varchar(100) DEFAULT NULL;
+-- If the tours table already exists in your database, run migrate.php instead
+-- of the statements below — it adds any missing columns and backfills
+-- package_pages for your existing tours automatically.
 
 INSERT INTO `tours` (`title`, `location`, `price`, `duration`, `rating`, `status`, `category`, `image`, `description`) VALUES
 ('Bali Luxury Escape', 'Bali, Indonesia', 472.00, '8 Days / 3 Nights', 4.8, 'Active', 'Luxury', 'assets/images/tour/style1/pic1.jpg', 'Nusa Penida is a stunning island located just southeast of Bali.'),

@@ -4,6 +4,19 @@ function homeQuery(PDO $pdo, string $sql): array {
     try { return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC); } catch (PDOException $e) { return []; }
 }
 $homeBlogs = homeQuery($pdo, "SELECT id, title, slug, excerpt, image, author, category, created_at FROM blog_posts WHERE status = 'Published' ORDER BY created_at DESC LIMIT 5");
+
+require_once 'includes/packages.php';
+
+// Homepage package areas, driven by the admin panel's "Feature on homepage"
+// toggle and section dropdown.
+$homeTours = getHomepagePackages($pdo, 'Explore Popular Tours', 8);
+$homePromo = getHomepagePackages($pdo, 'Marketing Highlights', 8);
+
+// Fall back to any active package so a fresh install never renders an empty
+// slider; the admin can then curate the selection explicitly.
+if (empty($homeTours)) {
+    $homeTours = homeQuery($pdo, "SELECT * FROM tours WHERE status = 'Active' ORDER BY created_at DESC LIMIT 6");
+}
 $page_title = "Luxit Global Escapes - Travel & Tour | Home";
 include 'header.php';
 ?>
@@ -267,277 +280,57 @@ include 'header.php';
 						<div>
 							<div class="swiper trv-tours-st1 xl:!pb-29 !pb-22.5">
 								<div class="swiper-wrapper">
-									<div class="swiper-slide">
-										<div class="mx-3.75">
-											<div class="rounded-tl-3xl rounded-tr-3xl overflow-hidden relative">
-												<a href="tour-detail.php"><img src="assets/images/tour/style1/pic1.jpg" alt="Image" class="xl:h-105 h-80 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
-												<div class="absolute top-7.5 left-0 py-2.5 px-5 bg-primary text-white font-semibold text-sm rounded-tr-5xl rounded-br-5xl flex itmes-center">
-													<i class="text-xl mr-2.5 fa-regular fa-calendar-days"></i>
-													<span class="block">8 days , 3 Nights</span>
-												</div>
-												<div class="absolute bottom-0 left-0 right-0 py-3.75 px-7.5 bg-caribbeanlight backdrop-blur duration-500">
-													<h3 class="2xl:text-28 text-2xl font-medium">
-														<a href="tour-detail.php" class="text-white">
-														   <i class="fa-solid fa-location-dot"></i>
-															Bali, Indonesia
-														</a>
-													</h3>
-												</div>
+								<?php foreach ($homeTours as $tour) :
+									$tImg   = !empty($tour['image']) ? htmlspecialchars($tour['image']) : 'assets/images/tour/style1/pic1.jpg';
+									$tLink  = 'tour-detail.php?id=' . (int)$tour['id'];
+									$tRating = (float)($tour['rating'] ?? 5);
+									?>
+								<div class="swiper-slide">
+									<div class="mx-3.75">
+										<div class="rounded-tl-3xl rounded-tr-3xl overflow-hidden relative">
+											<a href="<?php echo $tLink; ?>"><img src="<?php echo $tImg; ?>" alt="<?php echo htmlspecialchars($tour['title']); ?>" class="xl:h-105 h-80 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
+											<?php if (!empty($tour['duration'])) : ?>
+											<div class="absolute top-7.5 left-0 py-2.5 px-5 bg-primary text-white font-semibold text-sm rounded-tr-5xl rounded-br-5xl flex itmes-center">
+												<i class="text-xl mr-2.5 fa-regular fa-calendar-days"></i>
+												<span class="block"><?php echo htmlspecialchars($tour['duration']); ?></span>
 											</div>
-											<div class="bg-white p-7.5 rounded-bl-3xl rounded-br-3xl shadow-[0px_18px_18px_rgba(0,106,114,0.15)]">
-												<div class="mb-7.5 flex">
-													<div class="w-20">
-														<span class="text-citrusyellow text-28/[1.3] font-black block">$59</span>
-														<span class="text-base block">Per Day</span>
-													</div>
-													<div class="w-[calc(100%_-_90px)] text-xl/[1.3] font-title font-medium">
-														<a href="tour-detail.php" class="text-primary hover:text-citrusyellow duration-500">Nusa Penida is a stunning island located just southeast of Bali</a>
-													</div>
-												</div>
-												<div class="flex itmes-center justify-between">
-													<div class="trv-book">
-														<a href="#" class="site-button outline quick-book-btn">Book Now</a>
-													</div>
-													<div>
-														<span>(4.8 Review)</span>
-														<div class="text-citrusyellow">
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-														</div>
-													</div>
-												</div>
+											<?php endif; ?>
+											<div class="absolute bottom-0 left-0 right-0 py-3.75 px-7.5 bg-caribbeanlight backdrop-blur duration-500">
+												<h3 class="2xl:text-28 text-2xl font-medium">
+													<a href="<?php echo $tLink; ?>" class="text-white">
+														<i class="fa-solid fa-location-dot"></i>
+														<?php echo htmlspecialchars($tour['location']); ?>
+													</a>
+												</h3>
 											</div>
 										</div>
-									</div>
-									<div class="swiper-slide">
-										<div class="mx-3.75">
-											<div class="rounded-tl-3xl rounded-tr-3xl overflow-hidden relative">
-												<a href="tour-detail.php"><img src="assets/images/tour/style1/pic2.jpg" alt="Image" class="xl:h-105 h-80 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
-												<div class="absolute top-7.5 left-0 py-2.5 px-5 bg-primary text-white font-semibold text-sm rounded-tr-5xl rounded-br-5xl flex itmes-center">
-													<i class="text-xl mr-2.5 fa-regular fa-calendar-days"></i>
-													<span class="block">4 days , 2 Nights</span>
+										<div class="bg-white p-7.5 rounded-bl-3xl rounded-br-3xl shadow-[0px_18px_18px_rgba(0,106,114,0.15)]">
+											<div class="mb-7.5 flex">
+												<div class="w-20">
+													<span class="text-citrusyellow text-28/[1.3] font-black block">$<?php echo number_format((float)$tour['price']); ?></span>
+													<span class="text-base block">Per Person</span>
 												</div>
-												<div class="absolute bottom-0 left-0 right-0 py-3.75 px-7.5 bg-caribbeanlight backdrop-blur duration-500">
-													<h3 class="2xl:text-28 text-2xl font-medium">
-														<a href="tour-detail.php" class="text-white">
-														   <i class="fa-solid fa-location-dot"></i>
-															South Korea
-														</a>
-													</h3>
+												<div class="w-[calc(100%_-_90px)] text-xl/[1.3] font-title font-medium">
+													<a href="<?php echo $tLink; ?>" class="text-primary hover:text-citrusyellow duration-500"><?php echo htmlspecialchars($tour['title']); ?></a>
 												</div>
 											</div>
-											<div class="bg-white p-7.5 rounded-bl-3xl rounded-br-3xl shadow-[0px_18px_18px_rgba(0,106,114,0.15)]">
-												<div class="mb-7.5 flex">
-													<div class="w-20">
-														<span class="text-citrusyellow text-28/[1.3] font-black block">$75</span>
-														<span class="text-base block">Per Day</span>
-													</div>
-													<div class="w-[calc(100%_-_90px)] text-xl/[1.3] font-title font-medium">
-														<a href="tour-detail.php" class="text-primary hover:text-citrusyellow duration-500">Deogyusan  mountain. Its highest peak is 1,614 m. above sea level</a>
-													</div>
+											<div class="flex itmes-center justify-between">
+												<div class="trv-book">
+													<a href="<?php echo $tLink; ?>" class="site-button outline quick-book-btn">Book Now</a>
 												</div>
-												<div class="flex itmes-center justify-between">
-													<div class="trv-book">
-														<a href="#" class="site-button outline quick-book-btn">Book Now</a>
-													</div>
-													<div>
-														<span>(4.8 Review)</span>
-														<div class="text-citrusyellow">
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div class="swiper-slide">
-										<div class="mx-3.75">
-											<div class="rounded-tl-3xl rounded-tr-3xl overflow-hidden relative">
-												<a href="tour-detail.php"><img src="assets/images/tour/style1/pic3.jpg" alt="Image" class="xl:h-105 h-80 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
-												<div class="absolute top-7.5 left-0 py-2.5 px-5 bg-primary text-white font-semibold text-sm rounded-tr-5xl rounded-br-5xl flex itmes-center">
-													<i class="text-xl mr-2.5 fa-regular fa-calendar-days"></i>
-													<span class="block">6 days , 3 Nights</span>
-												</div>
-												<div class="absolute bottom-0 left-0 right-0 py-3.75 px-7.5 bg-caribbeanlight backdrop-blur duration-500">
-													<h3 class="2xl:text-28 text-2xl font-medium">
-														<a href="tour-detail.php" class="text-white">
-														   <i class="fa-solid fa-location-dot"></i>
-															Tokyo City Japan
-														</a>
-													</h3>
-												</div>
-											</div>
-											<div class="bg-white p-7.5 rounded-bl-3xl rounded-br-3xl shadow-[0px_18px_18px_rgba(0,106,114,0.15)]">
-												<div class="mb-7.5 flex">
-													<div class="w-20">
-														<span class="text-citrusyellow text-28/[1.3] font-black block">$99</span>
-														<span class="text-base block">Per Day</span>
-													</div>
-													<div class="w-[calc(100%_-_90px)] text-xl/[1.3] font-title font-medium">
-														<a href="tour-detail.php" class="text-primary hover:text-citrusyellow duration-500">The bridge offers panoramic views of Tokyo Tower, the skyline.</a>
-													</div>
-												</div>
-												<div class="flex itmes-center justify-between">
-													<div class="trv-book">
-														<a href="#" class="site-button outline quick-book-btn">Book Now</a>
-													</div>
-													<div>
-														<span>(4.8 Review)</span>
-														<div class="text-citrusyellow">
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div class="swiper-slide">
-										<div class="mx-3.75">
-											<div class="rounded-tl-3xl rounded-tr-3xl overflow-hidden relative">
-												<a href="tour-detail.php"><img src="assets/images/tour/style1/pic4.jpg" alt="Image" class="xl:h-105 h-80 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
-												<div class="absolute top-7.5 left-0 py-2.5 px-5 bg-primary text-white font-semibold text-sm rounded-tr-5xl rounded-br-5xl flex itmes-center">
-													<i class="text-xl mr-2.5 fa-regular fa-calendar-days"></i>
-													<span class="block">8 days , 3 Nights</span>
-												</div>
-												<div class="absolute bottom-0 left-0 right-0 py-3.75 px-7.5 bg-caribbeanlight backdrop-blur duration-500">
-													<h3 class="2xl:text-28 text-2xl font-medium">
-														<a href="tour-detail.php" class="text-white">
-														   <i class="fa-solid fa-location-dot"></i>
-															Plateau in Slovenia
-														</a>
-													</h3>
-												</div>
-											</div>
-											<div class="bg-white p-7.5 rounded-bl-3xl rounded-br-3xl shadow-[0px_18px_18px_rgba(0,106,114,0.15)]">
-												<div class="mb-7.5 flex">
-													<div class="w-20">
-														<span class="text-citrusyellow text-28/[1.3] font-black block">$149</span>
-														<span class="text-base block">Per Day</span>
-													</div>
-													<div class="w-[calc(100%_-_90px)] text-xl/[1.3] font-title font-medium">
-														<a href="tour-detail.php" class="text-primary hover:text-citrusyellow duration-500">Nusa Penida is a stunning island located just southeast of Bali</a>
-													</div>
-												</div>
-												<div class="flex itmes-center justify-between">
-													<div class="trv-book">
-														<a href="#" class="site-button outline quick-book-btn">Book Now</a>
-													</div>
-													<div>
-														<span>(4.8 Review)</span>
-														<div class="text-citrusyellow">
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div class="swiper-slide">
-										<div class="mx-3.75">
-											<div class="rounded-tl-3xl rounded-tr-3xl overflow-hidden relative">
-												<a href="tour-detail.php"><img src="assets/images/tour/style1/pic5.jpg" alt="Image" class="xl:h-105 h-80 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
-												<div class="absolute top-7.5 left-0 py-2.5 px-5 bg-primary text-white font-semibold text-sm rounded-tr-5xl rounded-br-5xl flex itmes-center">
-													<i class="text-xl mr-2.5 fa-regular fa-calendar-days"></i>
-													<span>4 days , 2 Nights</span>
-												</div>
-												<div class="absolute bottom-0 left-0 right-0 py-3.75 px-7.5 bg-caribbeanlight backdrop-blur duration-500">
-													<h3 class="2xl:text-28 text-2xl font-medium">
-														<a href="tour-detail.php" class="text-white">
-														   <i class="fa-solid fa-location-dot"></i>
-															Switzerland Tour Package
-														</a>
-													</h3>
-												</div>
-											</div>
-											<div class="bg-white p-7.5 rounded-bl-3xl rounded-br-3xl shadow-[0px_18px_18px_rgba(0,106,114,0.15)]">
-												<div class="mb-7.5 flex">
-													<div class="w-20">
-														<span class="text-citrusyellow text-28/[1.3] font-black block">$129</span>
-														<span class="text-base block">Per Day</span>
-													</div>
-													<div class="w-[calc(100%_-_90px)] text-xl/[1.3] font-title font-medium">
-														<a href="tour-detail.php" class="text-primary hover:text-citrusyellow duration-500">Deogyusan  mountain. Its highest peak is 1,614 m. above sea level</a>
-													</div>
-												</div>
-												<div class="flex itmes-center justify-between">
-													<div class="trv-book">
-														<a href="#" class="site-button outline quick-book-btn">Book Now</a>
-													</div>
-													<div>
-														<span>(4.8 Review)</span>
-														<div class="text-citrusyellow">
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div class="swiper-slide">
-										<div class="mx-3.75">
-											<div class="rounded-tl-3xl rounded-tr-3xl overflow-hidden relative">
-												<a href="tour-detail.php"><img src="assets/images/tour/style1/pic6.jpg" alt="Image" class="xl:h-105 h-80 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
-												<div class="absolute top-7.5 left-0 py-2.5 px-5 bg-primary text-white font-semibold text-sm rounded-tr-5xl rounded-br-5xl flex itmes-center">
-													<i class="text-xl mr-2.5 fa-regular fa-calendar-days"></i>
-													<span class="block">6 days , 3 Nights</span>
-												</div>
-												<div class="absolute bottom-0 left-0 right-0 py-3.75 px-7.5 bg-caribbeanlight backdrop-blur duration-500">
-													<h3 class="2xl:text-28 text-2xl font-medium">
-														<a href="tour-detail.php" class="text-white">
-														   <i class="fa-solid fa-location-dot"></i>
-															Tokyo City Japan
-														</a>
-													</h3>
-												</div>
-											</div>
-											<div class="bg-white p-7.5 rounded-bl-3xl rounded-br-3xl shadow-[0px_18px_18px_rgba(0,106,114,0.15)]">
-												<div class="mb-7.5 flex">
-													<div class="w-20">
-														<span class="text-citrusyellow text-28/[1.3] font-black block">$79</span>
-														<span class="text-base block">Per Day</span>
-													</div>
-													<div class="w-[calc(100%_-_90px)] text-xl/[1.3] font-title font-medium">
-														<a href="tour-detail.php" class="text-primary hover:text-citrusyellow duration-500">The bridge offers panoramic views of Tokyo Tower, the skyline.</a>
-													</div>
-												</div>
-												<div class="flex itmes-center justify-between">
-													<div class="trv-book">
-														<a href="#" class="site-button outline quick-book-btn">Book Now</a>
-													</div>
-													<div>
-														<span>(4.8 Review)</span>
-														<div class="text-citrusyellow">
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-															<i class="fa-solid fa-star"></i>
-														</div>
+												<div>
+													<span>(<?php echo number_format($tRating, 1); ?> Review)</span>
+													<div class="text-citrusyellow">
+														<?php for ($i = 1; $i <= 5; $i++) : ?>
+														<i class="fa-solid fa-star<?php echo $i <= round($tRating) ? '' : ' opacity-30'; ?>"></i>
+														<?php endfor; ?>
 													</div>
 												</div>
 											</div>
 										</div>
 									</div>
 								</div>
+								<?php endforeach; ?>
 								<div class="swiper-button-next"></div>
 								<div class="swiper-button-prev"></div>
 							</div>
@@ -635,6 +428,7 @@ include 'header.php';
 				<!--WE RECOMMEND SECTION END-->
 
 				<!-- MARKETING TOUR CAROUSEL START -->
+				<?php if (!empty($homePromo)) : ?>
 				<div class="bg-paleaqua pb-15 relative overflow-hidden">
 					<div class="container">
 						<div class="text-center max-w-150 mx-auto md:mb-15 mb-7.5">
@@ -646,76 +440,38 @@ include 'header.php';
 						</div>
 						<div class="swiper trv-marketing-tour-swiper pb-10">
 							<div class="swiper-wrapper">
-								<!-- SLIDE 1: Iceland -->
+								<?php foreach ($homePromo as $promo) :
+									$pImg   = !empty($promo['image']) ? htmlspecialchars($promo['image']) : 'assets/images/tour/style1/pic1.jpg';
+									$pLink  = 'tour-detail.php?id=' . (int)$promo['id'];
+									$pBadge = trim((string)($promo['promo_badge'] ?? ''));
+									$pTag   = trim((string)($promo['promo_tagline'] ?? ''));
+									?>
 								<div class="swiper-slide">
 									<div class="mx-3.75 group">
 										<div class="relative rounded-3xl overflow-hidden shadow-lg transform transition duration-500 group-hover:scale-105">
-											<img src="assets/images/tour/style1/pic1.jpg" alt="Iceland Tours" class="w-full h-96 object-cover">
-											<div class="absolute top-5 left-5 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider z-10">
-												Flash Sale: 40% OFF
+											<img src="<?php echo $pImg; ?>" alt="<?php echo htmlspecialchars($promo['title']); ?>" class="w-full h-96 object-cover">
+											<?php if ($pBadge !== '') : ?>
+											<div class="absolute top-5 left-5 <?php echo packagePromoClasses($promo['promo_style'] ?? 'primary'); ?> text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider z-10">
+												<?php echo htmlspecialchars($pBadge); ?>
 											</div>
+											<?php endif; ?>
 											<div class="absolute bottom-0 left-0 right-0 p-6 bg-white text-center">
-												<h3 class="text-primary text-2xl font-bold mb-2">Majestic Iceland</h3>
-												<p class="text-secondary text-sm font-semibold italic">"The Land of Fire and Ice awaits you."</p>
-												<a href="#" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md quick-book-btn">BOOK NOW</a>
+												<h3 class="text-primary text-2xl font-bold mb-2"><?php echo htmlspecialchars($promo['title']); ?></h3>
+												<?php if ($pTag !== '') : ?>
+												<p class="text-secondary text-sm font-semibold italic">"<?php echo htmlspecialchars($pTag); ?>"</p>
+												<?php endif; ?>
+												<a href="<?php echo $pLink; ?>" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md quick-book-btn">BOOK NOW</a>
 											</div>
 										</div>
 									</div>
 								</div>
-								<!-- SLIDE 2: Japan -->
-								<div class="swiper-slide">
-									<div class="mx-3.75 group">
-										<div class="relative rounded-3xl overflow-hidden shadow-lg transform transition duration-500 group-hover:scale-105">
-											<img src="assets/images/tour/style1/pic2.jpg" alt="Japan Tours" class="w-full h-96 object-cover">
-											<div class="absolute top-5 left-5 bg-secondary text-primary text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider z-10">
-												Exclusive Guide
-											</div>
-											<div class="absolute bottom-0 left-0 right-0 p-6 bg-white text-center">
-												<h3 class="text-primary text-2xl font-bold mb-2">Spirit of Japan</h3>
-												<p class="text-secondary text-sm font-semibold italic">"Experience tradition with private local guides."</p>
-												<a href="#" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md quick-book-btn">EXPLORE</a>
-											</div>
-										</div>
-									</div>
-								</div>
-								<!-- SLIDE 3: Maldives -->
-								<div class="swiper-slide">
-									<div class="mx-3.75 group">
-										<div class="relative rounded-3xl overflow-hidden shadow-lg transform transition duration-500 group-hover:scale-105">
-											<img src="assets/images/tour/style1/pic3.jpg" alt="Maldives Tours" class="w-full h-96 object-cover">
-											<div class="absolute top-5 left-5 bg-citrusyellow text-primary text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider z-10">
-												Early Bird: SAVE $200
-											</div>
-											<div class="absolute bottom-0 left-0 right-0 p-6 bg-white text-center">
-												<h3 class="text-primary text-2xl font-bold mb-2">Maldives Paradise</h3>
-												<p class="text-secondary text-sm font-semibold italic">"Book for 2027 and lock in today's prices."</p>
-												<a href="#" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md quick-book-btn">CLAIM DEAL</a>
-											</div>
-										</div>
-									</div>
-								</div>
-								<!-- SLIDE 4: Switzerland -->
-								<div class="swiper-slide">
-									<div class="mx-3.75 group">
-										<div class="relative rounded-3xl overflow-hidden shadow-lg transform transition duration-500 group-hover:scale-105">
-											<img src="assets/images/tour/style1/pic4.jpg" alt="Switzerland Tours" class="w-full h-96 object-cover">
-											<div class="absolute top-5 left-5 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider z-10">
-												Last Minute Deal
-											</div>
-											<div class="absolute bottom-0 left-0 right-0 p-6 bg-white text-center">
-												<h3 class="text-primary text-2xl font-bold mb-2">Swiss Alpine Magic</h3>
-												<p class="text-secondary text-sm font-semibold italic">"Unbeatable escapes starting at $499."</p>
-												<a href="#" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md quick-book-btn">SNAG IT</a>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
+								<?php endforeach; ?>
 							<div class="swiper-pagination !-bottom-5"></div>
 							<!-- Navigation buttons removed per user request -->
 						</div>
 					</div>
 				</div>
+				<?php endif; ?>
 				<!-- MARKETING TOUR CAROUSEL END -->
 				
 				<!-- CLIENT LOGO SECTION START -->
