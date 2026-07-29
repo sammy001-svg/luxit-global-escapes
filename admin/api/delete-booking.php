@@ -1,6 +1,7 @@
 <?php
-header('Content-Type: application/json');
-require_once '../../includes/db.php';
+// Rejects anonymous callers and verifies the CSRF token on writes.
+require_once __DIR__ . '/_guard.php';
+require_once __DIR__ . '/../../includes/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'error' => 'Invalid request method']);

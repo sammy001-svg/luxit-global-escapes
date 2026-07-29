@@ -1,11 +1,15 @@
 <?php
-header('Content-Type: application/json');
-require_once '../../includes/db.php';
+// Rejects anonymous callers and verifies the CSRF token on writes.
+require_once __DIR__ . '/_guard.php';
+require_once __DIR__ . '/../../includes/db.php';
 
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    adminJsonError('Invalid request method', 405);
+}
+
+$id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
 if (!$id) {
-    echo json_encode(['success' => false, 'error' => 'Invalid ID']);
-    exit;
+    adminJsonError('Blog post ID is required');
 }
 
 try {
@@ -13,5 +17,5 @@ try {
     $stmt->execute([$id]);
     echo json_encode(['success' => true]);
 } catch (PDOException $e) {
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    adminJsonDbError($e, 'delete-blog');
 }

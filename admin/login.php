@@ -1,39 +1,74 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/auth.php';
+adminSessionStart();
 
 // If already logged in, redirect to index
-if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
+if (adminIsLoggedIn()) {
     header("Location: index.php");
     exit;
 }
 
 $error = '';
 
+// Throttle repeated failures from this session to slow credential stuffing.
+const LOGIN_MAX_ATTEMPTS = 5;
+const LOGIN_LOCKOUT_SECS = 300;
+
+$attempts   = $_SESSION['login_attempts']    ?? 0;
+$lastFailed = $_SESSION['login_last_failed'] ?? 0;
+$lockedFor  = ($attempts >= LOGIN_MAX_ATTEMPTS)
+              ? LOGIN_LOCKOUT_SECS - (time() - $lastFailed)
+              : 0;
+
+if ($lockedFor <= 0 && $attempts >= LOGIN_MAX_ATTEMPTS) {
+    // Lockout elapsed — start a fresh count.
+    $attempts = 0;
+    unset($_SESSION['login_attempts'], $_SESSION['login_last_failed']);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_once '../includes/db.php';
-    
-    $username = $_POST['username'] ?? '';
-    $password = $_POST['password'] ?? '';
-
-    if (!empty($username) && !empty($password)) {
-        $stmt = $pdo->prepare("SELECT * FROM admins WHERE username = ? OR email = ?");
-        $stmt->execute([$username, $username]);
-        $user = $stmt->fetch();
-
-        if ($user && password_verify($password, $user['password'])) {
-            $_SESSION['admin_logged_in'] = true;
-            $_SESSION['admin_id'] = $user['id'];
-            $_SESSION['admin_username'] = $user['username'];
-            $_SESSION['admin_email'] = $user['email'];
-            header("Location: index.php");
-            exit;
-        } else {
-            $error = 'Invalid username or password';
-        }
+    if ($lockedFor > 0) {
+        $error = 'Too many failed attempts. Try again in ' . ceil($lockedFor / 60) . ' minute(s).';
+    } elseif (!adminVerifyCsrf()) {
+        $error = 'Your session expired. Please try again.';
     } else {
-        $error = 'Please enter both username and password';
+        require_once '../includes/db.php';
+
+        $username = $_POST['username'] ?? '';
+        $password = $_POST['password'] ?? '';
+
+        if (!empty($username) && !empty($password)) {
+            $stmt = $pdo->prepare("SELECT * FROM admins WHERE username = ? OR email = ?");
+            $stmt->execute([$username, $username]);
+            $user = $stmt->fetch();
+
+            if ($user && password_verify($password, $user['password'])) {
+                // New session ID on privilege change, so a session fixed by an
+                // attacker before login cannot be reused after it.
+                session_regenerate_id(true);
+
+                $_SESSION['admin_logged_in'] = true;
+                $_SESSION['admin_id']        = $user['id'];
+                $_SESSION['admin_username']  = $user['username'];
+                $_SESSION['admin_email']     = $user['email'];
+                unset($_SESSION['login_attempts'], $_SESSION['login_last_failed']);
+
+                header("Location: index.php");
+                exit;
+            } else {
+                $_SESSION['login_attempts']    = $attempts + 1;
+                $_SESSION['login_last_failed'] = time();
+                // Deliberately identical for unknown user and wrong password so
+                // the form cannot be used to enumerate valid accounts.
+                $error = 'Invalid username or password';
+            }
+        } else {
+            $error = 'Please enter both username and password';
+        }
     }
 }
+
+$csrfToken = adminCsrfToken();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -86,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <form method="POST" action="login.php" class="space-y-6">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken); ?>">
             <div>
                 <label for="username" class="block text-sm font-medium text-slate-300 mb-2">Username</label>
                 <div class="relative">

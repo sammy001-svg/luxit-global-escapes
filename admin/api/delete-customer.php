@@ -1,23 +1,21 @@
 <?php
-header('Content-Type: application/json');
-require_once '../../includes/db.php';
+// Rejects anonymous callers and verifies the CSRF token on writes.
+require_once __DIR__ . '/_guard.php';
+require_once __DIR__ . '/../../includes/db.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    try {
-        $id = $_GET['id'] ?? null;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    adminJsonError('Invalid request method', 405);
+}
 
-        if (!$id) {
-            echo json_encode(['success' => false, 'error' => 'Customer ID is required']);
-            exit;
-        }
+$id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+if (!$id) {
+    adminJsonError('Customer ID is required');
+}
 
-        $stmt = $pdo->prepare("DELETE FROM customers WHERE id = ?");
-        $stmt->execute([$id]);
-
-        echo json_encode(['success' => true]);
-    } catch (PDOException $e) {
-        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-    }
-} else {
-    echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+try {
+    $stmt = $pdo->prepare("DELETE FROM customers WHERE id = ?");
+    $stmt->execute([$id]);
+    echo json_encode(['success' => true]);
+} catch (PDOException $e) {
+    adminJsonDbError($e, 'delete-customer');
 }

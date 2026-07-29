@@ -1,8 +1,9 @@
 <?php
-require_once '../includes/db.php';
-session_start();
+require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/../includes/db.php';
+adminSessionStart();
 
-if (!isset($_SESSION['admin_logged_in'])) {
+if (!adminIsLoggedIn()) {
     header("Location: login.php");
     exit;
 }

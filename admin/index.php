@@ -1,9 +1,13 @@
 <?php
-session_start();
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+require_once __DIR__ . '/includes/auth.php';
+adminSessionStart();
+
+if (!adminIsLoggedIn()) {
     header("Location: login.php");
     exit;
 }
+
+$csrfToken = adminCsrfToken();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -139,6 +143,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     ?>
     <script>
         window.ADMIN_DATA = <?php echo json_encode($adminData); ?>;
+        window.CSRF_TOKEN = <?php echo json_encode($csrfToken); ?>;
     </script>
     <script src="js/main.js?v=10"></script>
     <script>

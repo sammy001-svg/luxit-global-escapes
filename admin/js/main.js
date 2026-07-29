@@ -59,6 +59,43 @@ window.hardReset = () => {
     }
 };
 
+// ── API layer ─────────────────────────────────────────────────────────────────
+// Every write goes through apiPost so the CSRF token cannot be forgotten at a
+// call site. The server rejects any non-GET request without it.
+async function apiPost(endpoint, data = {}) {
+    const body = data instanceof FormData ? data : new FormData();
+    if (!(data instanceof FormData)) {
+        Object.entries(data).forEach(([k, v]) => body.append(k, v));
+    }
+    body.append('csrf_token', window.CSRF_TOKEN || '');
+
+    const res = await fetch(`api/${endpoint}`, { method: 'POST', body });
+    return handleApiResponse(res);
+}
+
+async function apiGet(endpoint) {
+    const res = await fetch(`api/${endpoint}`, {
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-store'
+    });
+    return handleApiResponse(res);
+}
+
+// A 401 means the session lapsed; a 403 means the token is stale (typically
+// after the session was rebuilt). Both are recoverable only by logging in again.
+async function handleApiResponse(res) {
+    if (res.status === 401) {
+        showToast('Your session has expired. Redirecting to login…', 'error');
+        setTimeout(() => { window.location.href = 'login.php'; }, 1500);
+        throw new Error('Session expired');
+    }
+    if (res.status === 403) {
+        showToast('Security token rejected. Please reload the page.', 'error');
+        throw new Error('CSRF rejected');
+    }
+    return res.json();
+}
+
 // ── Partial Refresh ───────────────────────────────────────────────────────────
 // Pulls the canonical payload from the server and re-renders the current tab
 // in place. Replaces location.reload() after writes: same correctness, but the
@@ -69,20 +106,8 @@ async function refreshData({ silent = false } = {}) {
     if (!silent) showRefreshIndicator(true);
 
     try {
-        const res = await fetch('api/get-data.php', {
-            headers: { 'Accept': 'application/json' },
-            cache: 'no-store'
-        });
-
-        // Session expired mid-session — bounce to login rather than silently
-        // rendering stale data.
-        if (res.status === 401) {
-            showToast('Your session has expired. Redirecting to login…', 'error');
-            setTimeout(() => { window.location.href = 'login.php'; }, 1500);
-            return false;
-        }
-
-        const payload = await res.json();
+        // apiGet bounces to login on 401 rather than rendering stale data.
+        const payload = await apiGet('get-data.php');
         if (!payload.success) throw new Error(payload.error || 'Refresh failed');
 
         state.data = payload.data;
@@ -90,7 +115,9 @@ async function refreshData({ silent = false } = {}) {
         return true;
     } catch (err) {
         console.error('Refresh failed:', err);
-        showToast('Saved, but the view could not refresh. Reload to see the latest.', 'error');
+        if (err.message !== 'Session expired' && err.message !== 'CSRF rejected') {
+            showToast('Saved, but the view could not refresh. Reload to see the latest.', 'error');
+        }
         return false;
     } finally {
         state.isRefreshing = false;
@@ -1509,8 +1536,7 @@ window.openBlogModal = (blogId = null) => {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
 
         try {
-            const res  = await fetch('api/save-blog.php', { method: 'POST', body: formData });
-            const data = await res.json();
+            const data = await apiPost('save-blog.php', formData);
             if (!data.success) throw new Error(data.error || 'Save failed');
 
             showToast(blog ? 'Post updated successfully' : 'Post published successfully');
@@ -1527,8 +1553,7 @@ window.openBlogModal = (blogId = null) => {
 window.deleteBlog = async (id) => {
     if (!confirm('Delete this blog post permanently? This cannot be undone.')) return;
     try {
-        const res  = await fetch(`api/delete-blog.php?id=${id}`);
-        const data = await res.json();
+        const data = await apiPost('delete-blog.php', { id });
         if (!data.success) throw new Error(data.error || 'Delete failed');
         showToast('Post deleted');
         await refreshData();
@@ -1964,8 +1989,7 @@ window.openTourModal = (tourId = null) => {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
 
         try {
-            const res  = await fetch('api/save-tour.php', { method: 'POST', body: formData });
-            const data = await res.json();
+            const data = await apiPost('save-tour.php', formData);
             if (!data.success) throw new Error(data.error || 'Save failed');
 
             showToast(tour ? 'Tour updated successfully' : 'Tour created successfully');
@@ -2017,8 +2041,7 @@ window.viewTourPublic = (id) => {
 window.deleteTour = async (id) => {
     if (!confirm('Are you sure you want to delete this tour? This cannot be undone.')) return;
     try {
-        const res  = await fetch(`api/delete-tour.php?id=${id}`);
-        const data = await res.json();
+        const data = await apiPost('delete-tour.php', { id });
         if (!data.success) throw new Error(data.error || 'Delete failed');
         showToast('Tour deleted');
         await refreshData();
@@ -2088,11 +2111,7 @@ window.openDestinationModal = (destId = null) => {
         const formData = new FormData(e.target);
         
         try {
-            const response = await fetch('api/save-destination.php', {
-                method: 'POST',
-                body: formData
-            });
-            const result = await response.json();
+            const result = await apiPost('save-destination.php', formData);
             
             if (result.success) {
                 showToast(dest ? 'Destination updated' : 'Destination added');
@@ -2111,8 +2130,7 @@ window.openDestinationModal = (destId = null) => {
 window.deleteDestination = async (id) => {
     if (!confirm('Are you sure you want to delete this destination? All nested sub-locations will also be deleted.')) return;
     try {
-        const response = await fetch(`api/delete-destination.php?id=${id}`);
-        const result = await response.json();
+        const result = await apiPost('delete-destination.php', { id });
         if (result.success) {
             showToast('Destination deleted');
             await refreshData();
@@ -2131,12 +2149,7 @@ window.closeModal = () => {
 
 window.confirmBooking = async (id) => {
     try {
-        const res = await fetch('api/update-booking-status.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `id=${encodeURIComponent(id)}&status=Confirmed`
-        });
-        const data = await res.json();
+        const data = await apiPost('update-booking-status.php', { id, status: 'Confirmed' });
         if (data.success) {
             showToast('Booking confirmed successfully');
             await refreshData();
@@ -2148,12 +2161,7 @@ window.confirmBooking = async (id) => {
 
 window.cancelBooking = async (id) => {
     try {
-        const res = await fetch('api/update-booking-status.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `id=${encodeURIComponent(id)}&status=Cancelled`
-        });
-        const data = await res.json();
+        const data = await apiPost('update-booking-status.php', { id, status: 'Cancelled' });
         if (data.success) {
             showToast('Booking cancelled');
             await refreshData();
@@ -2166,12 +2174,7 @@ window.cancelBooking = async (id) => {
 window.deleteBooking = async (id) => {
     if (!confirm('Delete this booking permanently?')) return;
     try {
-        const res = await fetch('api/delete-booking.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `id=${encodeURIComponent(id)}`
-        });
-        const data = await res.json();
+        const data = await apiPost('delete-booking.php', { id });
         if (data.success) {
             showToast('Booking deleted');
             await refreshData();
@@ -2338,11 +2341,7 @@ window.openCustomerModal = (id = null) => {
         const formData = new FormData(e.target);
         
         try {
-            const response = await fetch('api/save-customer.php', {
-                method: 'POST',
-                body: formData
-            });
-            const result = await response.json();
+            const result = await apiPost('save-customer.php', formData);
             
             if (result.success) {
                 showToast(cust ? 'Client profile updated' : 'New client registered');
@@ -2361,8 +2360,7 @@ window.openCustomerModal = (id = null) => {
 window.deleteCustomer = async (id) => {
     if (!confirm('Are you sure you want to delete this client? This will NOT delete their bookings, but they will be unlinked.')) return;
     try {
-        const response = await fetch(`api/delete-customer.php?id=${id}`);
-        const result = await response.json();
+        const result = await apiPost('delete-customer.php', { id });
         if (result.success) {
             showToast('Client deleted');
             await refreshData();
@@ -2444,11 +2442,7 @@ window.openBookingModal = () => {
         const formData = new FormData(e.target);
         
         try {
-            const response = await fetch('api/add-booking.php', {
-                method: 'POST',
-                body: formData
-            });
-            const result = await response.json();
+            const result = await apiPost('add-booking.php', formData);
             
             if (result.success) {
                 showToast('Booking created successfully');
@@ -2522,8 +2516,7 @@ window.openQuotationModal = (quoteId = null) => {
         if (quoteId) formData.append('id', quoteId);
 
         try {
-            const res = await fetch('api/save-quotation.php', { method: 'POST', body: formData });
-            const data = await res.json();
+            const data = await apiPost('save-quotation.php', formData);
             if (data.success) { showToast(quoteId ? 'Quotation updated' : 'Quotation created'); window.closeModal(); await refreshData(); }
             else { showToast(data.message || 'Error saving quotation', 'error'); }
         } catch (err) { console.error(err); showToast('Network error while saving', 'error'); }
@@ -2588,8 +2581,7 @@ window.openInvoiceModal = (invoiceId = null) => {
         if (invoiceId) formData.append('id', invoiceId);
 
         try {
-            const res = await fetch('api/save-invoice.php', { method: 'POST', body: formData });
-            const data = await res.json();
+            const data = await apiPost('save-invoice.php', formData);
             if (data.success) { showToast(invoiceId ? 'Invoice updated' : 'Invoice created'); window.closeModal(); await refreshData(); }
             else { showToast(data.message || 'Error saving invoice', 'error'); }
         } catch (err) { console.error(err); showToast('Network error while saving', 'error'); }
@@ -2649,8 +2641,7 @@ window.openExpenseModal = () => {
         const formData = new FormData(e.target);
 
         try {
-            const res = await fetch('api/save-expense.php', { method: 'POST', body: formData });
-            const data = await res.json();
+            const data = await apiPost('save-expense.php', formData);
             if (data.success) { showToast('Expense recorded'); window.closeModal(); await refreshData(); }
             else { showToast(data.message || 'Error saving expense', 'error'); }
         } catch (err) { console.error(err); showToast('Network error while saving', 'error'); }
@@ -2660,8 +2651,7 @@ window.openExpenseModal = () => {
 window.deleteExpense = async (id) => {
     if (!confirm('Are you sure you want to delete this expense record?')) return;
     try {
-        const res = await fetch(`api/delete-expense.php?id=${id}`);
-        const data = await res.json();
+        const data = await apiPost('delete-expense.php', { id });
         if (data.success) { showToast('Expense deleted'); await refreshData(); }
         else { showToast(data.error || 'Failed to delete expense', 'error'); }
     } catch (err) { showToast('Network error', 'error'); console.error(err); }
@@ -2670,12 +2660,7 @@ window.deleteExpense = async (id) => {
 window.markInvoicePaid = async (id) => {
     if (!confirm('Mark this invoice as Paid?')) return;
     try {
-        const res = await fetch('api/update-invoice-status.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `id=${encodeURIComponent(id)}&status=Paid`
-        });
-        const data = await res.json();
+        const data = await apiPost('update-invoice-status.php', { id, status: 'Paid' });
         if (data.success) { showToast('Invoice marked as Paid'); await refreshData(); }
         else { showToast(data.error || 'Failed to update invoice', 'error'); }
     } catch (err) { showToast('Network error', 'error'); console.error(err); }

@@ -1,16 +1,17 @@
 <?php
-header('Content-Type: application/json');
-require_once '../../includes/db.php';
+// Rejects anonymous callers and verifies the CSRF token on writes.
+require_once __DIR__ . '/_guard.php';
+require_once __DIR__ . '/../../includes/db.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-    exit;
+// POST-only: a destructive action must never be reachable from a plain URL,
+// which an <img src> on any page could trigger against a logged-in admin.
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    adminJsonError('Invalid request method', 405);
 }
 
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
 if (!$id) {
-    echo json_encode(['success' => false, 'error' => 'Tour ID is required']);
-    exit;
+    adminJsonError('Tour ID is required');
 }
 
 try {
@@ -18,5 +19,5 @@ try {
     $stmt->execute([$id]);
     echo json_encode(['success' => true]);
 } catch (PDOException $e) {
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    adminJsonDbError($e, 'delete-tour');
 }

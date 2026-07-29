@@ -1,6 +1,7 @@
 <?php
-require_once '../../includes/db.php';
-header('Content-Type: application/json');
+// Rejects anonymous callers and verifies the CSRF token on writes.
+require_once __DIR__ . '/_guard.php';
+require_once __DIR__ . '/../../includes/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = $_POST['id'] ?? 'QT-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);

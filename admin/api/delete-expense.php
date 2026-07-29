@@ -1,17 +1,21 @@
 <?php
-require_once '../../includes/db.php';
-header('Content-Type: application/json');
+// Rejects anonymous callers and verifies the CSRF token on writes.
+require_once __DIR__ . '/_guard.php';
+require_once __DIR__ . '/../../includes/db.php';
 
-if (isset($_GET['id'])) {
-    $id = $_GET['id'];
-    try {
-        $stmt = $pdo->prepare("DELETE FROM expenses WHERE id = ?");
-        $stmt->execute([$id]);
-        echo json_encode(['success' => true]);
-    } catch (PDOException $e) {
-        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-    }
-} else {
-    echo json_encode(['success' => false, 'error' => 'No ID provided']);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    adminJsonError('Invalid request method', 405);
 }
-?>
+
+$id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+if (!$id) {
+    adminJsonError('Expense ID is required');
+}
+
+try {
+    $stmt = $pdo->prepare("DELETE FROM expenses WHERE id = ?");
+    $stmt->execute([$id]);
+    echo json_encode(['success' => true]);
+} catch (PDOException $e) {
+    adminJsonDbError($e, 'delete-expense');
+}

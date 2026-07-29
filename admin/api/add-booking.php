@@ -1,6 +1,7 @@
 <?php
-header('Content-Type: application/json');
-require_once '../../includes/db.php';
+// Rejects anonymous callers and verifies the CSRF token on writes.
+require_once __DIR__ . '/_guard.php';
+require_once __DIR__ . '/../../includes/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
@@ -27,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'booking_id' => $booking_id
         ]);
     } catch (PDOException $e) {
-        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        adminJsonDbError($e, 'add-booking');
     }
 } else {
     echo json_encode(['success' => false, 'error' => 'Invalid request method']);
