@@ -1,4 +1,5 @@
-// import MOCK_DATA removed for global script compatibility
+// Data is injected by admin/index.php as window.ADMIN_DATA and refreshed
+// in place from api/get-data.php — see refreshData() below.
 console.log('Main script loading...');
 
 // Global Error Handler for Remote Debugging
@@ -23,56 +24,117 @@ window.onerror = function(message, source, lineno, colno, error) {
 };
 
 // State Management
+//
+// state.data is server-owned: it is seeded from window.ADMIN_DATA on boot and
+// replaced wholesale by refreshData() after every write. It is never cached to
+// localStorage — the DB is the single source of truth, so a hand-patched local
+// copy can only drift from it.
+//
+// Everything else in `state` is UI-only (which tab, filters, search) and is
+// deliberately kept outside state.data so it survives a refresh.
 let state = {
     currentTab: 'dashboard',
-    version: '5.0',
     data: (() => {
-        try {
-            if (!window.MOCK_DATA) {
-                console.error('window.MOCK_DATA NOT FOUND!');
-                return { tours: [], destinations: [], bookings: [], customers: [] };
-            }
-            // Always start from fresh DB data; only carry over UI-only state from localStorage
-            const saved = (() => { try { return JSON.parse(localStorage.getItem('adminData')); } catch(e) { return null; } })();
-            if (!saved || saved.version !== '5.0') {
-                localStorage.removeItem('adminData');
-                return { ...window.MOCK_DATA };
-            }
-            // Keep DB sources fresh; only tours are briefly cached for instant re-render after saves
-            return {
-                ...window.MOCK_DATA,
-                bookings:    window.MOCK_DATA.bookings,
-                destinations: window.MOCK_DATA.destinations,
-                customers:   window.MOCK_DATA.customers,
-                blogPosts:   window.MOCK_DATA.blogPosts,
-                tours:       Array.isArray(saved.tours) ? saved.tours : window.MOCK_DATA.tours,
-            };
-        } catch (e) {
-            console.error('State initialization failed:', e);
-            return window.MOCK_DATA || {};
+        if (!window.ADMIN_DATA) {
+            console.error('window.ADMIN_DATA NOT FOUND!');
+            return { tours: [], destinations: [], bookings: [], customers: [] };
         }
+        return window.ADMIN_DATA;
     })(),
     searchQuery: '',
     tourStatusFilter: 'All',
     bookingFilter: 'All',
-    financeTab: 'quotations'
+    financeTab: 'quotations',
+    isRefreshing: false
 };
 
-// Persistence
-const saveState = () => {
-    try {
-        localStorage.setItem('adminData', JSON.stringify(state.data));
-    } catch (e) {
-        console.error('Failed to save state:', e);
-    }
-};
+// Legacy localStorage cache from the pre-refresh data model. Clear any stale
+// copy left in browsers that used an earlier build.
+try { localStorage.removeItem('adminData'); } catch (e) { /* ignore */ }
 
 window.hardReset = () => {
-    if (confirm('CRITICAL: This will delete ALL your local data and restore defaults. Proceed?')) {
-        localStorage.removeItem('adminData');
+    if (confirm('Reload the panel and pull fresh data from the server?')) {
         location.reload();
     }
 };
+
+// ── Partial Refresh ───────────────────────────────────────────────────────────
+// Pulls the canonical payload from the server and re-renders the current tab
+// in place. Replaces location.reload() after writes: same correctness, but the
+// admin keeps their tab, filters, search text and scroll position.
+async function refreshData({ silent = false } = {}) {
+    if (state.isRefreshing) return false;
+    state.isRefreshing = true;
+    if (!silent) showRefreshIndicator(true);
+
+    try {
+        const res = await fetch('api/get-data.php', {
+            headers: { 'Accept': 'application/json' },
+            cache: 'no-store'
+        });
+
+        // Session expired mid-session — bounce to login rather than silently
+        // rendering stale data.
+        if (res.status === 401) {
+            showToast('Your session has expired. Redirecting to login…', 'error');
+            setTimeout(() => { window.location.href = 'login.php'; }, 1500);
+            return false;
+        }
+
+        const payload = await res.json();
+        if (!payload.success) throw new Error(payload.error || 'Refresh failed');
+
+        state.data = payload.data;
+        rerenderCurrentTab();
+        return true;
+    } catch (err) {
+        console.error('Refresh failed:', err);
+        showToast('Saved, but the view could not refresh. Reload to see the latest.', 'error');
+        return false;
+    } finally {
+        state.isRefreshing = false;
+        showRefreshIndicator(false);
+    }
+}
+window.refreshData = refreshData;
+
+// Re-render the active tab, preserving scroll position so the admin does not
+// lose their place in a long table after saving a row.
+function rerenderCurrentTab() {
+    const scrollTop = contentArea ? contentArea.scrollTop : 0;
+    destroyCharts();
+    const render = tabs[state.currentTab];
+    if (typeof render === 'function') render();
+    if (contentArea) contentArea.scrollTop = scrollTop;
+}
+
+function showRefreshIndicator(active) {
+    let bar = document.getElementById('refresh-indicator');
+    if (active) {
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'refresh-indicator';
+            bar.className = 'fixed top-0 left-0 right-0 h-0.5 bg-secondary z-[99998] animate-pulse';
+            document.body.appendChild(bar);
+        }
+    } else if (bar) {
+        bar.remove();
+    }
+}
+
+// Chart.js instances must be destroyed before their canvas is replaced,
+// otherwise each re-render leaks a live chart bound to a detached node.
+const chartRegistry = [];
+function registerChart(chart) {
+    if (chart) chartRegistry.push(chart);
+    return chart;
+}
+function destroyCharts() {
+    while (chartRegistry.length) {
+        const chart = chartRegistry.pop();
+        try { chart.destroy(); } catch (e) { /* already gone */ }
+    }
+}
 
 // ── Toast Notification System ─────────────────────────────────────────────────
 function showToast(message, type = 'success') {
@@ -162,6 +224,7 @@ function switchTab(tab) {
     try {
         console.log(`Switching to tab: ${tab}`);
         state.currentTab = tab;
+        destroyCharts();
         sidebarLinks.forEach(l => {
             l.classList.toggle('active', l.getAttribute('data-tab') === tab);
         });
@@ -1354,30 +1417,9 @@ window.openBlogModal = (blogId = null) => {
             const data = await res.json();
             if (!data.success) throw new Error(data.error || 'Save failed');
 
-            const blogData = {
-                id:         data.id,
-                title:      formData.get('title'),
-                slug:       data.slug,
-                excerpt:    formData.get('excerpt'),
-                content:    formData.get('content'),
-                image:      data.image || formData.get('image'),
-                author:     formData.get('author'),
-                category:   formData.get('category'),
-                tags:       formData.get('tags'),
-                status:     formData.get('status'),
-                created_at: blog ? blog.created_at : new Date().toISOString(),
-            };
-
-            if (!state.data.blogPosts) state.data.blogPosts = [];
-            if (blog) {
-                state.data.blogPosts = state.data.blogPosts.map(b => b.id === blog.id ? blogData : b);
-            } else {
-                state.data.blogPosts.unshift(blogData);
-            }
-
             showToast(blog ? 'Post updated successfully' : 'Post published successfully');
-            renderBlogs();
             window.closeModal();
+            await refreshData();
         } catch (err) {
             showToast('Error saving post: ' + err.message, 'error');
             submitBtn.disabled = false;
@@ -1392,9 +1434,8 @@ window.deleteBlog = async (id) => {
         const res  = await fetch(`api/delete-blog.php?id=${id}`);
         const data = await res.json();
         if (!data.success) throw new Error(data.error || 'Delete failed');
-        state.data.blogPosts = (state.data.blogPosts || []).filter(b => b.id !== id);
         showToast('Post deleted');
-        renderBlogs();
+        await refreshData();
     } catch (err) {
         showToast('Error deleting post: ' + err.message, 'error');
     }
@@ -1472,7 +1513,7 @@ function initDashboardCharts() {
     const ctx = document.getElementById('revenueChart');
     if (!ctx) return;
     
-    new Chart(ctx, {
+    registerChart(new Chart(ctx, {
         type: 'line',
         data: {
             labels: state.data.analytics.monthlyStats.map(s => s.month),
@@ -1492,7 +1533,7 @@ function initDashboardCharts() {
                 x: { grid: { display: false }, border: { display: false } }
             }
         }
-    });
+    }));
 }
 
 function initAnalyticsCharts() {
@@ -1506,7 +1547,7 @@ function initAnalyticsCharts() {
         gradient.addColorStop(0, 'rgba(0, 106, 114, 0.4)');
         gradient.addColorStop(1, 'rgba(0, 106, 114, 0)');
 
-        new Chart(revCtx, {
+        registerChart(new Chart(revCtx, {
             type: 'line',
             data: {
                 labels: state.data.analytics.monthlyStats.map(s => s.month),
@@ -1550,7 +1591,7 @@ function initAnalyticsCharts() {
                     }
                 }
             }
-        });
+        }));
     }
 
     if (distCtx) {
@@ -1566,7 +1607,7 @@ function initAnalyticsCharts() {
         const data = Object.values(regionCounts);
         const colors = ['#006A72', '#FFD214', '#10B981', '#1E293B', '#8B5CF6', '#F43F5E'];
 
-        new Chart(distCtx, {
+        registerChart(new Chart(distCtx, {
             type: 'doughnut',
             data: {
                 labels: labels,
@@ -1590,7 +1631,7 @@ function initAnalyticsCharts() {
                 },
                 cutout: '75%'
             }
-        });
+        }));
     }
 }
 
@@ -1769,31 +1810,9 @@ window.openTourModal = (tourId = null) => {
             const data = await res.json();
             if (!data.success) throw new Error(data.error || 'Save failed');
 
-            const tourData = {
-                id:          data.id,
-                title:       formData.get('title'),
-                image:       data.image || formData.get('image'),
-                price:       parseInt(formData.get('price')),
-                location:    formData.get('location'),
-                duration:    formData.get('duration'),
-                category:    formData.get('category'),
-                status:      formData.get('status'),
-                description: formData.get('description'),
-                show_on_home: formData.get('showOnHome') === 'on' ? 1 : 0,
-                home_section: formData.get('homeSection'),
-                rating:      tour ? tour.rating : 5.0
-            };
-
-            if (tour) {
-                state.data.tours = state.data.tours.map(t => t.id === tour.id ? tourData : t);
-            } else {
-                state.data.tours.unshift(tourData);
-            }
-
-            saveState();
             showToast(tour ? 'Tour updated successfully' : 'Tour created successfully');
-            renderTours();
             window.closeModal();
+            await refreshData();
         } catch (err) {
             showToast('Error saving tour: ' + err.message, 'error');
             submitBtn.disabled = false;
@@ -1818,10 +1837,8 @@ window.deleteTour = async (id) => {
         const res  = await fetch(`api/delete-tour.php?id=${id}`);
         const data = await res.json();
         if (!data.success) throw new Error(data.error || 'Delete failed');
-        state.data.tours = state.data.tours.filter(t => t.id !== id);
-        saveState();
         showToast('Tour deleted');
-        renderTours();
+        await refreshData();
     } catch (err) {
         showToast('Error deleting tour: ' + err.message, 'error');
     }
@@ -1896,7 +1913,8 @@ window.openDestinationModal = (destId = null) => {
             
             if (result.success) {
                 showToast(dest ? 'Destination updated' : 'Destination added');
-                location.reload();
+                window.closeModal();
+                await refreshData();
             } else {
                 showToast('Error: ' + result.error, 'error');
             }
@@ -1914,7 +1932,7 @@ window.deleteDestination = async (id) => {
         const result = await response.json();
         if (result.success) {
             showToast('Destination deleted');
-            location.reload();
+            await refreshData();
         } else {
             showToast('Error: ' + result.error, 'error');
         }
@@ -1937,11 +1955,8 @@ window.confirmBooking = async (id) => {
         });
         const data = await res.json();
         if (data.success) {
-            state.data.bookings = state.data.bookings.map(b =>
-                b.id == id ? { ...b, status: 'Confirmed' } : b
-            );
             showToast('Booking confirmed successfully');
-            renderBookings();
+            await refreshData();
         } else {
             showToast(data.error || 'Failed to confirm booking', 'error');
         }
@@ -1957,11 +1972,8 @@ window.cancelBooking = async (id) => {
         });
         const data = await res.json();
         if (data.success) {
-            state.data.bookings = state.data.bookings.map(b =>
-                b.id == id ? { ...b, status: 'Cancelled' } : b
-            );
             showToast('Booking cancelled');
-            renderBookings();
+            await refreshData();
         } else {
             showToast(data.error || 'Failed to cancel booking', 'error');
         }
@@ -1978,9 +1990,8 @@ window.deleteBooking = async (id) => {
         });
         const data = await res.json();
         if (data.success) {
-            state.data.bookings = state.data.bookings.filter(b => b.id != id);
             showToast('Booking deleted');
-            renderBookings();
+            await refreshData();
         } else {
             showToast(data.error || 'Failed to delete booking', 'error');
         }
@@ -2152,7 +2163,8 @@ window.openCustomerModal = (id = null) => {
             
             if (result.success) {
                 showToast(cust ? 'Client profile updated' : 'New client registered');
-                location.reload();
+                window.closeModal();
+                await refreshData();
             } else {
                 showToast('Error: ' + result.error, 'error');
             }
@@ -2170,7 +2182,7 @@ window.deleteCustomer = async (id) => {
         const result = await response.json();
         if (result.success) {
             showToast('Client deleted');
-            location.reload();
+            await refreshData();
         } else {
             showToast('Error: ' + result.error, 'error');
         }
@@ -2256,21 +2268,9 @@ window.openBookingModal = () => {
             const result = await response.json();
             
             if (result.success) {
-                const newBooking = {
-                    id: result.booking_id,
-                    user: formData.get('user_name'),
-                    email: formData.get('email'),
-                    tour: formData.get('tour_name'),
-                    date: formData.get('booking_date'),
-                    amount: parseFloat(formData.get('amount')),
-                    status: formData.get('status'),
-                    created_at: new Date().toISOString()
-                };
-                state.data.bookings.unshift(newBooking);
-                saveState();
                 showToast('Booking created successfully');
-                renderBookings();
                 window.closeModal();
+                await refreshData();
             } else {
                 showToast('Error creating booking: ' + result.error, 'error');
             }
@@ -2341,7 +2341,7 @@ window.openQuotationModal = (quoteId = null) => {
         try {
             const res = await fetch('api/save-quotation.php', { method: 'POST', body: formData });
             const data = await res.json();
-            if (data.success) { showToast(quoteId ? 'Quotation updated' : 'Quotation created'); window.closeModal(); location.reload(); }
+            if (data.success) { showToast(quoteId ? 'Quotation updated' : 'Quotation created'); window.closeModal(); await refreshData(); }
             else { showToast(data.message || 'Error saving quotation', 'error'); }
         } catch (err) { console.error(err); showToast('Network error while saving', 'error'); }
     });
@@ -2407,7 +2407,7 @@ window.openInvoiceModal = (invoiceId = null) => {
         try {
             const res = await fetch('api/save-invoice.php', { method: 'POST', body: formData });
             const data = await res.json();
-            if (data.success) { showToast(invoiceId ? 'Invoice updated' : 'Invoice created'); window.closeModal(); location.reload(); }
+            if (data.success) { showToast(invoiceId ? 'Invoice updated' : 'Invoice created'); window.closeModal(); await refreshData(); }
             else { showToast(data.message || 'Error saving invoice', 'error'); }
         } catch (err) { console.error(err); showToast('Network error while saving', 'error'); }
     });
@@ -2468,7 +2468,7 @@ window.openExpenseModal = () => {
         try {
             const res = await fetch('api/save-expense.php', { method: 'POST', body: formData });
             const data = await res.json();
-            if (data.success) { showToast('Expense recorded'); window.closeModal(); location.reload(); }
+            if (data.success) { showToast('Expense recorded'); window.closeModal(); await refreshData(); }
             else { showToast(data.message || 'Error saving expense', 'error'); }
         } catch (err) { console.error(err); showToast('Network error while saving', 'error'); }
     });
@@ -2479,7 +2479,7 @@ window.deleteExpense = async (id) => {
     try {
         const res = await fetch(`api/delete-expense.php?id=${id}`);
         const data = await res.json();
-        if (data.success) { showToast('Expense deleted'); location.reload(); }
+        if (data.success) { showToast('Expense deleted'); await refreshData(); }
         else { showToast(data.error || 'Failed to delete expense', 'error'); }
     } catch (err) { showToast('Network error', 'error'); console.error(err); }
 };
@@ -2493,7 +2493,7 @@ window.markInvoicePaid = async (id) => {
             body: `id=${encodeURIComponent(id)}&status=Paid`
         });
         const data = await res.json();
-        if (data.success) { showToast('Invoice marked as Paid'); location.reload(); }
+        if (data.success) { showToast('Invoice marked as Paid'); await refreshData(); }
         else { showToast(data.error || 'Failed to update invoice', 'error'); }
     } catch (err) { showToast('Network error', 'error'); console.error(err); }
 };
