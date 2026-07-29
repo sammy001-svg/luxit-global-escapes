@@ -312,64 +312,86 @@ function renderDashboard() {
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-2 glass-card rounded-2xl p-6">
                     <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-xl font-bold">Revenue Performance</h2>
-                        <span class="text-xs text-emerald-400 font-bold bg-emerald-400/10 px-2 py-1 rounded-md">+12.5% vs last month</span>
+                        <div>
+                            <h2 class="text-xl font-bold">Revenue Performance</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Confirmed bookings, last 6 months</p>
+                        </div>
+                        ${renderTrendBadge(analytics.revenueTrend)}
                     </div>
                     <canvas id="revenueChart" class="w-full h-80"></canvas>
                 </div>
-                
+
                 <div class="glass-card rounded-2xl p-6 flex flex-col">
                     <h2 class="text-xl font-bold mb-6">Recent Activity</h2>
-                    <div class="flex-1 space-y-6">
-                        ${activityFeed.map(item => `
+                    <div class="flex-1 space-y-5">
+                        ${activityFeed.length ? activityFeed.slice(0, 8).map(item => `
                             <div class="flex space-x-4">
                                 <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                                     <i class="fas ${getActivityIcon(item.action)} text-primary text-xs"></i>
                                 </div>
-                                <div>
-                                    <p class="text-sm font-medium"><span class="text-primary">${item.user}</span> ${item.action}</p>
-                                    <p class="text-xs text-slate-400 font-bold opacity-80 mt-0.5">${item.target} • ${item.time}</p>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-medium leading-snug">
+                                        <span class="text-primary">${item.user}</span> ${item.action}
+                                    </p>
+                                    <p class="text-xs text-slate-400 font-bold opacity-80 mt-0.5 truncate" title="${item.target}">${item.target}</p>
+                                    <p class="text-[10px] text-slate-600 mt-0.5">${timeAgo(item.created_at)}</p>
                                 </div>
                             </div>
-                        `).join('')}
+                        `).join('') : `
+                            <div class="text-center py-10">
+                                <i class="fas fa-clock-rotate-left text-4xl text-slate-800 mb-3 block"></i>
+                                <p class="text-sm text-slate-500">No activity yet</p>
+                                <p class="text-xs text-slate-600 mt-1">Actions you take in the panel will appear here.</p>
+                            </div>
+                        `}
                     </div>
-                    <button class="w-full mt-6 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm font-semibold transition">View System Logs</button>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div class="glass-card rounded-2xl p-6">
                     <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-xl font-bold">Calendar of Events</h2>
+                        <div>
+                            <h2 class="text-xl font-bold">Departure Calendar</h2>
+                            <p class="text-xs text-slate-500 mt-0.5" id="calendar-label">${calendarMonthLabel()}</p>
+                        </div>
                         <div class="flex space-x-2">
-                            <button class="p-1.5 hover:bg-white/5 rounded-lg text-slate-400"><i class="fas fa-chevron-left"></i></button>
-                            <button class="p-1.5 hover:bg-white/5 rounded-lg text-slate-400"><i class="fas fa-chevron-right"></i></button>
+                            <button onclick="window.shiftCalendar(-1)" class="p-1.5 hover:bg-white/5 rounded-lg text-slate-400 transition" title="Previous month"><i class="fas fa-chevron-left"></i></button>
+                            <button onclick="window.shiftCalendar(1)" class="p-1.5 hover:bg-white/5 rounded-lg text-slate-400 transition" title="Next month"><i class="fas fa-chevron-right"></i></button>
                         </div>
                     </div>
                     <div class="grid grid-cols-7 gap-2 text-center text-[10px] text-slate-500 font-bold mb-4 uppercase tracking-tighter">
                         <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
                     </div>
-                    <div class="grid grid-cols-7 gap-2">
+                    <div class="grid grid-cols-7 gap-2" id="calendar-grid">
                         ${renderCalendarDays()}
                     </div>
                 </div>
 
                 <div class="glass-card rounded-2xl p-6">
-                    <h2 class="text-xl font-bold mb-6">Upcoming Schedule</h2>
+                    <div class="mb-6">
+                        <h2 class="text-xl font-bold">Upcoming Departures</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Confirmed bookings and scheduled events</p>
+                    </div>
                     <div class="space-y-4">
-                        ${state.data.events.slice(0, 4).map(event => `
+                        ${state.data.events.length ? state.data.events.slice(0, 5).map(event => `
                             <div class="flex items-center p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition group">
-                                <div class="w-12 h-12 rounded-xl ${getEventTypeColor(event.type)} flex flex-col items-center justify-center mr-4">
+                                <div class="w-12 h-12 rounded-xl ${getEventTypeColor(event.type)} flex flex-col items-center justify-center mr-4 flex-shrink-0">
                                     <span class="text-[10px] font-bold uppercase opacity-80">${new Date(event.date).toLocaleString('default', { month: 'short' })}</span>
                                     <span class="text-lg font-bold leading-none">${new Date(event.date).getDate()}</span>
                                 </div>
-                                <div class="flex-1">
-                                    <h4 class="text-sm font-bold group-hover:text-primary transition">${event.title}</h4>
-                                    <p class="text-xs text-slate-500">${event.type.charAt(0).toUpperCase() + event.type.slice(1)} • All Day</p>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-sm font-bold group-hover:text-primary transition truncate" title="${event.title}">${event.title}</h4>
+                                    <p class="text-xs text-slate-500">${daysUntil(event.date)}</p>
                                 </div>
-                                <i class="fas fa-chevron-right text-slate-700 text-xs"></i>
                             </div>
-                        `).join('')}
+                        `).join('') : `
+                            <div class="text-center py-10">
+                                <i class="fas fa-calendar-day text-4xl text-slate-800 mb-3 block"></i>
+                                <p class="text-sm text-slate-500">No upcoming departures</p>
+                                <p class="text-xs text-slate-600 mt-1">Confirmed bookings with a future travel date appear here.</p>
+                            </div>
+                        `}
                     </div>
                 </div>
             </div>
@@ -907,10 +929,14 @@ function renderAnalytics() {
     try {
         const { analytics, bookings, tours } = state.data;
         
-        // Calculate dynamic insights
-        const totalConfirmed = bookings.filter(b => b.status === 'Confirmed').length;
-        const avgBookingValue = Math.round(analytics.totalRevenue / analytics.totalBookings);
-        
+        // Every figure here comes from the server's computed analytics. Values
+        // that cannot be derived from real rows render as "—" rather than a
+        // plausible-looking invention.
+        const money = (v) => v === null || v === undefined
+            ? '—'
+            : '$' + Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 });
+        const pct = (v) => v === null || v === undefined ? '—' : `${v}%`;
+
         contentArea.innerHTML = `
         <div class="space-y-8 animate-fade-in pb-12">
             <div class="flex items-center justify-between">
@@ -933,10 +959,10 @@ function renderAnalytics() {
 
             <!-- KPI Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                ${renderAnalyticsStatCard('Total Revenue', `$${analytics.totalRevenue.toLocaleString()}`, 'fa-dollar-sign', 'text-emerald-400', '+18.4%')}
-                ${renderAnalyticsStatCard('Conversion Rate', '4.2%', 'fa-bullseye', 'text-amber-400', '+0.8%')}
-                ${renderAnalyticsStatCard('Avg. Order Value', `$${avgBookingValue}`, 'fa-receipt', 'text-blue-400', '-2.1%')}
-                ${renderAnalyticsStatCard('Customer LTV', '$2,840', 'fa-user-graduate', 'text-purple-400', '+12%')}
+                ${renderAnalyticsStatCard('Total Revenue', money(analytics.totalRevenue), 'fa-dollar-sign', 'text-emerald-400', 'From confirmed bookings')}
+                ${renderAnalyticsStatCard('Confirmation Rate', pct(analytics.confirmationRate), 'fa-bullseye', 'text-amber-400', `${analytics.confirmedBookings} of ${analytics.totalBookings} bookings`)}
+                ${renderAnalyticsStatCard('Avg. Booking Value', money(analytics.avgBookingValue), 'fa-receipt', 'text-blue-400', 'Per confirmed booking')}
+                ${renderAnalyticsStatCard('Revenue / Customer', money(analytics.revenuePerCustomer), 'fa-user-graduate', 'text-purple-400', `${pct(analytics.repeatRate)} book again`)}
             </div>
 
             <!-- Main Charts -->
@@ -966,11 +992,7 @@ function renderAnalytics() {
                         <canvas id="bookingsDoughnut"></canvas>
                     </div>
                     <div class="space-y-3">
-                        ${[
-                            { label: 'Africa', value: '35%', color: 'bg-[#006A72]' },
-                            { label: 'Asia', value: '25%', color: 'bg-[#FFD214]' },
-                            { label: 'Europe', value: '20%', color: 'bg-[#10B981]' }
-                        ].map(item => `
+                        ${regionLegend().map(item => `
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
                                     <span class="w-2 h-2 rounded-full ${item.color} mr-3"></span>
@@ -997,7 +1019,7 @@ function renderAnalytics() {
                                     <th class="p-4 text-[10px] font-black uppercase text-slate-500 tracking-wider">Tour Name</th>
                                     <th class="p-4 text-[10px] font-black uppercase text-slate-500 tracking-wider">Bookings</th>
                                     <th class="p-4 text-[10px] font-black uppercase text-slate-500 tracking-wider">Revenue</th>
-                                    <th class="p-4 text-[10px] font-black uppercase text-slate-500 tracking-wider">Trend</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-slate-500 tracking-wider">Share of Revenue</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-white/5">
@@ -1012,7 +1034,12 @@ function renderAnalytics() {
                                         <td class="p-4 text-sm font-medium">${tour.bookings}</td>
                                         <td class="p-4 text-sm font-bold text-secondary">$${parseFloat(tour.revenue || 0).toLocaleString()}</td>
                                         <td class="p-4">
-                                            <span class="text-emerald-400 text-xs font-bold"><i class="fas fa-caret-up mr-1"></i>${Math.floor(Math.random()*15)+5}%</span>
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-16 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                                                    <div class="h-full bg-primary rounded-full" style="width: ${revenueShare(tour)}%"></div>
+                                                </div>
+                                                <span class="text-xs font-bold text-slate-400">${revenueShare(tour)}%</span>
+                                            </div>
                                         </td>
                                     </tr>
                                 `).join('')}
@@ -1021,21 +1048,21 @@ function renderAnalytics() {
                     </div>
                 </div>
 
+                <!-- Booking pipeline. This panel previously showed traffic
+                     source percentages, but the site records no traffic data,
+                     so those figures could only ever be invented. -->
                 <div class="glass-card rounded-2xl p-6">
-                    <h2 class="text-xl font-bold mb-6">Device & Source Traffic</h2>
+                    <h2 class="text-xl font-bold mb-1">Booking Pipeline</h2>
+                    <p class="text-xs text-slate-500 mb-8">Where your bookings currently stand</p>
                     <div class="space-y-8">
-                        ${[
-                            { label: 'Direct Traffic', percent: 65, color: 'bg-primary' },
-                            { label: 'Social Media', percent: 22, color: 'bg-secondary' },
-                            { label: 'Referral', percent: 13, color: 'bg-emerald-400' }
-                        ].map(source => `
+                        ${bookingPipeline().map(stage => `
                             <div class="space-y-2">
                                 <div class="flex items-center justify-between text-xs">
-                                    <span class="font-bold text-slate-400 uppercase tracking-widest">${source.label}</span>
-                                    <span class="font-bold">${source.percent}%</span>
+                                    <span class="font-bold text-slate-400 uppercase tracking-widest">${stage.label}</span>
+                                    <span class="font-bold">${stage.count} <span class="text-slate-600 font-medium">(${stage.percent}%)</span></span>
                                 </div>
                                 <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                                    <div class="${source.color} h-full rounded-full" style="width: ${source.percent}%"></div>
+                                    <div class="${stage.color} h-full rounded-full transition-all duration-500" style="width: ${stage.percent}%"></div>
                                 </div>
                             </div>
                         `).join('')}
@@ -1044,8 +1071,8 @@ function renderAnalytics() {
                         <div class="flex items-start space-x-3">
                             <i class="fas fa-lightbulb text-primary mt-1"></i>
                             <div>
-                                <h4 class="text-sm font-bold text-white">Insight: Mobile users are growing</h4>
-                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Bookings from mobile devices have increased by 24% this month. Consider optimizing the checkout flow for smaller screens.</p>
+                                <h4 class="text-sm font-bold text-white">${pipelineInsight().title}</h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">${pipelineInsight().body}</p>
                             </div>
                         </div>
                     </div>
@@ -1067,21 +1094,103 @@ function renderAnalytics() {
     }
 }
 
-function renderAnalyticsStatCard(title, value, icon, iconColor, trend) {
-    const isPositive = trend.startsWith('+');
+// ── Analytics helpers ─────────────────────────────────────────────────────────
+// All three derive from state.data, so the numbers on screen always agree with
+// the charts beside them.
+
+// Legend for the regional doughnut, computed from the same destination counts
+// the chart itself uses. It previously listed fixed percentages that had no
+// relationship to the chart.
+function regionLegend() {
+    const counts = {};
+    (state.data.destinations || []).forEach(d => {
+        if (!d.parent_id && d.region) counts[d.region] = (counts[d.region] || 0) + 1;
+    });
+
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+    if (!total) return [];
+
+    const palette = ['bg-[#006A72]', 'bg-[#FFD214]', 'bg-[#10B981]', 'bg-[#1E293B]', 'bg-[#8B5CF6]', 'bg-[#F43F5E]'];
+
+    return Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([label, n], i) => ({
+            label,
+            value: `${Math.round((n / total) * 100)}%`,
+            color: palette[i % palette.length]
+        }));
+}
+
+// A tour's share of total booking revenue — a real, stable comparison, unlike
+// the Math.random() trend that changed on every render.
+function revenueShare(tour) {
+    const total = (state.data.analytics.popularTours || [])
+        .reduce((sum, t) => sum + parseFloat(t.revenue || 0), 0);
+    if (!total) return 0;
+    return Math.round((parseFloat(tour.revenue || 0) / total) * 100);
+}
+
+function bookingPipeline() {
+    const bookings = state.data.bookings || [];
+    const total = bookings.length;
+    const stages = [
+        { label: 'Confirmed', status: 'Confirmed', color: 'bg-emerald-400' },
+        { label: 'Pending',   status: 'Pending',   color: 'bg-secondary' },
+        { label: 'Cancelled', status: 'Cancelled', color: 'bg-rose-500' },
+    ];
+    return stages.map(s => {
+        const count = bookings.filter(b => b.status === s.status).length;
+        return { ...s, count, percent: total ? Math.round((count / total) * 100) : 0 };
+    });
+}
+
+// An observation drawn from the pipeline, or an honest note when there is not
+// enough data to say anything.
+function pipelineInsight() {
+    const bookings = state.data.bookings || [];
+    if (!bookings.length) {
+        return { title: 'No bookings yet', body: 'Once bookings come in, this panel will highlight where they are getting stuck.' };
+    }
+
+    const pending = bookings.filter(b => b.status === 'Pending').length;
+    const cancelled = bookings.filter(b => b.status === 'Cancelled').length;
+    const pendingValue = bookings
+        .filter(b => b.status === 'Pending')
+        .reduce((sum, b) => sum + Number(b.amount || 0), 0);
+
+    if (pending > 0) {
+        return {
+            title: `${pending} booking${pending === 1 ? '' : 's'} awaiting confirmation`,
+            body: `That is $${pendingValue.toLocaleString()} of revenue not yet confirmed. Confirming these moves them into your reported totals.`
+        };
+    }
+    if (cancelled / bookings.length > 0.2) {
+        return {
+            title: 'Cancellation rate is above 20%',
+            body: `${cancelled} of ${bookings.length} bookings were cancelled. Worth reviewing which packages they came from.`
+        };
+    }
+    return {
+        title: 'Pipeline is clear',
+        body: 'No bookings are waiting on confirmation. Every booking has been actioned.'
+    };
+}
+
+// `note` describes how the figure was derived. It replaced a trend badge that
+// rendered a fixed percentage regardless of the underlying data.
+function renderAnalyticsStatCard(title, value, icon, iconColor, note) {
     return `
         <div class="glass-card rounded-2xl p-6 border border-white/5 hover:border-white/10 transition">
             <div class="flex items-center justify-between mb-4">
                 <div class="w-10 h-10 rounded-xl bg-dark-900 flex items-center justify-center">
                     <i class="fas ${icon} ${iconColor} text-lg"></i>
                 </div>
-                <span class="text-[10px] font-black px-2 py-1 rounded-lg ${isPositive ? 'bg-emerald-400/10 text-emerald-400' : 'bg-rose-500/10 text-rose-500'}">
-                    ${trend}
-                </span>
             </div>
             <div>
                 <p class="text-xs text-slate-500 font-bold uppercase tracking-widest mb-1">${title}</p>
                 <p class="text-2xl font-bold">${value}</p>
+                ${note ? `<p class="text-[10px] text-slate-600 mt-1.5">${note}</p>` : ''}
             </div>
         </div>
     `;
@@ -1575,9 +1684,46 @@ function renderStars(rating) {
 }
 
 function getActivityIcon(action) {
-    if (action.includes('Booking')) return 'fa-shopping-cart';
-    if (action.includes('tour')) return 'fa-plus';
-    return 'fa-comment-alt';
+    const a = (action || '').toLowerCase();
+    if (a.includes('booking'))     return 'fa-calendar-check';
+    if (a.includes('package'))     return 'fa-route';
+    if (a.includes('blog'))        return 'fa-newspaper';
+    if (a.includes('client'))      return 'fa-user';
+    if (a.includes('destination')) return 'fa-map-marker-alt';
+    if (a.includes('expense'))     return 'fa-receipt';
+    if (a.includes('invoice'))     return 'fa-file-invoice-dollar';
+    if (a.includes('quotation'))   return 'fa-file-lines';
+    if (a.includes('deleted'))     return 'fa-trash';
+    return 'fa-clock-rotate-left';
+}
+
+// Age of a MySQL DATETIME, computed at render time. The activity feed used to
+// show a stored string ("2 hours ago") that never changed.
+function timeAgo(timestamp) {
+    if (!timestamp) return '';
+    // MySQL returns "YYYY-MM-DD HH:MM:SS"; Safari needs the T separator.
+    const then = new Date(String(timestamp).replace(' ', 'T'));
+    if (isNaN(then)) return '';
+
+    const secs = Math.floor((Date.now() - then.getTime()) / 1000);
+    if (secs < 60)    return 'just now';
+    if (secs < 3600)  return `${Math.floor(secs / 60)}m ago`;
+    if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`;
+    if (secs < 604800) return `${Math.floor(secs / 86400)}d ago`;
+    return then.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+}
+
+// Percentage change badge. Renders a neutral note when there is no baseline,
+// rather than implying a trend that was never measured.
+function renderTrendBadge(pct, label = 'vs last month') {
+    if (pct === null || pct === undefined) {
+        return `<span class="text-xs text-slate-500 font-bold bg-white/5 px-2 py-1 rounded-md">No prior data</span>`;
+    }
+    const up = pct >= 0;
+    const cls = up ? 'text-emerald-400 bg-emerald-400/10' : 'text-rose-400 bg-rose-400/10';
+    return `<span class="text-xs font-bold ${cls} px-2 py-1 rounded-md">
+                <i class="fas fa-arrow-${up ? 'up' : 'down'} mr-1"></i>${up ? '+' : ''}${pct}% ${label}
+            </span>`;
 }
 
 function getEventTypeColor(type) {
@@ -1589,14 +1735,54 @@ function getEventTypeColor(type) {
     }
 }
 
+// How far in the future a scheduled date falls.
+function daysUntil(dateStr) {
+    const target = new Date(String(dateStr).replace(' ', 'T'));
+    if (isNaN(target)) return '';
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    target.setHours(0, 0, 0, 0);
+
+    const days = Math.round((target - today) / 86400000);
+    if (days < 0)  return `${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'} ago`;
+    if (days === 0) return 'Departs today';
+    if (days === 1) return 'Departs tomorrow';
+    if (days < 7)  return `In ${days} days`;
+    if (days < 30) return `In ${Math.round(days / 7)} week${Math.round(days / 7) === 1 ? '' : 's'}`;
+    return target.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function calendarMonthLabel() {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + (state.calendarOffset || 0));
+    return d.toLocaleString('default', { month: 'long', year: 'numeric' });
+}
+
+// Move the calendar without re-rendering the whole dashboard, so the charts
+// and activity feed are not rebuilt just to page through months.
+window.shiftCalendar = (delta) => {
+    state.calendarOffset = (state.calendarOffset || 0) + delta;
+    const grid  = document.getElementById('calendar-grid');
+    const label = document.getElementById('calendar-label');
+    if (grid)  grid.innerHTML = renderCalendarDays();
+    if (label) label.textContent = calendarMonthLabel();
+};
+
 function renderCalendarDays() {
     const days = [];
-    const date = new Date();
-    const month = date.getMonth();
-    const year = date.getFullYear();
+    const today = new Date();
+
+    // Anchor to the first of the month so adding an offset cannot skip a month
+    // (e.g. 31 Jan + 1 month lands in March).
+    const cursor = new Date(today.getFullYear(), today.getMonth(), 1);
+    cursor.setMonth(cursor.getMonth() + (state.calendarOffset || 0));
+
+    const month = cursor.getMonth();
+    const year  = cursor.getFullYear();
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    
+
     // Adjust for Monday start (default is Sunday=0)
     const offset = firstDay === 0 ? 6 : firstDay - 1;
 
@@ -1604,18 +1790,23 @@ function renderCalendarDays() {
         days.push(`<div class="h-10 border border-white/5 rounded-lg opacity-20"></div>`);
     }
 
+    const events = state.data.events || [];
+
     for (let d = 1; d <= daysInMonth; d++) {
         const currentDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        const hasEvent = state.data.events.some(e => e.date === currentDate);
-        const isToday = d === date.getDate();
-        
+        const dayEvents = events.filter(e => String(e.date).slice(0, 10) === currentDate);
+        const hasEvent = dayEvents.length > 0;
+        const isToday = d === today.getDate()
+                     && month === today.getMonth()
+                     && year === today.getFullYear();
+
         days.push(`
             <div class="h-10 relative group border border-white/5 rounded-lg flex items-center justify-center text-xs font-bold ${isToday ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' : 'hover:bg-white/5'} transition cursor-pointer">
                 ${d}
                 ${hasEvent ? `<span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-secondary"></span>` : ''}
                 ${hasEvent ? `
                     <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-slate-900 border border-white/10 rounded-lg text-[9px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none z-50">
-                        ${state.data.events.find(e => e.date === currentDate).title}
+                        ${dayEvents.map(e => e.title).join('<br>')}
                     </div>
                 ` : ''}
             </div>

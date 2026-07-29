@@ -2,6 +2,7 @@
 // Rejects anonymous callers and verifies the CSRF token on writes.
 require_once __DIR__ . '/_guard.php';
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../includes/activity.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'error' => 'Invalid request method']);
@@ -20,6 +21,8 @@ if (empty($id) || !in_array($status, $allowed)) {
 try {
     $stmt = $pdo->prepare("UPDATE invoices SET status = ? WHERE id = ?");
     $stmt->execute([$status, $id]);
+
+    logActivity($pdo, 'marked invoice ' . strtolower($status), $id);
     echo json_encode(['success' => true]);
 } catch (PDOException $e) {
     echo json_encode(['success' => false, 'error' => 'Database error']);

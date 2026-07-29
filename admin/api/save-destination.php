@@ -2,6 +2,7 @@
 // Rejects anonymous callers and verifies the CSRF token on writes.
 require_once __DIR__ . '/_guard.php';
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../includes/activity.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
@@ -31,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$name, $parent_id, $region, $description]);
         }
 
+        logActivity($pdo, $id ? 'updated the destination' : 'added the destination', $name);
         echo json_encode(['success' => true]);
     } catch (PDOException $e) {
         adminJsonDbError($e, 'save-destination');

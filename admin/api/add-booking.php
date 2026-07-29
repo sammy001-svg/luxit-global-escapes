@@ -2,6 +2,7 @@
 // Rejects anonymous callers and verifies the CSRF token on writes.
 require_once __DIR__ . '/_guard.php';
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../includes/activity.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
@@ -22,6 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $stmt = $pdo->prepare("INSERT INTO bookings (id, user_name, email, tour_name, booking_date, amount, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([$booking_id, $user_name, $email, $tour_name, $booking_date, $amount, $status]);
+
+        logActivity($pdo, 'created a booking for', $user_name . ' - ' . $tour_name);
 
         echo json_encode([
             'success' => true,

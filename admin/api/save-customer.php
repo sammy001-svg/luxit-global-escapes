@@ -2,6 +2,7 @@
 // Rejects anonymous callers and verifies the CSRF token on writes.
 require_once __DIR__ . '/_guard.php';
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../includes/activity.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
@@ -34,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$newId, $name, $email, $country, date('Y-m-d')]);
         }
 
+        logActivity($pdo, $id ? 'updated the client' : 'registered a new client', $name);
         echo json_encode(['success' => true]);
     } catch (PDOException $e) {
         adminJsonDbError($e, 'save-customer');

@@ -52,14 +52,33 @@ if (!function_exists('getAdminDashboardData')) {
                     joined_date    AS joined
              FROM customers ORDER BY joined_date DESC");
 
-        // Events — alias event_date so JS can use .date
-        $events = adminSafeQuery($pdo,
+        // Schedule — upcoming departures derived from confirmed bookings, merged
+        // with any manually entered events. Previously this read only the events
+        // table, which nothing ever wrote to, so it showed the same stale seed
+        // rows forever.
+        $manualEvents = adminSafeQuery($pdo,
             "SELECT id, title, event_date AS date, type
-             FROM events ORDER BY event_date ASC");
+             FROM events
+             WHERE event_date >= CURDATE()
+             ORDER BY event_date ASC");
 
-        // Activity Feed — alias activity_time so JS can use .time
+        $departures = adminSafeQuery($pdo,
+            "SELECT CONCAT('bk-', id) AS id,
+                    CONCAT(tour_name, ' — ', user_name) AS title,
+                    booking_date AS date,
+                    'tour' AS type
+             FROM bookings
+             WHERE status = 'Confirmed' AND booking_date >= CURDATE()
+             ORDER BY booking_date ASC
+             LIMIT 20");
+
+        $events = array_merge($manualEvents, $departures);
+        usort($events, fn($a, $b) => strcmp((string)$a['date'], (string)$b['date']));
+
+        // Activity Feed — created_at drives the age; the old activity_time column
+        // held literal strings like "2 hours ago" that never changed.
         $activityFeed = adminSafeQuery($pdo,
-            "SELECT id, user, action, target, activity_time AS time
+            "SELECT id, user, action, target, created_at
              FROM activity_feed ORDER BY created_at DESC LIMIT 20");
 
         // Finance — LEFT JOINs so rows without a matching customer still appear
@@ -80,17 +99,27 @@ if (!function_exists('getAdminDashboardData')) {
         $blogPosts = adminSafeQuery($pdo, "SELECT * FROM blog_posts ORDER BY created_at DESC");
 
         // ── Analytics ─────────────────────────────────────────────────────────
+        // Every figure below is computed from real rows. The panel previously
+        // displayed hardcoded values for conversion rate, customer lifetime
+        // value and all four trend percentages.
         $totalRevenue       = 0;
         $currentMonthIncome = 0;
+        $prevMonthIncome    = 0;
         $newBookingsToday   = 0;
+        $confirmedCount     = 0;
         $today              = date('Y-m-d');
         $currentMonth       = date('Y-m');
+        $prevMonth          = date('Y-m', strtotime('first day of last month'));
 
         foreach ($bookings as $b) {
             if ($b['status'] === 'Confirmed') {
+                $confirmedCount++;
                 $totalRevenue += $b['amount'];
                 if (strpos((string)$b['date'], $currentMonth) === 0) {
                     $currentMonthIncome += $b['amount'];
+                }
+                if (strpos((string)$b['date'], $prevMonth) === 0) {
+                    $prevMonthIncome += $b['amount'];
                 }
             }
             if (strpos((string)($b['created_at'] ?? ''), $today) === 0) {
@@ -98,24 +127,75 @@ if (!function_exists('getAdminDashboardData')) {
             }
         }
 
+        // Percentage change, or null when there is no baseline to compare to —
+        // the UI renders "no prior data" rather than inventing a number.
+        $pctChange = function (float $now, float $before): ?float {
+            if ($before <= 0) return null;
+            return round((($now - $before) / $before) * 100, 1);
+        };
+
+        $totalBookings  = count($bookings);
+        $customerCount  = count($customers);
+
+        // Share of bookings that reached Confirmed. This is a real funnel
+        // measure, unlike the fixed "4.2% conversion rate" shown before.
+        $confirmationRate = $totalBookings > 0
+            ? round(($confirmedCount / $totalBookings) * 100, 1)
+            : null;
+
+        // Average confirmed booking value.
+        $avgBookingValue = $confirmedCount > 0
+            ? round($totalRevenue / $confirmedCount, 2)
+            : null;
+
+        // Revenue per customer — a measurable stand-in for lifetime value,
+        // rather than the previous hardcoded $2,840.
+        $revenuePerCustomer = $customerCount > 0
+            ? round($totalRevenue / $customerCount, 2)
+            : null;
+
+        // Customers with more than one booking.
+        $repeatRate = null;
+        if ($customerCount > 0) {
+            $repeat = adminSafeQuery($pdo,
+                "SELECT COUNT(*) AS c FROM (
+                     SELECT email FROM bookings GROUP BY email HAVING COUNT(*) > 1
+                 ) r");
+            $repeatCustomers = (int)($repeat[0]['c'] ?? 0);
+            $repeatRate = round(($repeatCustomers / $customerCount) * 100, 1);
+        }
+
         $popularTours = adminSafeQuery($pdo,
             "SELECT tour_name as name, COUNT(*) as bookings, SUM(amount) as revenue
              FROM bookings GROUP BY tour_name ORDER BY bookings DESC LIMIT 5");
 
+        // Last 6 months in chronological order. The previous query grouped by
+        // month name only, so bookings from different years collapsed together
+        // and the series was ordered by month number regardless of year.
         $monthlyStats = adminSafeQuery($pdo,
-            "SELECT DATE_FORMAT(booking_date, '%b') as month, SUM(amount) as revenue
-             FROM bookings WHERE status = 'Confirmed'
-             GROUP BY month, DATE_FORMAT(booking_date, '%m')
-             ORDER BY DATE_FORMAT(booking_date, '%m') ASC LIMIT 6");
+            "SELECT DATE_FORMAT(booking_date, '%b %Y') AS month,
+                    SUM(amount) AS revenue
+             FROM bookings
+             WHERE status = 'Confirmed'
+               AND booking_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+             GROUP BY YEAR(booking_date), MONTH(booking_date)
+             ORDER BY YEAR(booking_date) ASC, MONTH(booking_date) ASC");
 
         $analytics = [
-            'totalRevenue'       => (float)$totalRevenue,
-            'currentMonthIncome' => (float)$currentMonthIncome,
-            'totalBookings'      => count($bookings),
-            'newBookingsToday'   => $newBookingsToday,
-            'activeTours'        => count(array_filter($tours, fn($t) => $t['status'] === 'Active')),
-            'popularTours'       => $popularTours,
-            'monthlyStats'       => $monthlyStats,
+            'totalRevenue'        => (float)$totalRevenue,
+            'currentMonthIncome'  => (float)$currentMonthIncome,
+            'prevMonthIncome'     => (float)$prevMonthIncome,
+            'revenueTrend'        => $pctChange((float)$currentMonthIncome, (float)$prevMonthIncome),
+            'totalBookings'       => $totalBookings,
+            'confirmedBookings'   => $confirmedCount,
+            'newBookingsToday'    => $newBookingsToday,
+            'activeTours'         => count(array_filter($tours, fn($t) => $t['status'] === 'Active')),
+            'confirmationRate'    => $confirmationRate,
+            'avgBookingValue'     => $avgBookingValue,
+            'revenuePerCustomer'  => $revenuePerCustomer,
+            'repeatRate'          => $repeatRate,
+            'popularTours'        => $popularTours,
+            'monthlyStats'        => $monthlyStats,
         ];
 
         // Report tables the panel needs but the database does not have, so the
