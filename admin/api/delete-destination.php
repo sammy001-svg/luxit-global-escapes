@@ -2,6 +2,7 @@
 // Rejects anonymous callers and verifies the CSRF token on writes.
 require_once __DIR__ . '/_guard.php';
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../includes/activity.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     adminJsonError('Invalid request method', 405);
@@ -13,9 +14,17 @@ if (!$id) {
 }
 
 try {
+    // Capture the label before the row goes away so the activity log reads as
+    // a name rather than a bare id.
+    $label = $pdo->prepare("SELECT `name` FROM destinations WHERE id = ?");
+    $label->execute([$id]);
+    $name = (string)($label->fetchColumn() ?: ("#" . $id));
+
     // Foreign key ON DELETE CASCADE in database.sql removes sub-locations.
     $stmt = $pdo->prepare("DELETE FROM destinations WHERE id = ?");
     $stmt->execute([$id]);
+
+    logActivity($pdo, 'deleted the destination', $name);
     echo json_encode(['success' => true]);
 } catch (PDOException $e) {
     adminJsonDbError($e, 'delete-destination');

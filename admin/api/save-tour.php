@@ -2,6 +2,7 @@
 // Rejects anonymous callers and verifies the CSRF token on writes.
 require_once __DIR__ . '/_guard.php';
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../includes/activity.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'error' => 'Invalid request method']);
@@ -113,6 +114,7 @@ try {
         $newId = (int)$pdo->lastInsertId();
     }
 
+    logActivity($pdo, $id ? 'updated the package' : 'created the package', $title);
     echo json_encode(['success' => true, 'id' => $newId, 'image' => $imagePath]);
 } catch (PDOException $e) {
     error_log('save-tour error: ' . $e->getMessage());
