@@ -1,7 +1,19 @@
 <?php
 /**
  * Luxit Global Escapes - Database Setup Utility
- * This script creates the database if it doesn't exist and imports the schema.
+ *
+ * ############################################################################
+ * # DESTRUCTIVE. This performs a CLEAN INSTALL.                              #
+ * #                                                                          #
+ * # database.sql begins with DROP TABLE IF EXISTS for admins, destinations,  #
+ * # tours, bookings, customers, events, quotations, invoices, expenses and   #
+ * # activity_feed. Running this against a database that already holds real   #
+ * # records DELETES THEM and restores the sample data in their place.        #
+ * #                                                                          #
+ * # To add tables that were introduced after your database was first set up  #
+ * # (for example blog_posts), run migrate.php instead — it only creates what #
+ * # is missing and never drops anything.                                     #
+ * ############################################################################
  */
 
 // 1. Manually load .env since constants aren't defined yet
@@ -37,6 +49,31 @@ try {
     // 4. Connect to the specific database
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // 4b. Refuse to wipe a database that already holds real records.
+    // Re-running this on a live site was silently destroying bookings and
+    // customers; adding a missing table is migrate.php's job, not this script's.
+    $liveRecords = 0;
+    foreach (['bookings', 'customers', 'tours'] as $t) {
+        try {
+            $liveRecords += (int)$pdo->query("SELECT COUNT(*) FROM `$t`")->fetchColumn();
+        } catch (PDOException $e) {
+            // Table absent — nothing to protect.
+        }
+    }
+
+    $forced = in_array('--force', $argv ?? [], true) || isset($_GET['force']);
+
+    if ($liveRecords > 0 && !$forced) {
+        echo "\n";
+        echo "ABORTED — '$dbname' already contains $liveRecords records across bookings/customers/tours.\n\n";
+        echo "This script does a CLEAN INSTALL: database.sql drops those tables and\n";
+        echo "reseeds them with sample data. Running it here would delete real records.\n\n";
+        echo "If you are trying to add a table that is missing (e.g. blog_posts),\n";
+        echo "run migrate.php instead — it only creates what is absent.\n\n";
+        echo "To wipe and reinstall anyway: php setup_db.php --force\n";
+        exit(1);
+    }
 
     // 5. Import SQL schema
     $sqlFile = __DIR__ . '/database.sql';

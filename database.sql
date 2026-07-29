@@ -3,6 +3,10 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
 -- Drop existing tables for a clean setup
+-- NOTE: every table created below must be listed here. blog_posts was missing
+-- from this list, so a second run died on "table already exists" *after*
+-- activity_feed had been dropped, leaving that table gone for good.
+DROP TABLE IF EXISTS `blog_posts`;
 DROP TABLE IF EXISTS `expenses`;
 DROP TABLE IF EXISTS `invoices`;
 DROP TABLE IF EXISTS `quotations`;
@@ -239,8 +243,11 @@ CREATE TABLE `blog_posts` (
   UNIQUE KEY `slug` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Run this if blog_posts table doesn't exist in your live database:
--- (Copy the full CREATE TABLE above and run it in phpMyAdmin)
+-- If blog_posts is missing from your live database (it was added after the
+-- initial release, so databases set up before then will not have it), run
+-- migrate.php in the project root. It creates only the missing tables and
+-- leaves your existing bookings, customers and tours untouched.
+-- Do NOT run setup_db.php on a live database — it is a destructive reinstall.
 
 INSERT INTO `blog_posts` (`title`, `slug`, `excerpt`, `content`, `image`, `author`, `category`, `status`) VALUES
 ('Resources for Your First Trip to an Overseas Vacation', 'first-trip-overseas-vacation', 'Planning your first international trip can be daunting. Here are key resources to make your journey smooth and memorable.', '<p>Planning your first international trip is one of the most exciting milestones in life. Whether you are heading to the beaches of Bali or the savannahs of Kenya, preparation is key to a seamless experience.</p><p>Start by researching your destination\'s entry requirements, including visa regulations and vaccination recommendations. Booking travel insurance is also strongly advisable for any international journey.</p><p>Pack smart — bring versatile clothing, a first-aid kit, and keep digital and physical copies of important documents like your passport and hotel bookings. Learning a few basic phrases in the local language can also make a huge difference.</p><p>Finally, connect with a reputable travel agency like Luxit Global Escapes to handle the complex logistics so you can focus on enjoying your adventure.</p>', 'assets/images/trv-blog/blog-sm/pic1.jpg', 'Aidan Butler', 'Travel Tips', 'Published'),

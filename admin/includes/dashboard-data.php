@@ -118,7 +118,26 @@ if (!function_exists('getAdminDashboardData')) {
             'monthlyStats'       => $monthlyStats,
         ];
 
+        // Report tables the panel needs but the database does not have, so the
+        // UI can say so instead of rendering a silently empty tab. Databases
+        // created before a feature shipped will be missing its table until
+        // migrate.php is run.
+        $missingTables = [];
+        try {
+            $present = $pdo->query(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()"
+            )->fetchAll(PDO::FETCH_COLUMN);
+            $present = array_map('strtolower', $present);
+            foreach (['tours', 'destinations', 'bookings', 'customers', 'events',
+                      'quotations', 'invoices', 'expenses', 'blog_posts', 'activity_feed'] as $t) {
+                if (!in_array($t, $present, true)) $missingTables[] = $t;
+            }
+        } catch (PDOException $e) {
+            error_log('Schema check failed: ' . $e->getMessage());
+        }
+
         return [
+            'missingTables' => $missingTables,
             'tours'        => $tours,
             'destinations' => $destinations,
             'bookings'     => $bookings,

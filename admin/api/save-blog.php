@@ -102,5 +102,20 @@ try {
 
     echo json_encode(['success' => true, 'id' => $newId, 'slug' => $slug, 'image' => $imagePath]);
 } catch (PDOException $e) {
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    error_log('save-blog error: ' . $e->getMessage());
+
+    // 42S02 = table missing. This is the common one: databases created before
+    // the blog module shipped have no blog_posts table, so posts silently fail
+    // to save and never reach the public site.
+    if ($e->getCode() === '42S02') {
+        echo json_encode([
+            'success' => false,
+            'error'   => 'The blog_posts table is missing from the database. Run migrate.php in the site root to create it, then try again.'
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'error'   => 'Could not save the post. Please try again.'
+        ]);
+    }
 }

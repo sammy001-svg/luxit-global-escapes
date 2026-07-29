@@ -1176,8 +1176,18 @@ function renderBlogs() {
     const published = (state.data.blogPosts || []).filter(b => b.status === 'Published').length;
     const drafts    = (state.data.blogPosts || []).filter(b => b.status === 'Draft').length;
 
+    // Without this table nothing can save and nothing reaches the public site.
+    // Say so explicitly rather than rendering an empty tab that looks normal.
+    const tableMissing = (state.data.missingTables || []).includes('blog_posts');
+    const schemaWarning = tableMissing ? `
+        <div class="rounded-2xl p-5 bg-rose-500/10 border border-rose-500/40 text-rose-300 space-y-2">
+            <p class="font-bold flex items-center"><i class="fas fa-triangle-exclamation mr-2"></i> The blog_posts table is missing from your database</p>
+            <p class="text-sm text-rose-300/80">Posts cannot be saved and nothing will appear on the public site until it exists. Run <code class="bg-black/30 px-1.5 py-0.5 rounded font-mono">migrate.php</code> in your site root to create it — your existing bookings, customers and tours are not affected.</p>
+        </div>` : '';
+
     contentArea.innerHTML = `
         <div class="space-y-8 animate-fade-in pb-12">
+            ${schemaWarning}
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold">Blog Posts</h1>
