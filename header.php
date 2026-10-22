@@ -71,6 +71,7 @@ $hImage = htmlspecialchars($page_image ?? 'assets/images/seo/og_index.png', ENT_
 	<link rel="stylesheet" href="assets/css/responsive.css">
 	<link rel="stylesheet" href="assets/css/packages.css">
 	<link rel="stylesheet" href="assets/css/site.css">
+	<link rel="stylesheet" href="assets/css/menu.css">
 <?php foreach (($page_css ?? []) as $css) : ?>
 	<link rel="stylesheet" href="<?php echo htmlspecialchars($css, ENT_QUOTES); ?>">
 <?php endforeach; ?>
@@ -99,93 +100,6 @@ $hImage = htmlspecialchars($page_image ?? 'assets/images/seo/og_index.png', ENT_
 	  .site-header--solid:not(.is-fixed) { top: 54px; left: 10px; right: 10px; }
 	}
 
-	/* ═══════════════════════════════════════
-	   MEGA MENU — Desktop layout & hover
-	═══════════════════════════════════════ */
-	@media (min-width: 1024px) {
-	  li.mm-parent { position: static !important; }
-	  li.mm-parent > .mega-menu {
-	    position: absolute;
-	    top: 100%;
-	    left: 0;
-	    right: 0;
-	    z-index: 99999;
-	    padding-top: 8px;
-	  }
-	  .mm-panel {
-	    background: #fff;
-	    border-radius: 16px;
-	    box-shadow: 0 20px 60px rgba(6,97,104,.13), 0 4px 20px rgba(0,0,0,.07);
-	    border: 1px solid rgba(0,0,0,.07);
-	    overflow: hidden;
-	  }
-	  .mm-topbar, .mm-botbar {
-	    display: flex !important;
-	    align-items: center;
-	    justify-content: space-between;
-	    padding: 11px 32px;
-	  }
-	  .mm-topbar {
-	    background: rgba(6,97,104,.04);
-	    border-bottom: 1px solid rgba(0,0,0,.06);
-	  }
-	  .mm-botbar {
-	    background: #f9fafb;
-	    border-top: 1px solid rgba(0,0,0,.06);
-	  }
-	  .mm-topbar-label { font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.14em; }
-	  .mm-topbar-link { font-size:12px; font-weight:600; color:#066168; display:flex; align-items:center; gap:4px; transition:gap .2s; }
-	  .mm-topbar-link:hover { gap:8px; }
-	  .mm-body { padding: 22px 8px; }
-	  .mm-4col { display: grid; grid-template-columns: repeat(4, 1fr); }
-	  .mm-3col { display: grid; grid-template-columns: 1fr 2fr; }
-	  .mm-col { padding: 0 20px; }
-	  .mm-col + .mm-col { border-left: 1px solid rgba(0,0,0,.07); }
-	  .mm-col + .mm-col2 { border-left: 1px solid rgba(0,0,0,.07); }
-	  .mm-col2 { padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
-	  .mm-col2 + .mm-col { border-left: 1px solid rgba(0,0,0,.07); }
-	  .mm-col-head { display: flex !important; align-items: center; gap: 10px; margin-bottom: 10px; }
-	  .mm-icon { width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; }
-	  .mm-col-title { font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.14em; }
-	  .mm-col-count { font-size:9.5px; color:#9ca3af; margin-top:1px; }
-	  .mm-divider { display:block !important; width:18px; height:2px; border-radius:9999px; margin-bottom:12px; }
-	  .mm-link { display:block; font-size:13.5px; font-weight:500; color:#374151; padding:5px 0; transition:color .15s, padding-left .15s; }
-	  .mm-link:hover { color:#066168; padding-left:5px; }
-	  .mm-plink { display:flex; align-items:flex-start; gap:12px; padding:7px 0; cursor:pointer; }
-	  .mm-plink:hover .mm-picon { background:rgba(6,97,104,.12); }
-	  .mm-plink:hover .mm-ptitle { color:#066168; }
-	  .mm-picon { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; transition:background .15s; }
-	  .mm-ptitle { font-size:13.5px; font-weight:600; color:#1f2937; transition:color .15s; display:block; line-height:1.3; }
-	  .mm-pdesc { font-size:10.5px; color:#9ca3af; display:block; margin-top:2px; }
-	  .mm-xlink { display:flex; align-items:center; gap:9px; padding:6px 0; font-size:13.5px; font-weight:500; color:#374151; transition:color .15s; }
-	  .mm-xlink:hover { color:#066168; }
-	  .mm-xicon { width:24px; height:24px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
-	  .mm-btn { display:inline-flex; align-items:center; gap:7px; background:#066168; color:#fff !important; font-size:11.5px; font-weight:700; padding:7px 14px; border-radius:8px; transition:background .2s; }
-	  .mm-btn:hover { background:#054f55; }
-	  .mm-botbar-note { font-size:11.5px; color:#9ca3af; }
-	}
-
-	/* ═══════════════════════════════════════
-	   MEGA MENU — Mobile overrides (simple list)
-	═══════════════════════════════════════ */
-	.mm-topbar, .mm-botbar, .mm-col-head, .mm-divider, .mm-pdesc { display: none; }
-	.mm-moblabel { display:block; padding:9px 20px; font-size:10.5px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.1em; background:#f9fafb; border-bottom:1px solid rgba(0,0,0,.05); }
-	@media (min-width: 1024px) {
-	  .mm-moblabel { display: none; }
-	  .mm-col-head { display: flex; }
-	}
-	@media (max-width: 1023px) {
-	  .mm-col { padding: 0; }
-	  .mm-col + .mm-col { border-left: none; }
-	  .mm-col2 { padding: 0; display:block; }
-	  .mm-link { padding:10px 20px; border-bottom:1px solid rgba(0,0,0,.05); }
-	  .mm-plink { padding:10px 20px; border-bottom:1px solid rgba(0,0,0,.05); gap:0; }
-	  .mm-picon { display:none; }
-	  .mm-xlink { padding:10px 20px; border-bottom:1px solid rgba(0,0,0,.05); gap:0; }
-	  .mm-xicon { display:none; }
-	  .mm-body { padding:0; }
-	  .mm-ptitle { font-size:14px; font-weight:500; color:#1f2937; }
-	}
 	</style>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -212,7 +126,7 @@ $hImage = htmlspecialchars($page_image ?? 'assets/images/seo/og_index.png', ENT_
 <div class="cursor"></div>
 <div class="cursor2"></div>
 <div class="page-wraper">
-	<div class="bg-white text-black py-3 block border-b border-black/5 relative" style="z-index: 1001;">
+	<div class="bg-white text-black py-3 block border-b border-black/5 relative" style="z-index: 998;">
 		<div class="site-topbar-inner container mx-auto sm:px-8.75 px-4 flex flex-wrap justify-center items-center text-[12px] font-medium tracking-wide md:gap-x-48 sm:gap-x-10 gap-x-4 gap-y-1.5">
 			<div class="flex items-center">
 				<i class="fas fa-map-marker-alt text-secondary mr-2 text-sm"></i>
@@ -261,136 +175,125 @@ $hImage = htmlspecialchars($page_image ?? 'assets/images/seo/og_index.png', ENT_
 								</a>
 							</li>
 
-							<!-- ══ DESTINATIONS DROPDOWN ══ -->
-							<li class="lg:inline-block block max-lg:border-b max-lg:border-gray-200 relative group">
-								<a class="lg:py-7.5 py-2 xl:px-5 lg:px-2 relative lg:inline-block block text-lg font-medium lg:text-white text-black hover:text-secondary" href="destinations.php">
-									<span class="inline-block">Destinations</span>
-									<i class="fas fa-chevron-right lg:!hidden !block size-7 !leading-7 text-center text-xs bg-black text-black float-end"></i>
+							<?php
+							// Mega-menu content. Add a destination by adding its page here.
+							$mmRegions = [
+								'africa' => ['Africa', 'africa.php', 'assets/images/header-banners/destination-africa.png',
+									'Safaris, gorilla treks and Indian Ocean islands.',
+									['Kenya' => 'kenya.php', 'Tanzania' => 'tanzania.php', 'Uganda' => 'uganda.php', 'Rwanda' => 'rwanda.php',
+									 'South Africa' => 'south-africa.php', 'Botswana' => 'botswana.php', 'Namibia' => 'namibia.php', 'Zambia' => 'zambia.php',
+									 'Zimbabwe' => 'zimbabwe.php', 'Seychelles' => 'seychelles.php', 'Madagascar' => 'madagascar.php', 'Morocco' => 'morocco.php',
+									 'Egypt' => 'egypt.php']],
+								'asia' => ['Asia', 'asia.php', 'assets/images/header-banners/destination-asia.png',
+									'Island hideaways, temples and vibrant cities.',
+									['Maldives' => 'maldives.php', 'Thailand' => 'thailand.php', 'Indonesia' => 'indonesia.php', 'Malaysia' => 'malaysia.php',
+									 'Singapore' => 'singapore.php', 'Philippines' => 'philippines.php', 'India' => 'india.php', 'China' => 'china.php']],
+								'middle-east' => ['Middle East', 'middle-east.php', 'assets/images/header-banners/destination-middle-east.png',
+									'Desert luxury, ancient wonders and city breaks.',
+									['Dubai' => 'dubai.php', 'Oman' => 'oman.php', 'Jordan' => 'jordan.php']],
+								'europe' => ['Europe', 'europe.php', 'assets/images/header-banners/destination-europe.png',
+									'Historic capitals, coastlines and fine food.',
+									['France' => 'france.php', 'Italy' => 'italy.php', 'Spain' => 'spain.php', 'Greece' => 'greece.php', 'Turkey' => 'turkey.php']],
+							];
+							$mmPackages = [
+								['Safari Packages', 'safari-packages.php', 'assets/images/header-carousel/safari.png', 'Game drives and wildlife camps'],
+								['Local Packages', 'local-packages.php', 'assets/images/header-carousel/mountains.png', 'Kenya, East Africa and beyond'],
+								['International Packages', 'international-packages.php', 'assets/images/header-carousel/maldives.png', 'Beach, city and island escapes'],
+							];
+							$mmStyles = [
+								['Romantic Travel', 'romantic-travel.php', 'fa-heart', 'Honeymoons and anniversaries'],
+								['Wellness Travel', 'wellness-travel.php', 'fa-spa', 'Retreats, spas and slow travel'],
+								['Halal Travel', 'halal-travel.php', 'fa-moon', 'Halal dining and prayer-friendly stays'],
+								['Kosher Travel', 'kosher-travel.php', 'fa-star-of-david', 'Kosher meals and Shabbat planning'],
+								['Faith Travel', 'faith-travel.php', 'fa-place-of-worship', 'Pilgrimages and heritage journeys'],
+								['Accessible Travel', 'accessible-travel.php', 'fa-wheelchair', 'Step-free stays and adapted transport'],
+								['MICE Travel', 'mice-travel.php', 'fa-briefcase', 'Meetings, incentives and events'],
+							];
+							$mmLink = 'lg:py-7.5 py-2 xl:px-5 lg:px-2 relative lg:inline-flex lg:items-center block text-lg font-medium lg:text-white text-black hover:text-secondary';
+							?>
+
+							<!-- ══ DESTINATIONS MEGA MENU ══ -->
+							<li class="lg:inline-block block max-lg:border-b max-lg:border-gray-200 mm-item" data-mm>
+								<a class="<?php echo $mmLink; ?>" href="destinations.php" aria-haspopup="true">
+									<span class="inline-block">Destinations</span><span class="mm-caret" aria-hidden="true"></span>
 								</a>
-								<ul class="lg:absolute bg-white lg:rounded-xxl block lg:left-0 w-full lg:w-55 lg:opacity-0 lg:invisible lg:translate-y-10 z-10 mt-0 text-left duration-500 lg:group-hover:opacity-100 lg:group-hover:visible lg:group-hover:translate-y-0 max-lg:hidden sub-menu">
-									<li class="relative border-b border-black/5"><a class="block relative text-sm text-primary font-semibold py-3 lg:px-5 duration-500 hover:text-secondary hover:pl-6.25" href="africa.php"><span>Africa</span></a></li>
-									<li class="relative border-b border-black/5"><a class="block relative text-sm text-primary font-semibold py-3 lg:px-5 duration-500 hover:text-secondary hover:pl-6.25" href="middle-east.php"><span>Middle East</span></a></li>
-									<li class="relative border-b border-black/5"><a class="block relative text-sm text-primary font-semibold py-3 lg:px-5 duration-500 hover:text-secondary hover:pl-6.25" href="asia.php"><span>Asia</span></a></li>
-									<li class="relative border-b border-black/5"><a class="block relative text-sm text-primary font-semibold py-3 lg:px-5 duration-500 hover:text-secondary hover:pl-6.25" href="europe.php"><span>Europe</span></a></li>
-								</ul>
+								<button type="button" class="mm-toggle" aria-expanded="false" aria-controls="mm-destinations" aria-label="Show destinations"></button>
+								<div class="mm-panel" id="mm-destinations">
+									<div class="mm-dest">
+										<div class="mm-rail" role="tablist" aria-label="Regions">
+											<p class="mm-label">Regions</p>
+											<?php $first = true; foreach ($mmRegions as $key => [$name, $page, $img, $blurb, $places]) : ?>
+											<a class="mm-region<?php echo $first ? ' is-active' : ''; ?>" href="<?php echo $page; ?>" role="tab" aria-selected="<?php echo $first ? 'true' : 'false'; ?>" aria-controls="mm-region-<?php echo $key; ?>" data-mm-region="<?php echo $key; ?>">
+												<span><?php echo $name; ?></span>
+												<small><?php echo count($places); ?></small>
+											</a>
+											<?php $first = false; endforeach; ?>
+										</div>
+										<?php $first = true; foreach ($mmRegions as $key => [$name, $page, $img, $blurb, $places]) : ?>
+										<div class="mm-region-pane<?php echo $first ? ' is-active' : ''; ?>" id="mm-region-<?php echo $key; ?>" role="tabpanel">
+											<div class="mm-places">
+												<p class="mm-label"><?php echo $name; ?> &middot; <?php echo count($places); ?> destinations</p>
+												<div class="mm-place-grid">
+													<?php foreach ($places as $place => $href) : ?>
+													<a class="mm-place" href="<?php echo $href; ?>"><?php echo $place; ?></a>
+													<?php endforeach; ?>
+												</div>
+											</div>
+											<a class="mm-feature" href="<?php echo $page; ?>">
+												<img src="<?php echo $img; ?>" alt="" loading="lazy" width="320" height="320">
+												<span class="mm-feature-text">
+													<strong>Explore <?php echo $name; ?></strong>
+													<span><?php echo $blurb; ?></span>
+												</span>
+											</a>
+										</div>
+										<?php $first = false; endforeach; ?>
+									</div>
+									<div class="mm-foot">
+										<span><i class="fa-solid fa-compass" aria-hidden="true"></i> Not sure where to go? Our specialists will suggest destinations for your dates and budget.</span>
+										<span class="mm-foot-actions">
+											<a href="destinations.php" class="mm-foot-link">All destinations <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+											<a href="contact.php" class="mm-btn">Talk to an expert</a>
+										</span>
+									</div>
+								</div>
 							</li>
 
 							<!-- ══ TOURS MEGA MENU ══ -->
-							<li class="lg:inline-block block max-lg:border-b max-lg:border-gray-200 relative group mm-parent">
-								<a class="lg:py-7.5 py-2 xl:px-5 lg:px-2 relative lg:inline-block block text-lg font-medium lg:text-white text-black hover:text-secondary" href="javascript:void(0);">
-									<span class="inline-block">Tours</span>
-									<i class="fas fa-chevron-right lg:!hidden !block size-7 !leading-7 text-center text-xs bg-black text-white float-end"></i>
+							<li class="lg:inline-block block max-lg:border-b max-lg:border-gray-200 mm-item" data-mm>
+								<a class="<?php echo $mmLink; ?>" href="safari-packages.php" aria-haspopup="true">
+									<span class="inline-block">Tours</span><span class="mm-caret" aria-hidden="true"></span>
 								</a>
-								<div class="mega-menu max-lg:hidden lg:opacity-0 lg:invisible lg:translate-y-10 duration-500 lg:group-hover:opacity-100 lg:group-hover:visible lg:group-hover:translate-y-0">
-									<div class="mm-panel">
-										<!-- Top bar -->
-										<div class="mm-topbar">
-											<div style="display:flex;align-items:center;gap:8px;">
-												<i class="fas fa-route" style="color:#066168;font-size:14px;"></i>
-												<span class="mm-topbar-label">Our Tour Packages</span>
+								<button type="button" class="mm-toggle" aria-expanded="false" aria-controls="mm-tours" aria-label="Show tours"></button>
+								<div class="mm-panel" id="mm-tours">
+									<div class="mm-tours">
+										<div>
+											<p class="mm-label">Tour packages</p>
+											<div class="mm-pack-grid">
+												<?php foreach ($mmPackages as [$name, $href, $img, $desc]) : ?>
+												<a class="mm-pack" href="<?php echo $href; ?>">
+													<span class="mm-pack-img"><img src="<?php echo $img; ?>" alt="" loading="lazy" width="320" height="240"></span>
+													<span class="mm-pack-text"><strong><?php echo $name; ?></strong><span><?php echo $desc; ?></span></span>
+												</a>
+												<?php endforeach; ?>
 											</div>
-											<a href="local-packages.php" class="mm-topbar-link">
-												Browse all packages <i class="fas fa-long-arrow-alt-right" style="font-size:11px;"></i>
+										</div>
+										<div class="mm-styles">
+											<p class="mm-label">Travel styles</p>
+											<?php foreach ($mmStyles as [$name, $href, $icon, $desc]) : ?>
+											<a class="mm-style" href="<?php echo $href; ?>">
+												<span class="mm-style-icon"><i class="fa-solid <?php echo $icon; ?>" aria-hidden="true"></i></span>
+												<span><strong><?php echo $name; ?></strong><small><?php echo $desc; ?></small></span>
 											</a>
+											<?php endforeach; ?>
 										</div>
-										<!-- Columns -->
-										<div class="mm-body mm-3col">
-
-											<!-- Package Types column -->
-											<div class="mm-col">
-												<div class="mm-col-head">
-													<span class="mm-icon" style="background:rgba(6,97,104,.08);border:1px solid rgba(6,97,104,.2);">
-														<i class="fas fa-suitcase-rolling" style="color:#066168;"></i>
-													</span>
-													<p class="mm-col-title" style="color:#066168;">Package Types</p>
-												</div>
-												<div class="mm-divider" style="background:rgba(6,97,104,.3);"></div>
-												<span class="mm-moblabel">Package Types</span>
-
-												<a href="local-packages.php" class="mm-plink">
-													<span class="mm-picon" style="background:rgba(6,97,104,.06);">
-														<i class="fas fa-map-marker-alt" style="color:#066168;"></i>
-													</span>
-													<span>
-														<span class="mm-ptitle">Local Packages</span>
-														<span class="mm-pdesc">East Africa &amp; beyond</span>
-													</span>
-												</a>
-												<a href="international-packages.php" class="mm-plink">
-													<span class="mm-picon" style="background:#eff6ff;">
-														<i class="fas fa-plane" style="color:#2563eb;"></i>
-													</span>
-													<span>
-														<span class="mm-ptitle">International Packages</span>
-														<span class="mm-pdesc">Worldwide destinations</span>
-													</span>
-												</a>
-												<a href="safari-packages.php" class="mm-plink">
-													<span class="mm-picon" style="background:#fffbeb;">
-														<i class="fas fa-paw" style="color:#d97706;"></i>
-													</span>
-													<span>
-														<span class="mm-ptitle">Safari Packages</span>
-														<span class="mm-pdesc">Wildlife &amp; game drives</span>
-													</span>
-												</a>
-											</div>
-
-											<!-- Special Experiences (2-col span) -->
-											<div class="mm-col2">
-												<div style="grid-column:span 2;" class="mm-col-head">
-													<span class="mm-icon" style="background:#fefce8;border:1px solid #fef08a;">
-														<i class="fas fa-star" style="color:#ca8a04;"></i>
-													</span>
-													<p class="mm-col-title" style="color:#92400e;">Special Experiences</p>
-												</div>
-												<div class="mm-divider" style="grid-column:span 2;background:#fcd34d;"></div>
-												<span class="mm-moblabel" style="grid-column:span 2;">Special Packages</span>
-
-												<!-- Left sub-column -->
-												<div>
-													<a href="halal-travel.php" class="mm-xlink">
-														<span class="mm-xicon" style="background:#f0fdf4;"><span>🕌</span></span>
-														Halal Travel
-													</a>
-													<a href="kosher-travel.php" class="mm-xlink">
-														<span class="mm-xicon" style="background:#eff6ff;"><span>✡️</span></span>
-														Kosher Travel
-													</a>
-													<a href="accessible-travel.php" class="mm-xlink">
-														<span class="mm-xicon" style="background:#f0f9ff;"><span>♿</span></span>
-														Accessible Travel
-													</a>
-													<a href="mice-travel.php" class="mm-xlink">
-														<span class="mm-xicon" style="background:#f9fafb;"><span>🤝</span></span>
-														MICE Travel
-													</a>
-												</div>
-												<!-- Right sub-column -->
-												<div>
-													<a href="romantic-travel.php" class="mm-xlink">
-														<span class="mm-xicon" style="background:#fff1f2;"><span>💑</span></span>
-														Romantic Travel
-													</a>
-													<a href="wellness-travel.php" class="mm-xlink">
-														<span class="mm-xicon" style="background:#f0fdf4;"><span>🌿</span></span>
-														Wellness Travel
-													</a>
-													<a href="faith-travel.php" class="mm-xlink">
-														<span class="mm-xicon" style="background:#fffbeb;"><span>✝️</span></span>
-														Faith Travel
-													</a>
-												</div>
-											</div>
-
-										</div>
-										<!-- Bottom bar -->
-										<div class="mm-botbar">
-											<span class="mm-botbar-note"><i class="fas fa-award" style="color:#066168;margin-right:6px;"></i>Award-winning tours since 2010</span>
-											<a href="contact.php" class="mm-btn">
-												<i class="fas fa-calendar-check" style="font-size:11px;"></i> Book a Tour
-											</a>
-										</div>
+									</div>
+									<div class="mm-foot">
+										<span><i class="fa-solid fa-route" aria-hidden="true"></i> Every trip can be tailor-made around your dates, group and budget.</span>
+										<span class="mm-foot-actions">
+											<a href="international-packages.php" class="mm-foot-link">All packages <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+											<a href="contact.php" class="mm-btn">Plan my trip</a>
+										</span>
 									</div>
 								</div>
 							</li>

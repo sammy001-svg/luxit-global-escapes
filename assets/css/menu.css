@@ -1,0 +1,153 @@
+/*
+ * Destinations + Tours mega menus (markup in header.php, behaviour in
+ * assets/js/menu.js).
+ *
+ * Desktop (≥1024px): panels open on hover or keyboard focus, with a short
+ * close delay so moving the pointer diagonally into the panel does not shut
+ * it. Mobile: each menu becomes an accordion inside the side drawer.
+ */
+
+.mm-item {
+	--mm-ink: #10201f;
+	--mm-text: #33413f;
+	--mm-muted: #6b7a78;
+	--mm-line: #e3eceb;
+	--mm-tint: #f3f9f8;
+	--mm-teal: #066168;
+	--mm-gold: #FFD214;
+}
+
+.mm-label { margin: 0 0 12px; font-size: .68rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--mm-muted); }
+
+.mm-caret { display: inline-block; width: 7px; height: 7px; margin-left: 9px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-2px) rotate(45deg); opacity: .7; transition: transform .2s; }
+
+.mm-place, .mm-region, .mm-pack, .mm-style, .mm-feature, .mm-foot a { text-decoration: none; }
+.mm-panel a:focus-visible, .mm-toggle:focus-visible { outline: 2px solid var(--mm-gold); outline-offset: 2px; }
+
+/* ── Destinations ─────────────────────────────────────────────── */
+.mm-region { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 14px; border-radius: 12px; color: var(--mm-ink); font-weight: 600; font-size: .98rem; transition: background .15s, color .15s, box-shadow .15s; }
+.mm-region small { min-width: 26px; padding: 2px 8px; border-radius: 999px; background: rgba(6, 97, 104, .08); color: var(--mm-teal); font-size: .72rem; font-weight: 700; text-align: center; }
+.mm-region.is-active, .mm-region:hover { background: #fff; color: var(--mm-teal); box-shadow: 0 4px 14px rgba(6, 97, 104, .1); }
+
+.mm-place-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px 14px; }
+.mm-place { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; color: var(--mm-text); font-size: .95rem; transition: background .15s, color .15s; }
+.mm-place::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #c9dbd8; flex: 0 0 auto; transition: background .15s; }
+.mm-place:hover { background: var(--mm-tint); color: var(--mm-teal); }
+.mm-place:hover::before { background: var(--mm-teal); }
+
+.mm-feature { position: relative; display: block; border-radius: 16px; overflow: hidden; min-height: 250px; background: var(--mm-tint); }
+.mm-feature img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .6s; }
+.mm-feature::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4, 28, 22, 0) 35%, rgba(4, 28, 22, .82) 100%); }
+.mm-feature:hover img { transform: scale(1.05); }
+.mm-feature-text { position: absolute; left: 18px; right: 18px; bottom: 16px; z-index: 1; color: #fff; }
+.mm-feature-text strong { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; }
+.mm-feature-text strong::after { content: '→'; transition: transform .2s; }
+.mm-feature:hover .mm-feature-text strong::after { transform: translateX(4px); }
+.mm-feature-text span { display: block; margin-top: 4px; font-size: .84rem; line-height: 1.45; color: rgba(255, 255, 255, .85); }
+
+/* ── Tours ────────────────────────────────────────────────────── */
+.mm-pack-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.mm-pack { display: flex; flex-direction: column; gap: 10px; color: var(--mm-ink); }
+.mm-pack-img { display: block; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background: var(--mm-tint); }
+.mm-pack-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s; }
+.mm-pack:hover .mm-pack-img img { transform: scale(1.05); }
+.mm-pack-text strong { display: block; font-size: .98rem; transition: color .15s; }
+.mm-pack-text span { display: block; margin-top: 2px; font-size: .82rem; color: var(--mm-muted); }
+.mm-pack:hover strong { color: var(--mm-teal); }
+
+.mm-styles { display: flex; flex-direction: column; }
+.mm-style { display: flex; align-items: center; gap: 12px; padding: 7px 10px; border-radius: 12px; color: var(--mm-ink); transition: background .15s; }
+.mm-style:hover { background: var(--mm-tint); }
+.mm-style-icon { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: rgba(6, 97, 104, .08); color: var(--mm-teal); font-size: .85rem; transition: background .15s, color .15s; }
+.mm-style:hover .mm-style-icon { background: var(--mm-teal); color: #fff; }
+.mm-style strong { display: block; font-size: .92rem; font-weight: 600; }
+.mm-style small { display: block; font-size: .76rem; color: var(--mm-muted); line-height: 1.35; }
+
+/* ── Footer strip ─────────────────────────────────────────────── */
+.mm-foot { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 28px; background: var(--mm-tint); border-top: 1px solid var(--mm-line); font-size: .86rem; color: var(--mm-muted); }
+.mm-foot > span:first-child i { color: var(--mm-teal); margin-right: 8px; }
+.mm-foot-actions { display: flex; align-items: center; gap: 18px; flex: 0 0 auto; }
+.mm-foot-link { color: var(--mm-teal); font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+.mm-btn { display: inline-flex; align-items: center; padding: 9px 18px; border-radius: 999px; background: var(--mm-teal); color: #fff !important; font-weight: 700; font-size: .86rem; transition: background .2s; }
+.mm-btn:hover { background: #054f55; }
+
+.mm-toggle { display: none; }
+
+/* ══ Desktop ═════════════════════════════════════════════════════ */
+@media (min-width: 1024px) {
+	.mm-item { position: static !important; }
+
+	/* The transparent top padding bridges the gap between the bar and the
+	   sheet, so the pointer never "leaves" the menu on the way down. */
+	.mm-panel {
+		position: absolute; left: 0; right: 0; top: 100%; z-index: 99999;
+		padding-top: 12px;
+		filter: drop-shadow(0 24px 40px rgba(6, 50, 54, .16)) drop-shadow(0 2px 6px rgba(6, 50, 54, .06));
+		opacity: 0; visibility: hidden; transform: translateY(8px);
+		transition: opacity .18s ease .12s, transform .18s ease .12s, visibility 0s linear .3s;
+	}
+	.mm-item:hover > .mm-panel,
+	.mm-item:focus-within > .mm-panel,
+	.mm-item.mm-open > .mm-panel {
+		opacity: 1; visibility: visible; transform: none;
+		transition: opacity .18s ease, transform .18s ease, visibility 0s;
+	}
+	/* Escape closes the menu even while the pointer is still over it. */
+	.mm-item.mm-closed > .mm-panel { opacity: 0 !important; visibility: hidden !important; transform: translateY(8px) !important; }
+	.mm-item:hover .mm-caret, .mm-item:focus-within .mm-caret { transform: translateY(1px) rotate(225deg); }
+
+	.mm-panel > :first-child { background: #fff; border-radius: 20px 20px 0 0; }
+	.mm-foot { border-radius: 0 0 20px 20px; }
+
+	.mm-dest { display: grid; grid-template-columns: 230px minmax(0, 1fr); min-height: 330px; }
+	.mm-rail { padding: 24px 14px; background: var(--mm-tint); border-right: 1px solid var(--mm-line); border-top-left-radius: 20px; display: flex; flex-direction: column; gap: 4px; }
+	.mm-rail .mm-label { padding: 0 14px; }
+	.mm-region-pane { display: none; grid-template-columns: minmax(0, 1fr) 270px; gap: 28px; padding: 24px 28px; }
+	.mm-region-pane.is-active { display: grid; }
+
+	.mm-tours { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 36px; padding: 26px 28px; }
+	/* Portrait photos so the package cards match the travel-styles column. */
+	.mm-pack-img { aspect-ratio: 3 / 4; }
+	.mm-styles { border-left: 1px solid var(--mm-line); padding-left: 28px; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+	.mm-place-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.mm-region-pane { grid-template-columns: minmax(0, 1fr) 220px; }
+	.mm-tours { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; }
+	.mm-style small { display: none; }
+	.mm-pack-img { aspect-ratio: 4 / 3; }
+}
+
+/* ══ Mobile drawer ═══════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+	.mm-item { position: relative; }
+	.mm-item > a { padding-right: 52px !important; }
+	.mm-caret { display: none; }
+
+	.mm-toggle { display: grid; place-items: center; position: absolute; right: 0; top: 2px; width: 40px; height: 40px; border: 0; border-radius: 10px; background: var(--mm-tint); cursor: pointer; }
+	.mm-toggle::before { content: ''; width: 8px; height: 8px; border-right: 2px solid var(--mm-teal); border-bottom: 2px solid var(--mm-teal); transform: translateY(-2px) rotate(45deg); transition: transform .2s; }
+	.mm-item.mm-open > .mm-toggle::before { transform: translateY(2px) rotate(225deg); }
+
+	.mm-panel { display: none; padding: 4px 0 14px; }
+	.mm-item.mm-open > .mm-panel { display: block; }
+
+	.mm-rail, .mm-feature, .mm-foot > span:first-child, .mm-style small, .mm-pack-text span { display: none; }
+	.mm-region-pane { display: block; margin-bottom: 12px; }
+	.mm-label { margin: 10px 0 6px; }
+	.mm-place-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 8px; }
+	.mm-place { padding: 7px 4px; font-size: .9rem; }
+
+	.mm-pack-grid { grid-template-columns: 1fr; gap: 8px; }
+	.mm-pack { flex-direction: row; align-items: center; gap: 12px; }
+	.mm-pack-img { width: 56px; flex: 0 0 56px; aspect-ratio: 1; border-radius: 10px; }
+	.mm-styles { margin-top: 8px; }
+	.mm-style { padding: 6px 4px; }
+	.mm-style-icon { width: 30px; height: 30px; }
+
+	.mm-foot { padding: 12px 0 0; background: transparent; border: 0; }
+	.mm-foot-actions { width: 100%; justify-content: space-between; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.mm-panel, .mm-feature img, .mm-pack-img img { transition: none !important; }
+}
