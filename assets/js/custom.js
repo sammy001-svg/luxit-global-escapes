@@ -794,6 +794,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (href === 'destinations.php' && li.querySelector('.sub-menu-down, .sub-menu')) {
       li.insertAdjacentHTML('afterend', destHTML);
+      // Keep the replaced link's classes: the template hardcodes text-black,
+      // which is unreadable over the homepage's transparent header.
+      const added = li.nextElementSibling && li.nextElementSibling.querySelector(':scope > a');
+      if (added) added.className = a.className;
       li.remove();
     } else if (text === 'Tours' && li.querySelector('.sub-menu')) {
       li.insertAdjacentHTML('afterend', toursHTML);

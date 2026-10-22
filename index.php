@@ -111,61 +111,75 @@ include 'header.php';
 			<div class="page-content">
 				<!-- Hero Carousel Start -->
 				<style>
-				/* ── Hero Carousel ── */
-				.hero-carousel-wrap{position:relative;height:100vh;min-height:600px;max-height:960px;overflow:hidden;}
+				/* ── Hero Carousel ──
+				   The site header is absolutely positioned over the hero, so the copy
+				   must start below it. --hero-top is the header's measured bottom edge
+				   (set by the script after the hero); the fallbacks match its usual size. */
+				.hero-carousel-wrap{--hero-top:130px;--hero-gutter:20px;--hero-bottom:118px;position:relative;height:100vh;height:100svh;min-height:620px;max-height:980px;overflow:hidden;background:#041c16;}
+				@media(min-width:1024px){.hero-carousel-wrap{--hero-top:170px;--hero-gutter:70px;--hero-bottom:132px;min-height:660px;}}
 				.hero-carousel-wrap .trv-header-carousel{height:100%;}
 
 				/* Slide */
 				.hero-slide{position:relative;height:100%;}
-				.hero-slide-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
-				.hero-slide-overlay{position:absolute;inset:0;background:linear-gradient(105deg,rgba(4,28,22,.88) 0%,rgba(4,28,22,.55) 50%,rgba(4,28,22,.08) 100%);}
+				.hero-slide-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(1.06);transition:transform 7s ease-out;}
+				.swiper-slide-active .hero-slide-img{transform:scale(1);}
+				/* Left-weighted shade behind the copy, plus a top band so the logo and
+				   menu stay legible whatever the photo looks like. */
+				.hero-slide-overlay{position:absolute;inset:0;background:
+					linear-gradient(180deg,rgba(4,28,22,.62) 0%,rgba(4,28,22,0) 30%),
+					linear-gradient(95deg,rgba(4,28,22,.86) 0%,rgba(4,28,22,.6) 42%,rgba(4,28,22,.12) 78%,rgba(4,28,22,0) 100%);}
 
-				/* Content */
-				.hero-slide-content{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 6% 130px;}
+				/* Content: vertically centred in the space between header and nav bar */
+				.hero-slide-content{position:absolute;inset:0;display:flex;align-items:center;padding:calc(var(--hero-top) + 24px) var(--hero-gutter) calc(var(--hero-bottom) + 16px);}
+				.hero-copy{max-width:640px;text-align:left;}
 
 				/* Animated elements — start hidden, reveal on active slide */
-				.hero-eyebrow,.hero-title,.hero-desc,.hero-ctas{opacity:0;transform:translateY(32px);transition:opacity .75s ease,transform .75s ease;}
-				.swiper-slide-active .hero-eyebrow{opacity:1;transform:translateY(0);transition-delay:0ms;}
-				.swiper-slide-active .hero-title  {opacity:1;transform:translateY(0);transition-delay:190ms;}
-				.swiper-slide-active .hero-desc   {opacity:1;transform:translateY(0);transition-delay:370ms;}
-				.swiper-slide-active .hero-ctas   {opacity:1;transform:translateY(0);transition-delay:540ms;}
+				.hero-eyebrow,.hero-title,.hero-desc,.hero-ctas{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.2,1);}
+				.swiper-slide-active .hero-eyebrow{opacity:1;transform:none;transition-delay:100ms;}
+				.swiper-slide-active .hero-title  {opacity:1;transform:none;transition-delay:250ms;}
+				.swiper-slide-active .hero-desc   {opacity:1;transform:none;transition-delay:400ms;}
+				.swiper-slide-active .hero-ctas   {opacity:1;transform:none;transition-delay:550ms;}
+				@media(prefers-reduced-motion:reduce){.hero-eyebrow,.hero-title,.hero-desc,.hero-ctas,.hero-slide-img{transition:none;transform:none;}}
 
-				.hero-eyebrow{display:inline-flex;align-items:center;gap:10px;color:#FFD214;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin-bottom:18px;}
-				.hero-eyebrow::before{content:'';display:block;width:30px;height:2px;background:#FFD214;flex-shrink:0;}
+				.hero-eyebrow{display:inline-flex;align-items:center;gap:12px;color:#FFD214;font-size:.72rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;margin-bottom:20px;}
+				.hero-eyebrow::before{content:'';display:block;width:36px;height:1px;background:currentColor;flex-shrink:0;}
 
-				.hero-title{color:#fff;line-height:1.08;font-size:clamp(2.2rem,5.2vw,5rem);font-weight:800;margin-bottom:22px;font-family:var(--font-display,Georgia,serif);}
-				.hero-title em{color:#FFD214;font-style:normal;}
+				/* Sized by width AND height so short laptop screens get a smaller
+				   headline rather than one that runs into the header. */
+				.hero-title{color:#fff;font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-weight:600;line-height:1.08;letter-spacing:-.01em;font-size:clamp(2.2rem,min(5vw,8.4vh),4.4rem);margin:0 0 22px;text-wrap:balance;text-shadow:0 2px 24px rgba(0,0,0,.25);}
+				.hero-title em{color:#FFD214;font-style:italic;font-weight:500;}
 
-				.hero-desc{color:rgba(255,255,255,.72);font-size:clamp(.92rem,1.4vw,1.1rem);max-width:560px;line-height:1.72;margin:0 auto 36px;}
+				.hero-desc{color:rgba(255,255,255,.82);font-size:clamp(.95rem,1.2vw,1.08rem);max-width:500px;line-height:1.7;margin:0 0 34px;}
 
-				.hero-ctas{display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:center;}
-				.hero-cta-ghost{display:inline-flex;align-items:center;gap:9px;color:#fff;border:1px solid rgba(255,255,255,.45);border-radius:50px;padding:12px 26px;font-size:.86rem;font-weight:600;letter-spacing:.04em;transition:background .3s,border-color .3s;}
+				.hero-ctas{display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
+				.hero-cta-ghost{display:inline-flex;align-items:center;gap:9px;color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:50px;padding:12px 26px;font-size:.86rem;font-weight:600;letter-spacing:.04em;backdrop-filter:blur(4px);background:rgba(255,255,255,.06);transition:background .3s,border-color .3s;}
 				.hero-cta-ghost:hover{background:#006A72;border-color:#006A72;color:#fff;}
 				.hero-cta-ghost i{font-size:.75rem;transition:transform .3s;}
 				.hero-cta-ghost:hover i{transform:translateX(4px);}
 
 				/* Nav Bar */
-				.hero-nav-bar{position:absolute;bottom:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:20px 6% 26px;background:linear-gradient(0deg,rgba(4,28,22,.78) 0%,transparent 100%);}
+				.hero-nav-bar{position:absolute;bottom:0;left:0;right:0;z-index:20;display:flex;align-items:center;gap:24px;height:var(--hero-bottom);padding:0 var(--hero-gutter);background:linear-gradient(0deg,rgba(4,28,22,.8) 0%,rgba(4,28,22,0) 100%);}
 
-				/* Progress bar — pinned to top of nav bar */
-				.hero-progress-wrap{position:absolute;top:0;left:0;right:0;height:2px;background:rgba(255,255,255,.15);}
+				/* Progress bar — runs across the top of the nav bar, inside the gutters */
+				.hero-progress-wrap{position:absolute;top:28px;left:var(--hero-gutter);right:var(--hero-gutter);height:2px;background:rgba(255,255,255,.18);}
 				.hero-progress-bar{height:100%;width:0%;background:#FFD214;transition:width 5s linear;}
 
 				/* Counter */
-				.hero-counter{color:rgba(255,255,255,.55);font-size:.76rem;letter-spacing:.12em;font-weight:600;min-width:60px;font-variant-numeric:tabular-nums;}
+				.hero-counter{color:rgba(255,255,255,.55);font-size:.76rem;letter-spacing:.12em;font-weight:600;min-width:60px;font-variant-numeric:tabular-nums;padding-top:28px;}
 				.hero-counter strong{color:#fff;font-size:.92rem;}
 
 				/* Arrows */
-				.hero-arrows{display:flex;gap:10px;}
-				.hero-arrows button{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.07);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .3s,border-color .3s;font-size:.8rem;}
+				.hero-arrows{display:flex;gap:10px;padding-top:28px;}
+				.hero-arrows button{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.07);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .3s,border-color .3s;font-size:.8rem;}
 				.hero-arrows button:hover{background:#006A72;border-color:#006A72;}
+				.hero-arrows button:focus-visible{outline:2px solid #FFD214;outline-offset:3px;}
 
 				/* Thumbnails */
-				.hero-thumbs{display:flex;gap:8px;}
-				.hero-thumb{width:76px;height:48px;border-radius:8px;overflow:hidden;cursor:pointer;opacity:.4;border:2px solid transparent;transition:opacity .35s,border-color .35s,transform .35s;}
+				.hero-thumbs{display:flex;gap:10px;margin-left:auto;padding-top:28px;}
+				.hero-thumb{width:76px;height:48px;border-radius:8px;overflow:hidden;cursor:pointer;opacity:.45;border:2px solid transparent;transition:opacity .35s,border-color .35s;}
 				.hero-thumb img{width:100%;height:100%;object-fit:cover;}
-				.hero-thumb.active{opacity:1;border-color:#FFD214;transform:scale(1.06);}
-				.hero-thumb:hover:not(.active){opacity:.7;}
+				.hero-thumb.active{opacity:1;border-color:#FFD214;}
+				.hero-thumb:hover:not(.active){opacity:.75;}
 
 				/* Scroll indicator */
 				.hero-scroll-indicator{position:absolute;right:28px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:12px;z-index:20;}
@@ -175,8 +189,21 @@ include 'header.php';
 				@keyframes heroScrollDown{0%{top:-60px}100%{top:60px}}
 
 				/* Responsive */
-				@media(max-width:1023px){.hero-scroll-indicator{display:none;}.hero-slide-content{padding:0 5% 110px;}}
-				@media(max-width:640px){.hero-thumbs{display:none;}.hero-counter{display:none;}.hero-slide-content{padding:0 5% 90px;}.hero-title{font-size:clamp(1.9rem,8vw,2.6rem);}}
+				@media(max-width:1279px){.hero-scroll-indicator{display:none;}}
+				/* Phones: hide thumbnails and keep the arrows clear of the fixed scroll-to-top button. */
+				@media(max-width:767px){.hero-thumbs{display:none;}.hero-arrows{margin-left:auto;}.hero-nav-bar{padding-right:84px;}}
+				/* Short laptop screens: tighten the stack so it never meets the header. */
+				@media(min-width:1024px) and (max-height:800px){
+					.hero-carousel-wrap{--hero-bottom:112px;}
+					.hero-title{font-size:clamp(2rem,7.6vh,3.5rem);margin-bottom:16px;}
+					.hero-eyebrow{margin-bottom:14px;}
+					.hero-desc{margin-bottom:24px;}
+				}
+				@media(max-width:639px){
+					.hero-carousel-wrap{--hero-bottom:96px;}
+					.hero-title{font-size:clamp(2rem,9.5vw,2.6rem);}
+					.hero-desc{font-size:.95rem;margin-bottom:28px;}
+				}
 				</style>
 
 				<div class="hero-carousel-wrap">
@@ -188,7 +215,7 @@ include 'header.php';
 								<img src="assets/images/header-carousel/safari.png" alt="Kenya Safari" class="hero-slide-img">
 								<div class="hero-slide-overlay"></div>
 								<div class="hero-slide-content">
-									<div>
+									<div class="hero-copy">
 										<span class="hero-eyebrow">Kenya Safari Experience</span>
 										<h1 class="hero-title">Experience the <em>Wild Heart</em><br>of Africa</h1>
 										<p class="hero-desc">Discover our curated safari packages designed for nature lovers and adventurers seeking the ultimate wilderness encounter.</p>
@@ -205,7 +232,7 @@ include 'header.php';
 								<img src="assets/images/header-carousel/maldives.png" alt="Maldives Escape" class="hero-slide-img">
 								<div class="hero-slide-overlay"></div>
 								<div class="hero-slide-content">
-									<div>
+									<div class="hero-copy">
 										<span class="hero-eyebrow">Luxury Island Retreats</span>
 										<h1 class="hero-title">Paradise Found<br>in the <em>Maldives</em></h1>
 										<p class="hero-desc">Float above turquoise lagoons in overwater villas — curated luxury escapes for travellers who demand the extraordinary.</p>
@@ -222,7 +249,7 @@ include 'header.php';
 								<img src="assets/images/header-carousel/mountains.png" alt="Mountain Adventure" class="hero-slide-img">
 								<div class="hero-slide-overlay"></div>
 								<div class="hero-slide-content">
-									<div>
+									<div class="hero-copy">
 										<span class="hero-eyebrow">Adventure &amp; Trekking</span>
 										<h1 class="hero-title">Reach <em>New Heights</em><br>with Luxit</h1>
 										<p class="hero-desc">From the peaks of Kilimanjaro to misty highland trails — push your limits on expeditions crafted for true explorers.</p>
@@ -239,7 +266,7 @@ include 'header.php';
 								<img src="assets/images/background/adv-bg.jpg" alt="African Heritage" class="hero-slide-img">
 								<div class="hero-slide-overlay"></div>
 								<div class="hero-slide-content">
-									<div>
+									<div class="hero-copy">
 										<span class="hero-eyebrow">Cultural Heritage Tours</span>
 										<h1 class="hero-title">Uncover Africa's<br><em>Rich Heritage</em></h1>
 										<p class="hero-desc">Walk ancient trade routes, meet local communities and immerse yourself in the vibrant cultures that define the African continent.</p>
@@ -279,6 +306,25 @@ include 'header.php';
 					</div>
 				</div>
 				<!-- Hero Carousel End -->
+				<script>
+				// Keep the hero copy clear of the header: measure where the header
+				// actually ends (its height changes with the top bar and breakpoints).
+				(function () {
+					var wrap = document.querySelector('.hero-carousel-wrap');
+					var header = document.querySelector('.site-header');
+					if (!wrap || !header) return;
+					function measure() {
+						// Once scrolled the header turns fixed and collapses; only its
+						// resting position over the hero matters.
+						if (header.classList.contains('is-fixed')) return;
+						var gap = header.getBoundingClientRect().bottom - wrap.getBoundingClientRect().top;
+						if (gap > 0) wrap.style.setProperty('--hero-top', Math.ceil(gap) + 'px');
+					}
+					measure();
+					window.addEventListener('resize', measure);
+					window.addEventListener('load', measure);
+				})();
+				</script>
 				
 				<!-- SEARCH BAR START-->
 				<div class="trv-search-outer bg-lightturquoise xl:pt-17.5 pt-12.5 px-5">

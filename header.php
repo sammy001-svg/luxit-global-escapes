@@ -54,6 +54,10 @@
 	<link rel="stylesheet" href="assets/css/responsive.css">
 	<link rel="stylesheet" href="assets/css/packages.css">
 	<style>
+	/* Top contact bar: the md:gap-x-48 / sm:gap-x-10 utilities are not in the
+	   compiled build, which left the address, phone and email touching. */
+	.site-topbar-inner { column-gap: clamp(18px, 4vw, 56px); }
+
 	/* ═══════════════════════════════════════
 	   MEGA MENU — Desktop layout & hover
 	═══════════════════════════════════════ */
@@ -144,7 +148,7 @@
 	</style>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Afacad:ital,wght@0,400..700;1,400..700&family=Figtree:ital,wght@0,300..900;1,300..900&family=Kaushan+Script&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Afacad:ital,wght@0,400..700;1,400..700&family=Figtree:ital,wght@0,300..900;1,300..900&family=Kaushan+Script&family=Playfair+Display:ital,wght@0,500..700;1,500..700&display=swap" rel="stylesheet">
 
 </head>
 <body id="bg" class="selection:bg-[#484848] selection:text-white">
