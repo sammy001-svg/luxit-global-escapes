@@ -5,6 +5,8 @@
  * Set before including:
  *   $page_title        <title>, also used for social cards
  *   $page_description  meta / social description (optional)
+ *   $page_image        social-card image path (optional)
+ *   $page_css          extra stylesheet paths for this page (optional)
  *   $header_variant    'overlay' (default) — transparent, white links, for
  *                      pages that open on a dark full-bleed hero (homepage);
  *                      'solid' — white floating bar with dark links, readable
@@ -16,6 +18,7 @@ $page_description = $page_description ?? 'Luxit Global Escapes crafts luxury saf
 $header_variant   = ($header_variant ?? 'overlay') === 'solid' ? 'solid' : 'overlay';
 $hTitle = htmlspecialchars($page_title, ENT_QUOTES);
 $hDesc  = htmlspecialchars($page_description, ENT_QUOTES);
+$hImage = htmlspecialchars($page_image ?? 'assets/images/seo/og_index.png', ENT_QUOTES);
 ?>
 <!DOCTYPE html><html lang="en"><head>
     <!-- Character Encoding -->
@@ -37,7 +40,7 @@ $hDesc  = htmlspecialchars($page_description, ENT_QUOTES);
     <!-- Open Graph / Facebook -->
     <meta property="og:title" content="<?php echo $hTitle; ?>">
     <meta property="og:description" content="<?php echo $hDesc; ?>">
-    <meta property="og:image" content="assets/images/seo/og_index.png">
+    <meta property="og:image" content="<?php echo $hImage; ?>">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Luxit Global Escapes">
 
@@ -45,7 +48,7 @@ $hDesc  = htmlspecialchars($page_description, ENT_QUOTES);
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="<?php echo $hTitle; ?>">
     <meta name="twitter:description" content="<?php echo $hDesc; ?>">
-    <meta name="twitter:image" content="assets/images/seo/og_index.png">
+    <meta name="twitter:image" content="<?php echo $hImage; ?>">
 
     <!-- IE Compatibility -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -68,6 +71,9 @@ $hDesc  = htmlspecialchars($page_description, ENT_QUOTES);
 	<link rel="stylesheet" href="assets/css/responsive.css">
 	<link rel="stylesheet" href="assets/css/packages.css">
 	<link rel="stylesheet" href="assets/css/site.css">
+<?php foreach (($page_css ?? []) as $css) : ?>
+	<link rel="stylesheet" href="<?php echo htmlspecialchars($css, ENT_QUOTES); ?>">
+<?php endforeach; ?>
 	<style>
 	/* Top contact bar: the md:gap-x-48 / sm:gap-x-10 utilities are not in the
 	   compiled build, which left the address, phone and email touching. */

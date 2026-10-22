@@ -1,5 +1,6 @@
 <?php
 require_once 'includes/db.php';
+require_once 'includes/blog.php';
 
 function detailQuery(PDO $pdo, string $sql, array $params = []): ?array {
     try {
@@ -29,273 +30,261 @@ if ($slug !== '') {
     $post = detailQuery($pdo, "SELECT * FROM blog_posts WHERE id = ? AND status = 'Published'", [$id]);
 }
 
-// 404 redirect if not found
+// Unknown or unpublished post: back to the article list.
 if (!$post) {
-    header("HTTP/1.0 404 Not Found");
-    header("Location: blog.php");
+    header("Location: blog.php", true, 302);
     exit;
 }
 
-// Related posts — same category, excluding current
-$related = sideQuery($pdo,
-    "SELECT id, title, slug, excerpt, image, author, created_at FROM blog_posts WHERE status='Published' AND category=? AND id != ? ORDER BY created_at DESC LIMIT 3",
-    [$post['category'], $post['id']]
+$article = blogRenderContent(!empty($post['content']) ? $post['content'] : $post['excerpt']);
+$minutes = blogReadingMinutes($article['html']);
+
+// "Keep reading": same category first, topped up with the latest posts.
+$more = sideQuery($pdo,
+    "SELECT id, title, slug, excerpt, content, image, category, created_at FROM blog_posts
+     WHERE status = 'Published' AND id != ?
+     ORDER BY (category = ?) DESC, created_at DESC LIMIT 3",
+    [$post['id'], $post['category']]
 );
 
-// Recent posts for sidebar
-$recent = sideQuery($pdo,
-    "SELECT id, title, slug, image, created_at FROM blog_posts WHERE status='Published' AND id != ? ORDER BY created_at DESC LIMIT 5",
-    [$post['id']]
-);
-
-// Categories with counts
 $categories = sideQuery($pdo,
-    "SELECT category, COUNT(*) as cnt FROM blog_posts WHERE status='Published' GROUP BY category ORDER BY cnt DESC"
+    "SELECT category, COUNT(*) AS cnt FROM blog_posts WHERE status = 'Published' GROUP BY category ORDER BY cnt DESC, category"
 );
 
-$postDate = date('d F Y', strtotime($post['created_at']));
-$postImg  = !empty($post['image']) ? htmlspecialchars($post['image']) : 'assets/images/trv-blog/blog-lg/pic1.jpg';
+$postImg   = blogImagePath($post['image']);
+$author    = trim((string)$post['author']) ?: 'Luxit Global Escapes';
+$initial   = mb_strtoupper(mb_substr($author, 0, 1));
+$category  = trim((string)$post['category']);
+$catLink   = 'blog.php?cat=' . urlencode($category);
+$dek       = trim(strip_tags((string)$post['excerpt']));
+$tags      = array_values(array_filter(array_map('trim', explode(',', (string)$post['tags']))));
+$published = strtotime($post['created_at']);
 
-$page_title = htmlspecialchars($post['title']) . " - Luxit Global Escapes Blog";
-$header_variant = 'solid';
+// Absolute URL of this article for share links, built from the request so it
+// is right on any host (local, staging, live) and in a subdirectory install.
+$scheme   = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$basePath = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/')), '/');
+$shareUrl = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'luxitglobalescapes.com') . $basePath
+          . '/blog-detail.php?slug=' . urlencode($post['slug']);
+$enc      = fn($s) => rawurlencode($s);
+
+// header.php escapes these.
+$page_title       = $post['title'] . ' | Luxit Global Escapes Journal';
+$page_description = $dek !== '' ? mb_substr($dek, 0, 300) : mb_substr(trim(strip_tags($article['html'])), 0, 300);
+$page_image       = $postImg;
+$page_css         = ['assets/css/blog.css'];
+$header_variant   = 'solid';
 include 'header.php';
 ?>
+
+<!-- Reading progress (fixed, so outside #smooth-content) -->
+<div class="ba-progress" aria-hidden="true"><span id="ba-progress-bar"></span></div>
 
 <div id="smooth-wrapper">
     <div id="smooth-content">
         <div class="page-content">
 
-            <!-- INNER BANNER -->
-            <div class="relative bg-cover bg-center w-full overflow-hidden" style="background-image: url('<?php echo $postImg; ?>');">
-                <div class="bg-black/70 absolute left-0 top-0 size-full"></div>
-                <div class="inr-banner-height flex w-full lg:h-160 md:h-135 h-100 pb-10 items-baseline mx-auto">
-                    <div class="relative md:mt-60 mt-45 flex items-center justify-center w-full flex-col z-5 px-5">
-                        <span class="bg-primary text-white text-xs font-black uppercase px-4 py-1.5 rounded-full mb-5"><?php echo htmlspecialchars($post['category']); ?></span>
-                        <h1 class="lg:text-50 md:text-40 text-2xl relative text-white text-center max-w-4xl leading-tight mb-5">
-                            <?php echo htmlspecialchars($post['title']); ?>
-                        </h1>
-                        <div class="flex items-center gap-6 text-white/80 text-sm">
-                            <span class="flex items-center gap-2"><i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($post['author']); ?></span>
-                            <span class="flex items-center gap-2"><i class="fas fa-calendar-alt"></i> <?php echo $postDate; ?></span>
-                            <?php if (!empty($post['tags'])) : ?>
-                            <span class="flex items-center gap-2 max-sm:hidden"><i class="fas fa-tags"></i> <?php echo htmlspecialchars($post['tags']); ?></span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-                <div class="inr-plane-wrap absolute w-1/2 right-0 top-0 bottom-0 z-1">
-                    <div class="mt-60 animate-slide-right"><img src="assets/about/images/airplane.png" alt="" class="animate-slide-top-fast" width="378" height="146"></div>
-                </div>
-                <div class="inr-balloon-right absolute md:-right-15 -right-10 top-41.25 animate-slide-top"><img src="assets/about/images/hotballon-right.png" alt="" class="md:w-37.5 w-20" width="230" height="333"></div>
-            </div>
-            <!-- INNER BANNER END -->
-
-            <!-- BLOG DETAIL CONTENT -->
-            <div class="bg-paleaqua xl:pt-22.5 pt-12 pb-20">
-                <div class="container">
-                    <div class="grid grid-cols-12 gap-10">
-
-                        <!-- Main Article -->
-                        <div class="lg:col-span-8 col-span-12">
-                            <!-- Breadcrumb -->
-                            <div class="flex items-center gap-2 text-sm text-gray-400 mb-8">
-                                <a href="index.php" class="hover:text-primary duration-300">Home</a>
-                                <i class="fas fa-chevron-right text-xs"></i>
-                                <a href="blog.php" class="hover:text-primary duration-300">Blog</a>
-                                <i class="fas fa-chevron-right text-xs"></i>
-                                <span class="text-primary font-semibold line-clamp-1"><?php echo htmlspecialchars($post['title']); ?></span>
-                            </div>
-
-                            <!-- Article Card -->
-                            <div class="bg-white rounded-3xl overflow-hidden shadow-[0px_10px_50px_rgba(0,106,114,0.10)] mb-10">
-                                <!-- Featured Image -->
-                                <div class="relative overflow-hidden h-80 sm:h-96">
-                                    <img src="<?php echo $postImg; ?>" alt="<?php echo htmlspecialchars($post['title']); ?>" class="w-full h-full object-cover">
-                                </div>
-
-                                <!-- Article Meta & Content -->
-                                <div class="p-8 lg:p-12">
-                                    <!-- Meta bar -->
-                                    <div class="flex flex-wrap items-center gap-5 mb-8 pb-8 border-b border-gray-100">
-                                        <div class="flex items-center gap-3">
-                                            <div class="size-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-lg">
-                                                <?php echo strtoupper(substr($post['author'], 0, 1)); ?>
-                                            </div>
-                                            <div>
-                                                <p class="font-bold text-primary text-sm"><?php echo htmlspecialchars($post['author']); ?></p>
-                                                <p class="text-xs text-gray-400">Author</p>
-                                            </div>
-                                        </div>
-                                        <div class="h-8 w-px bg-gray-100 max-sm:hidden"></div>
-                                        <div class="flex items-center gap-2 text-sm text-gray-400">
-                                            <i class="fas fa-calendar-alt text-primary"></i>
-                                            <span><?php echo $postDate; ?></span>
-                                        </div>
-                                        <div class="h-8 w-px bg-gray-100 max-sm:hidden"></div>
-                                        <div class="flex items-center gap-2 text-sm text-gray-400">
-                                            <i class="fas fa-folder-open text-primary"></i>
-                                            <a href="blog.php?cat=<?php echo urlencode($post['category']); ?>" class="hover:text-primary duration-300"><?php echo htmlspecialchars($post['category']); ?></a>
-                                        </div>
-                                    </div>
-
-                                    <!-- Article Body -->
-                                    <div class="prose prose-lg max-w-none blog-content">
-                                        <?php if (!empty($post['content'])) : ?>
-                                            <?php echo $post['content']; ?>
-                                        <?php elseif (!empty($post['excerpt'])) : ?>
-                                            <p><?php echo htmlspecialchars($post['excerpt']); ?></p>
-                                        <?php else : ?>
-                                            <p>No content available for this post.</p>
-                                        <?php endif; ?>
-                                    </div>
-
-                                    <!-- Tags -->
-                                    <?php if (!empty($post['tags'])) :
-                                        $tagList = array_map('trim', explode(',', $post['tags']));
-                                    ?>
-                                    <div class="mt-10 pt-8 border-t border-gray-100">
-                                        <div class="flex flex-wrap items-center gap-3">
-                                            <span class="text-sm font-bold text-gray-400 uppercase tracking-widest">Tags:</span>
-                                            <?php foreach ($tagList as $tag) : if ($tag === '') continue; ?>
-                                            <a href="blog.php" class="px-4 py-1.5 bg-paleaqua text-primary text-xs font-bold rounded-full hover:bg-primary hover:text-white duration-300">
-                                                <?php echo htmlspecialchars($tag); ?>
-                                            </a>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </div>
-                                    <?php endif; ?>
-
-                                    <!-- Share -->
-                                    <div class="mt-8 pt-8 border-t border-gray-100 flex flex-wrap items-center gap-4">
-                                        <span class="text-sm font-bold text-gray-400 uppercase tracking-widest">Share:</span>
-                                        <a href="https://www.facebook.com/sharer/sharer.php?u=<?php echo urlencode('https://luxitglobalescapes.com/blog-detail.php?slug=' . $post['slug']); ?>" target="_blank" rel="noopener" class="size-10 rounded-full bg-[#1877F2] text-white flex items-center justify-center hover:scale-110 duration-300">
-                                            <i class="fab fa-facebook-f text-sm"></i>
-                                        </a>
-                                        <a href="https://twitter.com/intent/tweet?url=<?php echo urlencode('https://luxitglobalescapes.com/blog-detail.php?slug=' . $post['slug']); ?>&text=<?php echo urlencode($post['title']); ?>" target="_blank" rel="noopener" class="size-10 rounded-full bg-[#1DA1F2] text-white flex items-center justify-center hover:scale-110 duration-300">
-                                            <i class="fab fa-twitter text-sm"></i>
-                                        </a>
-                                        <a href="https://www.linkedin.com/shareArticle?mini=true&url=<?php echo urlencode('https://luxitglobalescapes.com/blog-detail.php?slug=' . $post['slug']); ?>&title=<?php echo urlencode($post['title']); ?>" target="_blank" rel="noopener" class="size-10 rounded-full bg-[#0A66C2] text-white flex items-center justify-center hover:scale-110 duration-300">
-                                            <i class="fab fa-linkedin-in text-sm"></i>
-                                        </a>
-                                        <a href="https://wa.me/?text=<?php echo urlencode($post['title'] . ' - https://luxitglobalescapes.com/blog-detail.php?slug=' . $post['slug']); ?>" target="_blank" rel="noopener" class="size-10 rounded-full bg-[#25D366] text-white flex items-center justify-center hover:scale-110 duration-300">
-                                            <i class="fab fa-whatsapp text-sm"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Back to Blog -->
-                            <div class="mb-12">
-                                <a href="blog.php" class="inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-citrusyellow duration-300">
-                                    <i class="fas fa-arrow-left text-xs"></i> Back to All Posts
-                                </a>
-                            </div>
-
-                            <!-- Related Posts -->
-                            <?php if (!empty($related)) : ?>
+            <article class="ba" id="ba-article">
+                <header class="ba-hero">
+                    <div class="ba-wrap ba-wrap--narrow">
+                        <nav class="ba-crumbs" aria-label="Breadcrumb">
+                            <a href="index.php">Home</a><span aria-hidden="true">/</span>
+                            <a href="blog.php">Journal</a><span aria-hidden="true">/</span>
+                            <span aria-current="page"><?php echo htmlspecialchars($category ?: 'Article'); ?></span>
+                        </nav>
+                        <?php if ($category !== '') : ?>
+                        <a class="ba-chip" href="<?php echo $catLink; ?>"><?php echo htmlspecialchars($category); ?></a>
+                        <?php endif; ?>
+                        <h1 class="ba-title"><?php echo htmlspecialchars($post['title']); ?></h1>
+                        <?php if ($dek !== '') : ?>
+                        <p class="ba-dek"><?php echo htmlspecialchars($dek); ?></p>
+                        <?php endif; ?>
+                        <div class="ba-meta">
+                            <span class="ba-avatar" aria-hidden="true"><?php echo htmlspecialchars($initial); ?></span>
                             <div>
-                                <h3 class="xl:text-30 text-24 font-bold text-primary mb-8">Related <span class="text-citrusyellow">Articles</span></h3>
-                                <div class="grid grid-cols-12 gap-6">
-                                    <?php foreach ($related as $rel) :
-                                        $rImg  = !empty($rel['image']) ? htmlspecialchars($rel['image']) : 'assets/images/trv-blog/blog-sm/pic1.jpg';
-                                        $rLink = 'blog-detail.php?slug=' . urlencode($rel['slug']);
-                                        $rDay  = date('j M Y', strtotime($rel['created_at']));
-                                    ?>
-                                    <div class="md:col-span-4 col-span-12">
-                                        <div class="bg-white rounded-2xl overflow-hidden shadow-[0px_5px_30px_rgba(0,106,114,0.08)] hover:shadow-[0px_15px_50px_rgba(0,106,114,0.15)] duration-500 group">
-                                            <div class="relative overflow-hidden h-44">
-                                                <a href="<?php echo $rLink; ?>">
-                                                    <img src="<?php echo $rImg; ?>" alt="<?php echo htmlspecialchars($rel['title']); ?>" class="w-full h-full object-cover group-hover:scale-105 duration-700">
-                                                </a>
-                                            </div>
-                                            <div class="p-5">
-                                                <p class="text-xs text-gray-400 mb-2"><?php echo $rDay; ?></p>
-                                                <h4 class="text-sm font-bold text-primary hover:text-citrusyellow duration-300 line-clamp-2">
-                                                    <a href="<?php echo $rLink; ?>"><?php echo htmlspecialchars($rel['title']); ?></a>
-                                                </h4>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                            <?php endif; ?>
-                        </div>
-
-                        <!-- Sidebar -->
-                        <div class="lg:col-span-4 col-span-12">
-                            <!-- Recent Posts -->
-                            <?php if (!empty($recent)) : ?>
-                            <div class="bg-white rounded-3xl p-7 shadow-[0px_10px_40px_rgba(0,106,114,0.08)] mb-8">
-                                <h4 class="text-lg font-bold text-primary mb-6 pb-4 border-b border-gray-100">Recent Posts</h4>
-                                <div class="space-y-5">
-                                    <?php foreach ($recent as $r) :
-                                        $rImg  = !empty($r['image']) ? htmlspecialchars($r['image']) : 'assets/images/trv-blog/blog-sm/pic1.jpg';
-                                        $rLink = 'blog-detail.php?slug=' . urlencode($r['slug']);
-                                        $rDate = date('d M Y', strtotime($r['created_at']));
-                                    ?>
-                                    <div class="flex gap-4 group">
-                                        <div class="min-w-16 w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
-                                            <a href="<?php echo $rLink; ?>">
-                                                <img src="<?php echo $rImg; ?>" alt="<?php echo htmlspecialchars($r['title']); ?>" class="w-full h-full object-cover group-hover:scale-105 duration-500">
-                                            </a>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs text-gray-400 mb-1"><?php echo $rDate; ?></p>
-                                            <h5 class="text-sm font-bold text-primary hover:text-citrusyellow duration-300 line-clamp-2">
-                                                <a href="<?php echo $rLink; ?>"><?php echo htmlspecialchars($r['title']); ?></a>
-                                            </h5>
-                                        </div>
-                                    </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                            <?php endif; ?>
-
-                            <!-- Categories -->
-                            <?php if (!empty($categories)) : ?>
-                            <div class="bg-white rounded-3xl p-7 shadow-[0px_10px_40px_rgba(0,106,114,0.08)] mb-8">
-                                <h4 class="text-lg font-bold text-primary mb-6 pb-4 border-b border-gray-100">Categories</h4>
-                                <div class="space-y-3">
-                                    <?php foreach ($categories as $c) : ?>
-                                    <a href="blog.php?cat=<?php echo urlencode($c['category']); ?>" class="flex items-center justify-between py-2.5 px-4 rounded-xl hover:bg-paleaqua group duration-300">
-                                        <span class="text-sm font-semibold text-primary group-hover:text-citrusyellow duration-300"><?php echo htmlspecialchars($c['category']); ?></span>
-                                        <span class="text-xs font-bold text-white bg-primary rounded-full size-6 flex items-center justify-center"><?php echo (int)$c['cnt']; ?></span>
-                                    </a>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                            <?php endif; ?>
-
-                            <!-- CTA Box -->
-                            <div class="bg-primary rounded-3xl p-8 text-center text-white">
-                                <i class="fas fa-paper-plane text-4xl mb-5 block text-secondary"></i>
-                                <h4 class="text-xl font-bold mb-3">Plan Your Dream Trip</h4>
-                                <p class="text-white/80 text-sm mb-6 leading-relaxed">Let our experts craft a bespoke itinerary tailored exactly to your travel dreams.</p>
-                                <a href="contact.php" class="inline-block bg-secondary text-primary font-black text-sm px-6 py-3 rounded-full hover:bg-white duration-300">Get a Free Quote</a>
+                                <span class="ba-author">By <?php echo htmlspecialchars($author); ?></span>
+                                <span class="ba-sub">
+                                    <time datetime="<?php echo date('Y-m-d', $published); ?>"><?php echo date('j F Y', $published); ?></time>
+                                    &middot; <?php echo $minutes; ?> min read
+                                </span>
                             </div>
                         </div>
+                    </div>
+                </header>
 
+                <figure class="ba-cover ba-wrap">
+                    <img src="<?php echo htmlspecialchars($postImg); ?>" alt="<?php echo htmlspecialchars($post['title']); ?>" width="1120" height="480">
+                </figure>
+
+                <div class="ba-wrap ba-layout">
+                    <div class="ba-main">
+                        <div class="ba-body">
+                            <?php echo $article['html'] !== '' ? $article['html'] : '<p>This article is being written. Please check back soon.</p>'; ?>
+                        </div>
+
+                        <?php if ($tags) : ?>
+                        <div class="ba-tags" aria-label="Tags">
+                            <?php foreach ($tags as $tag) : ?>
+                            <span class="ba-tag">#<?php echo htmlspecialchars($tag); ?></span>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
+
+                        <div class="ba-share">
+                            <span class="ba-share-label">Share</span>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u=<?php echo $enc($shareUrl); ?>" target="_blank" rel="noopener" aria-label="Share on Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                            <a href="https://twitter.com/intent/tweet?url=<?php echo $enc($shareUrl); ?>&amp;text=<?php echo $enc($post['title']); ?>" target="_blank" rel="noopener" aria-label="Share on X"><i class="fa-brands fa-x-twitter"></i></a>
+                            <a href="https://www.linkedin.com/sharing/share-offsite/?url=<?php echo $enc($shareUrl); ?>" target="_blank" rel="noopener" aria-label="Share on LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                            <a href="https://wa.me/?text=<?php echo $enc($post['title'] . ' ' . $shareUrl); ?>" target="_blank" rel="noopener" aria-label="Share on WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+                            <a href="mailto:?subject=<?php echo $enc($post['title']); ?>&amp;body=<?php echo $enc($shareUrl); ?>" aria-label="Share by email"><i class="fa-solid fa-envelope"></i></a>
+                            <button type="button" id="ba-copy" data-url="<?php echo htmlspecialchars($shareUrl); ?>" aria-label="Copy link"><i class="fa-solid fa-link"></i></button>
+                            <span class="ba-share-note" id="ba-copy-note" aria-live="polite"></span>
+                        </div>
+
+                        <div class="ba-authorbox">
+                            <span class="ba-avatar" aria-hidden="true"><?php echo htmlspecialchars($initial); ?></span>
+                            <div>
+                                <div class="ba-authorbox-label">Written by</div>
+                                <div class="ba-authorbox-name"><?php echo htmlspecialchars($author); ?></div>
+                                <p>Part of the Luxit Global Escapes travel team, sharing first-hand advice to help you plan journeys that run smoothly from the first enquiry to the flight home.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <aside class="ba-aside" aria-label="Article sidebar">
+                        <?php if (count($article['toc']) >= 2) : ?>
+                        <nav class="ba-panel ba-toc-panel" aria-label="Contents">
+                            <p class="ba-panel-title">In this article</p>
+                            <ol class="ba-toc">
+                                <?php foreach ($article['toc'] as $t) : ?>
+                                <li class="<?php echo $t['level'] === 3 ? 'is-sub' : ''; ?>"><a href="#<?php echo htmlspecialchars($t['id']); ?>" data-toc><?php echo htmlspecialchars($t['text']); ?></a></li>
+                                <?php endforeach; ?>
+                            </ol>
+                        </nav>
+                        <?php endif; ?>
+
+                        <div class="ba-cta">
+                            <span class="ba-cta-eyebrow">Plan with an expert</span>
+                            <h3>Ready to turn ideas into an itinerary?</h3>
+                            <p>Tell us where you'd like to go. Our team will design a tailor-made trip around your dates and budget.</p>
+                            <a href="contact.php">Start planning <i class="fa-solid fa-arrow-right"></i></a>
+                        </div>
+
+                        <?php if ($categories) : ?>
+                        <div class="ba-panel">
+                            <p class="ba-panel-title">Explore topics</p>
+                            <ul class="ba-cats">
+                                <?php foreach ($categories as $c) : ?>
+                                <li><a href="blog.php?cat=<?php echo urlencode($c['category']); ?>"<?php echo $c['category'] === $category ? ' aria-current="true"' : ''; ?>>
+                                    <?php echo htmlspecialchars($c['category']); ?> <span><?php echo (int)$c['cnt']; ?></span>
+                                </a></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                        <?php endif; ?>
+                    </aside>
+                </div>
+            </article>
+
+            <?php if ($more) : ?>
+            <section class="ba-more" aria-labelledby="ba-more-title">
+                <div class="ba-wrap">
+                    <div class="ba-more-head">
+                        <h2 id="ba-more-title">Keep reading</h2>
+                        <a href="blog.php">View all articles <i class="fa-solid fa-arrow-right"></i></a>
+                    </div>
+                    <div class="ba-grid">
+                        <?php foreach ($more as $m) :
+                            $mText = trim(strip_tags((string)$m['excerpt']));
+                        ?>
+                        <a class="ba-card" href="blog-detail.php?slug=<?php echo urlencode($m['slug']); ?>">
+                            <div class="ba-card-img"><img src="<?php echo htmlspecialchars(blogImagePath($m['image'])); ?>" alt="" loading="lazy"></div>
+                            <div class="ba-card-body">
+                                <span class="ba-card-cat"><?php echo htmlspecialchars($m['category']); ?></span>
+                                <h3 class="ba-card-title"><?php echo htmlspecialchars($m['title']); ?></h3>
+                                <?php if ($mText !== '') : ?><p class="ba-card-text"><?php echo htmlspecialchars($mText); ?></p><?php endif; ?>
+                                <span class="ba-card-meta"><?php echo date('j M Y', strtotime($m['created_at'])); ?> &middot; <?php echo blogReadingMinutes((string)($m['content'] ?: $m['excerpt'])); ?> min read</span>
+                            </div>
+                        </a>
+                        <?php endforeach; ?>
                     </div>
                 </div>
-            </div>
-            <!-- BLOG DETAIL CONTENT END -->
+            </section>
+            <?php else : ?>
+            <div class="ba-more" style="padding-top:0"></div>
+            <?php endif; ?>
 
         </div><!-- /page-content -->
 
-<style>
-/* Blog content typography */
-.blog-content p { margin-bottom: 1.25rem; line-height: 1.8; color: #4B5563; font-size: 1rem; }
-.blog-content h2 { font-size: 1.5rem; font-weight: 700; color: #006A72; margin-top: 2rem; margin-bottom: 1rem; }
-.blog-content h3 { font-size: 1.25rem; font-weight: 700; color: #006A72; margin-top: 1.5rem; margin-bottom: 0.75rem; }
-.blog-content ul, .blog-content ol { margin-left: 1.5rem; margin-bottom: 1.25rem; color: #4B5563; }
-.blog-content li { margin-bottom: 0.5rem; line-height: 1.7; }
-.blog-content strong { color: #1F2937; font-weight: 700; }
-.blog-content a { color: #006A72; text-decoration: underline; }
-.blog-content a:hover { color: #FFD214; }
-.blog-content blockquote { border-left: 4px solid #006A72; padding-left: 1.25rem; margin: 1.5rem 0; font-style: italic; color: #6B7280; }
-.blog-content img { max-width: 100%; border-radius: 12px; margin: 1.5rem 0; }
-</style>
+<?php ob_start(); ?>
+<script>
+(function () {
+    // Reading progress through the article.
+    var bar = document.getElementById('ba-progress-bar');
+    var article = document.getElementById('ba-article');
+    if (bar && article) {
+        var ticking = false;
+        var update = function () {
+            var r = article.getBoundingClientRect();
+            var total = r.height - window.innerHeight;
+            var done = total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 1;
+            bar.style.width = (done * 100) + '%';
+            ticking = false;
+        };
+        var onScroll = function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+        // ScrollSmoother eases the content after each native scroll event, so
+        // keep sampling briefly after the last one until it settles.
+        var settle;
+        window.addEventListener('scroll', function () {
+            onScroll();
+            clearInterval(settle);
+            var n = 0;
+            settle = setInterval(function () { onScroll(); if (++n > 40) clearInterval(settle); }, 50);
+        }, { passive: true });
+        window.addEventListener('resize', onScroll);
+        onScroll();
+    }
 
+    // Contents links: ScrollSmoother intercepts native anchor jumps.
+    document.querySelectorAll('[data-toc]').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+            var target = document.querySelector(a.getAttribute('href'));
+            if (!target) return;
+            e.preventDefault();
+            // animation.js handles every #link at document level and scrolls the
+            // target flush to the top, under the fixed header; keep it out.
+            e.stopPropagation();
+            // Land the heading below the fixed header, not underneath it.
+            var gap = 120;
+            var smoother = window.ScrollSmoother && ScrollSmoother.get && ScrollSmoother.get();
+            if (smoother) {
+                smoother.scrollTo(Math.max(0, smoother.offset(target, 'top top') - gap), true);
+            } else {
+                window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - gap, behavior: 'smooth' });
+            }
+        });
+    });
+
+    // Copy link.
+    var copy = document.getElementById('ba-copy');
+    var note = document.getElementById('ba-copy-note');
+    if (copy) {
+        copy.addEventListener('click', function () {
+            var url = copy.getAttribute('data-url');
+            var done = function () {
+                copy.classList.add('is-copied');
+                if (note) note.textContent = 'Link copied';
+                setTimeout(function () { copy.classList.remove('is-copied'); if (note) note.textContent = ''; }, 2200);
+            };
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(url).then(done, function () { window.prompt('Copy this link:', url); });
+            } else {
+                window.prompt('Copy this link:', url);
+            }
+        });
+    }
+})();
+</script>
+<?php $page_scripts = ob_get_clean(); ?>
 
 <?php include 'footer.php'; ?>
