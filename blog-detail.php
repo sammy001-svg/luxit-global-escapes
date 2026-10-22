@@ -194,19 +194,7 @@ include 'header.php';
                         <a href="blog.php">View all articles <i class="fa-solid fa-arrow-right"></i></a>
                     </div>
                     <div class="ba-grid">
-                        <?php foreach ($more as $m) :
-                            $mText = trim(strip_tags((string)$m['excerpt']));
-                        ?>
-                        <a class="ba-card" href="blog-detail.php?slug=<?php echo urlencode($m['slug']); ?>">
-                            <div class="ba-card-img"><img src="<?php echo htmlspecialchars(blogImagePath($m['image'])); ?>" alt="" loading="lazy"></div>
-                            <div class="ba-card-body">
-                                <span class="ba-card-cat"><?php echo htmlspecialchars($m['category']); ?></span>
-                                <h3 class="ba-card-title"><?php echo htmlspecialchars($m['title']); ?></h3>
-                                <?php if ($mText !== '') : ?><p class="ba-card-text"><?php echo htmlspecialchars($mText); ?></p><?php endif; ?>
-                                <span class="ba-card-meta"><?php echo date('j M Y', strtotime($m['created_at'])); ?> &middot; <?php echo blogReadingMinutes((string)($m['content'] ?: $m['excerpt'])); ?> min read</span>
-                            </div>
-                        </a>
-                        <?php endforeach; ?>
+                        <?php foreach ($more as $m) blogCard($m); ?>
                     </div>
                 </div>
             </section>

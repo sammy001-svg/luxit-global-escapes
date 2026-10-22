@@ -17,11 +17,61 @@ if (!function_exists('blogImagePath')) {
     }
 }
 
+if (!function_exists('blogPlainText')) {
+    /**
+     * Article HTML as readable plain text. Block boundaries become spaces
+     * first: a bare strip_tags() runs "…seasons.</p><h2>The Migration" into
+     * "seasons.The Migration".
+     */
+    function blogPlainText(?string $html): string {
+        $html = preg_replace('#<br\s*/?>|</(p|div|h[1-6]|li|blockquote|figcaption|td|th)>#i', '$0 ', (string)$html);
+        $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        return trim(preg_replace('/\s+/u', ' ', $text));
+    }
+}
+
 if (!function_exists('blogReadingMinutes')) {
     /** Estimated reading time at ~200 words per minute, never less than 1. */
     function blogReadingMinutes(string $html): int {
-        $words = str_word_count(strip_tags($html));
+        $words = count(preg_split('/\s+/u', blogPlainText($html), -1, PREG_SPLIT_NO_EMPTY));
         return max(1, (int)round($words / 200));
+    }
+}
+
+if (!function_exists('blogExcerpt')) {
+    /** Card summary: the author's excerpt, else the opening of the article. */
+    function blogExcerpt(array $post, int $max = 160): string {
+        $text = trim(strip_tags((string)($post['excerpt'] ?? '')));
+        if ($text === '') {
+            $text = blogPlainText($post['content'] ?? '');
+        }
+        if (mb_strlen($text) <= $max) return $text;
+        $cut = mb_substr($text, 0, $max);
+        $space = mb_strrpos($cut, ' ');
+        return rtrim($space !== false ? mb_substr($cut, 0, $space) : $cut, ' ,.;:') . '…';
+    }
+}
+
+if (!function_exists('blogCard')) {
+    /**
+     * Article card used on blog.php, the homepage and "Keep reading", so a
+     * post looks the same everywhere it appears. Styles: assets/css/blog.css.
+     */
+    function blogCard(array $post): void {
+        $link = 'blog-detail.php?slug=' . urlencode($post['slug']);
+        $text = blogExcerpt($post);
+        $mins = blogReadingMinutes((string)(($post['content'] ?? '') ?: ($post['excerpt'] ?? '')));
+        ?>
+                        <a class="ba-card" href="<?php echo $link; ?>">
+                            <div class="ba-card-img"><img src="<?php echo htmlspecialchars(blogImagePath($post['image'] ?? '')); ?>" alt="" loading="lazy"></div>
+                            <div class="ba-card-body">
+                                <span class="ba-card-cat"><?php echo htmlspecialchars($post['category'] ?? ''); ?></span>
+                                <h3 class="ba-card-title"><?php echo htmlspecialchars($post['title']); ?></h3>
+                                <?php if ($text !== '') : ?><p class="ba-card-text"><?php echo htmlspecialchars($text); ?></p><?php endif; ?>
+                                <span class="ba-card-meta"><?php echo date('j M Y', strtotime($post['created_at'])); ?> &middot; <?php echo $mins; ?> min read</span>
+                            </div>
+                        </a>
+        <?php
     }
 }
 

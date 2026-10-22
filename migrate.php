@@ -115,6 +115,7 @@ $columnMigrations = [
     ['bookings', 'message',    "text DEFAULT NULL"],
     ['bookings', 'admin_note', "text DEFAULT NULL"],
     ['bookings', 'updated_at', "timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP"],
+    ['blog_posts', 'featured', "tinyint(1) DEFAULT 0"],
 ];
 
 echo "\nChecking for missing columns...\n";

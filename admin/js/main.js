@@ -1529,14 +1529,15 @@ function renderSettings() {
 // ── Blog Management ───────────────────────────────────────────────────────────
 
 function renderBlogs() {
-    const blogs = (state.data.blogPosts || []).filter(b =>
-        b.title.toLowerCase().includes(state.searchQuery) ||
+    const allPosts = state.data.blogPosts || [];
+    const blogs = allPosts.filter(b =>
+        String(b.title || '').toLowerCase().includes(state.searchQuery) ||
         (b.author || '').toLowerCase().includes(state.searchQuery) ||
         (b.category || '').toLowerCase().includes(state.searchQuery)
     );
 
-    const published = (state.data.blogPosts || []).filter(b => b.status === 'Published').length;
-    const drafts    = (state.data.blogPosts || []).filter(b => b.status === 'Draft').length;
+    const published = allPosts.filter(b => b.status === 'Published').length;
+    const drafts    = allPosts.filter(b => b.status === 'Draft').length;
 
     // Without this table nothing can save and nothing reaches the public site.
     // Say so explicitly rather than rendering an empty tab that looks normal.
@@ -1547,27 +1548,28 @@ function renderBlogs() {
             <p class="text-sm text-rose-300/80">Posts cannot be saved and nothing will appear on the public site until it exists. Run <code class="bg-black/30 px-1.5 py-0.5 rounded font-mono">migrate.php</code> in your site root to create it — your existing bookings, customers and tours are not affected.</p>
         </div>` : '';
 
+    const img = (src) => escHtml(String(src).startsWith('assets') ? '../' + src : src);
+
     contentArea.innerHTML = `
         <div class="space-y-8 animate-fade-in pb-12">
             ${schemaWarning}
-            <div class="flex items-center justify-between">
+            <div class="flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h1 class="text-3xl font-bold">Blog Posts</h1>
-                    <p class="text-slate-500 mt-1">Create and manage articles that appear on your website</p>
+                    <p class="text-slate-500 mt-1">Published posts appear on the Blog page straight away, and the latest three on the homepage.</p>
                 </div>
-                <button onclick="window.openBlogModal()" class="bg-primary hover:bg-opacity-90 text-white px-6 py-2 rounded-xl text-sm font-bold transition shadow-lg shadow-primary/20">
+                <button onclick="window.openBlogModal()" class="bg-primary hover:bg-opacity-90 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition shadow-lg shadow-primary/20">
                     <i class="fas fa-pen-nib mr-2"></i> Write New Post
                 </button>
             </div>
 
-            <!-- Stats -->
             <div class="grid grid-cols-3 gap-4">
                 <div class="glass-card rounded-2xl p-5 border border-white/5">
                     <p class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Total Posts</p>
-                    <p class="text-3xl font-black text-white">${(state.data.blogPosts || []).length}</p>
+                    <p class="text-3xl font-black text-white">${allPosts.length}</p>
                 </div>
                 <div class="glass-card rounded-2xl p-5 border border-white/5">
-                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Published</p>
+                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Live on Website</p>
                     <p class="text-3xl font-black text-emerald-400">${published}</p>
                 </div>
                 <div class="glass-card rounded-2xl p-5 border border-white/5">
@@ -1576,8 +1578,7 @@ function renderBlogs() {
                 </div>
             </div>
 
-            <!-- Blog Table -->
-            <div class="glass-card rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
+            <div class="glass-card rounded-2xl overflow-hidden border border-white/5 shadow-2xl overflow-x-auto">
                 ${blogs.length > 0 ? `
                 <table class="w-full admin-table text-left border-collapse">
                     <thead>
@@ -1595,26 +1596,26 @@ function renderBlogs() {
                         <tr class="border-t border-white/5 hover:bg-white/5 transition group">
                             <td class="p-4">
                                 <div class="flex items-center gap-3">
-                                    ${b.image ? `<img src="${b.image.startsWith('assets') ? '../' + b.image : b.image}" class="w-12 h-12 rounded-xl object-cover border border-white/10 flex-shrink-0">` : `<div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0"><i class="fas fa-newspaper text-primary text-sm"></i></div>`}
-                                    <div>
-                                        <p class="font-bold text-sm text-white leading-tight line-clamp-2 max-w-xs">${b.title}</p>
-                                        <p class="text-[10px] text-slate-600 mt-0.5 font-mono">${b.slug || ''}</p>
+                                    ${b.image ? `<img src="${img(b.image)}" alt="" class="w-14 h-14 rounded-xl object-cover border border-white/10 flex-shrink-0">` : `<div class="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0"><i class="fas fa-newspaper text-primary text-sm"></i></div>`}
+                                    <div class="min-w-0">
+                                        <p class="font-bold text-sm text-white leading-tight line-clamp-2 max-w-sm">${escHtml(b.title)}</p>
+                                        ${Number(b.featured) === 1 ? '<span class="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-400 text-[10px] font-bold"><i class="fas fa-star text-[8px]"></i> Featured</span>' : ''}
                                     </div>
                                 </div>
                             </td>
-                            <td class="p-4 text-sm text-slate-400">${b.author || 'Admin'}</td>
+                            <td class="p-4 text-sm text-slate-400">${escHtml(b.author || '—')}</td>
                             <td class="p-4">
-                                <span class="px-2 py-1 rounded-md text-[10px] font-black uppercase bg-primary/10 text-primary">${b.category || 'Travel'}</span>
+                                <span class="px-2 py-1 rounded-md text-[10px] font-black uppercase bg-primary/10 text-primary">${escHtml(b.category || '—')}</span>
                             </td>
                             <td class="p-4">
-                                <span class="px-2 py-1 rounded-md text-[10px] font-black uppercase ${b.status === 'Published' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-400/10 text-amber-400'}">${b.status}</span>
+                                <span class="px-2 py-1 rounded-md text-[10px] font-black uppercase ${b.status === 'Published' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-400/10 text-amber-400'}">${b.status === 'Published' ? 'Live' : 'Draft'}</span>
                             </td>
-                            <td class="p-4 text-xs text-slate-500">${new Date(b.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}</td>
+                            <td class="p-4 text-xs text-slate-500">${bookingDate(b.created_at)}</td>
                             <td class="p-4 text-right">
                                 <div class="flex items-center justify-end space-x-2">
-                                    <a href="../blog-detail.php?slug=${b.slug}" target="_blank" class="p-2 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition" title="Preview"><i class="fas fa-eye text-xs"></i></a>
-                                    <button onclick="window.openBlogModal(${b.id})" class="p-2 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-lg transition" title="Edit"><i class="fas fa-edit text-xs"></i></button>
-                                    <button onclick="window.deleteBlog(${b.id})" class="p-2 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 rounded-lg transition" title="Delete"><i class="fas fa-trash text-xs"></i></button>
+                                    ${b.status === 'Published' ? `<a href="../blog-detail.php?slug=${encodeURIComponent(b.slug || '')}" target="_blank" rel="noopener" class="p-2 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition" title="View on website"><i class="fas fa-arrow-up-right-from-square text-xs"></i></a>` : ''}
+                                    <button onclick="window.openBlogModal(${Number(b.id)})" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-primary/20 text-slate-300 hover:text-primary text-xs font-bold transition">Edit</button>
+                                    <button onclick="window.deleteBlog(${Number(b.id)})" class="p-2 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 rounded-lg transition" title="Delete"><i class="fas fa-trash text-xs"></i></button>
                                 </div>
                             </td>
                         </tr>
@@ -1624,9 +1625,9 @@ function renderBlogs() {
                 ` : `
                 <div class="py-20 text-center">
                     <i class="fas fa-newspaper text-6xl text-slate-800 mb-6 block"></i>
-                    <h3 class="text-xl font-bold text-white mb-2">No Blog Posts Yet</h3>
+                    <h3 class="text-xl font-bold text-white mb-2">${allPosts.length ? 'No posts match your search' : 'No Blog Posts Yet'}</h3>
                     <p class="text-slate-500 mb-6">Start writing to engage your audience and drive traffic to your site.</p>
-                    <button onclick="window.openBlogModal()" class="bg-primary text-white px-8 py-3 rounded-2xl font-bold shadow-xl shadow-primary/20 hover:scale-105 transition">Write Your First Post</button>
+                    <button onclick="window.openBlogModal()" class="bg-primary text-white px-8 py-3 rounded-2xl font-bold shadow-xl shadow-primary/20 hover:scale-105 transition">Write a Post</button>
                 </div>
                 `}
             </div>
@@ -1634,169 +1635,293 @@ function renderBlogs() {
     `;
 }
 
+// Strip anything executable before older post HTML is loaded into the editor
+// (innerHTML does not run <script>, but it does run onerror= and friends).
+function sanitizeForEditor(html) {
+    const doc = new DOMParser().parseFromString(`<div>${html || ''}</div>`, 'text/html');
+    doc.querySelectorAll('script,style,iframe,object,embed,form,link,meta').forEach(n => n.remove());
+    doc.querySelectorAll('*').forEach(el => {
+        [...el.attributes].forEach(a => {
+            const v = a.value.replace(/\s+/g, '').toLowerCase();
+            if (a.name.startsWith('on') || ((a.name === 'href' || a.name === 'src') && v.startsWith('javascript:'))) el.removeAttribute(a.name);
+        });
+    });
+    return doc.body.firstChild.innerHTML;
+}
+
+const BLOG_CATEGORIES = ['Travel Tips', 'Safari', 'Destinations', 'Culture', 'Planning', 'Photography', 'Adventure', 'Luxury', 'Food & Cuisine', 'News'];
+
 window.openBlogModal = (blogId = null) => {
-    const blog = blogId ? (state.data.blogPosts || []).find(b => b.id === blogId) : null;
+    const blog = blogId ? (state.data.blogPosts || []).find(b => Number(b.id) === Number(blogId)) : null;
+    const categories = [...new Set([...BLOG_CATEGORIES, ...(state.data.blogPosts || []).map(b => b.category).filter(Boolean)])];
+    const isPublished = !blog || blog.status === 'Published';
+    const imgSrc = blog && blog.image ? (blog.image.startsWith('assets') ? '../' + blog.image : blog.image) : '';
+    const tool = (cmd, icon, label, arg = '') => `
+        <button type="button" data-cmd="${cmd}" data-arg="${arg}" title="${label}" aria-label="${label}"
+                class="h-8 min-w-8 px-2 rounded-lg text-slate-300 hover:bg-white/10 hover:text-white transition text-xs font-bold">${icon}</button>`;
 
     modalOverlay.classList.remove('hidden');
+    modalContent.classList.replace('max-w-2xl', 'max-w-4xl'); // room to write; closeModal restores it
     modalContent.innerHTML = `
-        <form id="blog-form" class="p-8 space-y-6 max-h-[90vh] overflow-y-auto custom-scroll">
+        <form id="blog-form" class="p-8 space-y-6 max-h-[90vh] overflow-y-auto custom-scroll w-full max-w-4xl">
             <div class="flex items-center justify-between sticky top-0 bg-dark-800 z-10 pb-4 border-b border-white/5">
                 <div>
-                    <h2 class="text-2xl font-bold">${blog ? 'Edit Blog Post' : 'Write New Post'}</h2>
-                    <p class="text-slate-500 text-xs mt-1">${blog ? 'Update your article details below' : 'Craft your article and publish when ready'}</p>
+                    <h2 class="text-2xl font-bold">${blog ? 'Edit Post' : 'Write a New Post'}</h2>
+                    <p class="text-slate-500 text-xs mt-1">Write it here as you would in a document. Publish to put it on the website, or save a draft.</p>
                 </div>
-                <button type="button" onclick="window.closeModal()" class="text-slate-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+                <button type="button" onclick="window.closeModal()" class="text-slate-500 hover:text-white" aria-label="Close"><i class="fas fa-times text-xl"></i></button>
             </div>
 
-            <div class="grid grid-cols-2 gap-6 text-sm">
-                <!-- Title -->
-                <div class="space-y-2 col-span-2">
-                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Post Title *</label>
-                    <input type="text" name="title" required value="${blog ? blog.title.replace(/"/g, '&quot;') : ''}"
-                        class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition"
-                        placeholder="e.g. Top 10 Safari Destinations in Africa">
-                </div>
+            <div class="space-y-2">
+                <label for="bf-title" class="text-xs text-slate-500 uppercase font-bold tracking-wider">Title</label>
+                <input id="bf-title" type="text" name="title" required maxlength="200" value="${blog ? escHtml(blog.title) : ''}"
+                    class="w-full bg-dark-900 border border-white/10 rounded-xl p-4 outline-none focus:border-primary transition text-lg font-bold"
+                    placeholder="e.g. When to Visit the Maasai Mara for the Great Migration">
+            </div>
 
-                <!-- Featured Image -->
-                <div class="space-y-2 col-span-2">
-                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Featured Image</label>
+            <div class="space-y-2">
+                <div class="flex items-end justify-between">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Article</label>
+                    <span id="be-count" class="text-[11px] text-slate-500"></span>
+                </div>
+                <div class="rounded-xl border border-white/10 bg-dark-900 focus-within:border-primary transition overflow-hidden">
+                    <div id="be-toolbar" class="flex flex-wrap items-center gap-1 p-2 border-b border-white/10 bg-white/5 sticky top-0">
+                        ${tool('formatBlock', 'Text', 'Normal paragraph', 'P')}
+                        ${tool('formatBlock', 'H2', 'Section heading', 'H2')}
+                        ${tool('formatBlock', 'H3', 'Sub-heading', 'H3')}
+                        <span class="w-px h-5 bg-white/10 mx-1"></span>
+                        ${tool('bold', '<i class="fas fa-bold"></i>', 'Bold')}
+                        ${tool('italic', '<i class="fas fa-italic"></i>', 'Italic')}
+                        <span class="w-px h-5 bg-white/10 mx-1"></span>
+                        ${tool('insertUnorderedList', '<i class="fas fa-list-ul"></i>', 'Bullet list')}
+                        ${tool('insertOrderedList', '<i class="fas fa-list-ol"></i>', 'Numbered list')}
+                        ${tool('formatBlock', '<i class="fas fa-quote-right"></i>', 'Quote', 'BLOCKQUOTE')}
+                        <span class="w-px h-5 bg-white/10 mx-1"></span>
+                        ${tool('createLink', '<i class="fas fa-link"></i>', 'Add link')}
+                        ${tool('unlink', '<i class="fas fa-link-slash"></i>', 'Remove link')}
+                        ${tool('removeFormat', '<i class="fas fa-eraser"></i>', 'Clear formatting')}
+                    </div>
+                    <div id="be-editor" class="blog-editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Article"
+                         data-placeholder="Start writing your article. Use H2 for section headings; they become the article's contents list on the website."></div>
+                </div>
+                <input type="hidden" name="content" id="be-content">
+                <p class="text-[10px] text-slate-500">Pasting from Word or Google Docs brings the text in as clean paragraphs; add headings and bold with the toolbar.</p>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex items-end justify-between">
+                    <label for="bf-excerpt" class="text-xs text-slate-500 uppercase font-bold tracking-wider">Summary <span class="text-slate-600 normal-case">(optional, shown on cards and in Google)</span></label>
+                    <span id="bf-excerpt-count" class="text-[11px] text-slate-500"></span>
+                </div>
+                <textarea id="bf-excerpt" name="excerpt" rows="2" maxlength="400" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition resize-none text-sm" placeholder="Leave empty and we'll use the first lines of the article.">${blog ? escHtml(blog.excerpt || '') : ''}</textarea>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 text-sm">
+                <div class="space-y-2 md:row-span-2">
+                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Cover Photo</label>
                     <div id="blog-image-dropzone" class="relative group cursor-pointer border-2 border-dashed border-white/10 rounded-2xl p-4 hover:border-primary/50 transition bg-dark-900/50">
-                        <input type="file" id="blog-image-input" accept="image/*" class="hidden">
-                        <div id="blog-image-preview-placeholder" class="flex flex-col items-center justify-center space-y-2 ${blog && blog.image ? 'hidden' : ''}">
-                            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                <i class="fas fa-cloud-upload-alt text-xl"></i>
-                            </div>
-                            <p class="text-xs font-bold text-slate-400">Click or drag to upload featured image</p>
-                            <p class="text-[10px] text-slate-600">JPG, PNG or WEBP (Max 5MB)</p>
+                        <input type="file" id="blog-image-input" accept="image/jpeg,image/png,image/webp" class="hidden">
+                        <div id="blog-image-preview-placeholder" class="flex flex-col items-center justify-center space-y-2 py-6 ${imgSrc ? 'hidden' : ''}">
+                            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary"><i class="fas fa-cloud-upload-alt text-xl"></i></div>
+                            <p class="text-xs font-bold text-slate-400">Click or drag a photo here</p>
+                            <p class="text-[10px] text-slate-600">Landscape works best. Large photos are resized automatically.</p>
                         </div>
-                        <div id="blog-image-preview" class="relative ${blog && blog.image ? '' : 'hidden'}">
-                            <img src="${blog && blog.image ? (blog.image.startsWith('assets') ? '../' + blog.image : blog.image) : ''}" id="blog-preview-img" class="w-full h-48 object-cover rounded-xl border border-white/5 shadow-2xl">
-                            <button type="button" id="blog-remove-img" class="absolute top-2 right-2 bg-rose-500 text-white size-8 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                        <div id="blog-image-preview" class="relative ${imgSrc ? '' : 'hidden'}">
+                            <img src="${escHtml(imgSrc)}" id="blog-preview-img" alt="" class="w-full h-44 object-cover rounded-xl border border-white/5">
+                            <button type="button" id="blog-remove-img" class="absolute top-2 right-2 bg-rose-500 text-white size-8 rounded-lg shadow-xl flex items-center justify-center" aria-label="Remove photo">
                                 <i class="fas fa-trash-alt text-xs"></i>
                             </button>
                         </div>
                     </div>
-                    <input type="hidden" name="image" id="blog-image-hidden" value="${blog ? (blog.image || '') : ''}">
-                </div>
-
-                <!-- Author & Category -->
-                <div class="space-y-2">
-                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Author</label>
-                    <input type="text" name="author" value="${blog ? (blog.author || 'Admin').replace(/"/g, '&quot;') : 'Admin'}"
-                        class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition"
-                        placeholder="Your name">
+                    <input type="hidden" name="image" id="blog-image-hidden" value="${blog ? escHtml(blog.image || '') : ''}">
+                    <input type="hidden" name="image_removed" id="blog-image-removed" value="">
                 </div>
                 <div class="space-y-2">
-                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Category</label>
-                    <select name="category" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition appearance-none">
-                        ${['Travel Tips', 'Culture', 'Planning', 'Photography', 'Adventure', 'Luxury', 'Food & Cuisine', 'News'].map(c => `
-                            <option value="${c}" ${blog && blog.category === c ? 'selected' : ''}>${c}</option>
-                        `).join('')}
-                    </select>
-                </div>
-
-                <!-- Tags & Status -->
-                <div class="space-y-2">
-                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Tags <span class="text-slate-600 normal-case">(comma-separated)</span></label>
-                    <input type="text" name="tags" value="${blog ? (blog.tags || '').replace(/"/g, '&quot;') : ''}"
-                        class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition"
-                        placeholder="safari, kenya, wildlife">
+                    <label for="bf-category" class="text-xs text-slate-500 uppercase font-bold tracking-wider">Category</label>
+                    <input id="bf-category" name="category" list="bf-category-list" maxlength="100" value="${escHtml(blog ? blog.category || '' : 'Travel Tips')}"
+                           class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="Choose or type a new one">
+                    <datalist id="bf-category-list">${categories.map(c => `<option value="${escHtml(c)}">`).join('')}</datalist>
                 </div>
                 <div class="space-y-2">
-                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Status</label>
-                    <div class="flex p-1 bg-dark-900 border border-white/10 rounded-xl">
-                        <label class="flex-1 text-center py-2.5 rounded-lg cursor-pointer text-xs font-bold transition ${(!blog || blog.status === 'Published') ? 'bg-emerald-500 text-white' : 'text-slate-500 hover:text-white'}">
-                            <input type="radio" name="status" value="Published" class="hidden" ${(!blog || blog.status === 'Published') ? 'checked' : ''}
-                                onchange="this.parentElement.parentElement.querySelectorAll('label').forEach(l=>{l.classList.remove('bg-emerald-500','bg-slate-700','text-white');l.classList.add('text-slate-500');}); this.parentElement.classList.remove('text-slate-500'); this.parentElement.classList.add('bg-emerald-500','text-white')">
-                            <i class="fas fa-globe mr-1"></i> Published
-                        </label>
-                        <label class="flex-1 text-center py-2.5 rounded-lg cursor-pointer text-xs font-bold transition ${blog && blog.status === 'Draft' ? 'bg-slate-700 text-white' : 'text-slate-500 hover:text-white'}">
-                            <input type="radio" name="status" value="Draft" class="hidden" ${blog && blog.status === 'Draft' ? 'checked' : ''}
-                                onchange="this.parentElement.parentElement.querySelectorAll('label').forEach(l=>{l.classList.remove('bg-emerald-500','bg-slate-700','text-white');l.classList.add('text-slate-500');}); this.parentElement.classList.remove('text-slate-500'); this.parentElement.classList.add('bg-slate-700','text-white')">
-                            <i class="fas fa-file-alt mr-1"></i> Draft
-                        </label>
-                    </div>
+                    <label for="bf-author" class="text-xs text-slate-500 uppercase font-bold tracking-wider">Author</label>
+                    <input id="bf-author" type="text" name="author" maxlength="100" value="${escHtml(blog ? blog.author || '' : (window.ADMIN_USER || 'Luxit Global Escapes'))}"
+                        class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition">
                 </div>
-
-                <!-- Excerpt -->
-                <div class="space-y-2 col-span-2">
-                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Excerpt <span class="text-slate-600 normal-case">(short summary shown in listings)</span></label>
-                    <textarea name="excerpt" rows="2" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition resize-none" placeholder="A brief summary of the post (1-2 sentences)...">${blog ? (blog.excerpt || '') : ''}</textarea>
+                <div class="space-y-2">
+                    <label for="bf-tags" class="text-xs text-slate-500 uppercase font-bold tracking-wider">Tags <span class="text-slate-600 normal-case">(optional, comma-separated)</span></label>
+                    <input id="bf-tags" type="text" name="tags" maxlength="255" value="${blog ? escHtml(blog.tags || '') : ''}"
+                        class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="safari, kenya, wildlife">
                 </div>
-
-                <!-- Full Content -->
-                <div class="space-y-2 col-span-2">
-                    <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Full Content <span class="text-slate-600 normal-case">(supports basic HTML)</span></label>
-                    <textarea name="content" rows="10" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition font-mono text-xs" placeholder="Write your article here. You can use HTML tags like &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;h2&gt;, etc.">${blog ? (blog.content || '') : ''}</textarea>
-                </div>
+                <label class="flex items-start gap-3 p-3.5 bg-dark-900 border border-white/10 rounded-xl cursor-pointer">
+                    <input type="checkbox" name="featured" class="mt-1 accent-amber-400" ${blog && Number(blog.featured) === 1 ? 'checked' : ''}>
+                    <span>
+                        <span class="block text-xs font-bold text-white"><i class="fas fa-star text-amber-400 mr-1"></i> Feature this post</span>
+                        <span class="block text-[11px] text-slate-500 mt-0.5">Shown as the lead story on the Blog page and first on the homepage. Replaces the current featured post.</span>
+                    </span>
+                </label>
             </div>
 
-            <div class="flex justify-end space-x-3 pt-6 border-t border-white/5 sticky bottom-0 bg-dark-800 z-10">
-                <button type="button" onclick="window.closeModal()" class="px-8 py-3 rounded-xl text-slate-500 hover:text-white font-bold transition">Discard</button>
-                <button type="submit" class="bg-primary px-10 py-3 rounded-xl text-white font-bold shadow-xl shadow-primary/20 hover:scale-105 transition">
-                    ${blog ? 'Update Post' : 'Publish Post'}
-                </button>
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-6 border-t border-white/5 sticky bottom-0 bg-dark-800 z-10">
+                <div class="flex p-1 bg-dark-900 border border-white/10 rounded-xl" role="radiogroup" aria-label="Visibility">
+                    <label class="px-4 text-center py-2 rounded-lg cursor-pointer text-xs font-bold transition" data-status-label="Published">
+                        <input type="radio" name="status" value="Published" class="hidden" ${isPublished ? 'checked' : ''}>
+                        <i class="fas fa-globe mr-1"></i> Live on website
+                    </label>
+                    <label class="px-4 text-center py-2 rounded-lg cursor-pointer text-xs font-bold transition" data-status-label="Draft">
+                        <input type="radio" name="status" value="Draft" class="hidden" ${isPublished ? '' : 'checked'}>
+                        <i class="fas fa-file-alt mr-1"></i> Draft
+                    </label>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="window.closeModal()" class="px-6 py-3 rounded-xl text-slate-500 hover:text-white font-bold transition">Cancel</button>
+                    <button type="submit" id="bf-submit" class="bg-primary px-8 py-3 rounded-xl text-white font-bold shadow-xl shadow-primary/20 hover:scale-105 transition"></button>
+                </div>
             </div>
         </form>
     `;
 
-    // Image upload handlers
-    const dropzone   = document.getElementById('blog-image-dropzone');
-    const fileInput  = document.getElementById('blog-image-input');
+    // ── Editor ──────────────────────────────────────────────────────────────
+    const editor = document.getElementById('be-editor');
+    editor.innerHTML = sanitizeForEditor(blog ? blog.content : '') || '<p><br></p>';
+    try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (e) {}
+
+    const counter = document.getElementById('be-count');
+    const updateCount = () => {
+        const words = (editor.innerText.trim().match(/\S+/g) || []).length;
+        counter.textContent = words ? `${words.toLocaleString()} words · about ${Math.max(1, Math.round(words / 200))} min read` : '';
+    };
+    editor.addEventListener('input', updateCount);
+    updateCount();
+
+    document.getElementById('be-toolbar').addEventListener('mousedown', (e) => {
+        const btn = e.target.closest('[data-cmd]');
+        if (!btn) return;
+        e.preventDefault(); // keep the selection in the editor
+        const cmd = btn.dataset.cmd;
+        if (cmd === 'createLink') {
+            const url = (prompt('Link address (https://…)') || '').trim();
+            if (!url) return;
+            if (!/^(https?:\/\/|mailto:|tel:|\/|[\w-]+\.php)/i.test(url)) { showToast('Links must start with https://, mailto: or tel:', 'error'); return; }
+            document.execCommand('createLink', false, url);
+        } else if (cmd === 'formatBlock') {
+            document.execCommand('formatBlock', false, btn.dataset.arg);
+        } else {
+            document.execCommand(cmd, false, null);
+        }
+        editor.focus();
+        updateCount();
+    });
+
+    // Paste as clean paragraphs: Word / Docs HTML carries fonts, colours and
+    // spans that would fight the website's typography.
+    editor.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+        const paras = text.replace(/\r\n?/g, '\n').split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+        const html = paras.length > 1
+            ? paras.map(p => `<p>${escHtml(p).replace(/\n/g, '<br>')}</p>`).join('')
+            : escHtml(text).replace(/\n/g, '<br>');
+        document.execCommand('insertHTML', false, html);
+        updateCount();
+    });
+
+    // ── Summary counter ─────────────────────────────────────────────────────
+    const excerpt = document.getElementById('bf-excerpt');
+    const excerptCount = document.getElementById('bf-excerpt-count');
+    const updateExcerpt = () => { excerptCount.textContent = excerpt.value.length ? `${excerpt.value.length}/400` : ''; };
+    excerpt.addEventListener('input', updateExcerpt);
+    updateExcerpt();
+
+    // ── Status toggle + submit label ────────────────────────────────────────
+    const submitBtn = document.getElementById('bf-submit');
+    const syncStatus = () => {
+        const status = document.querySelector('#blog-form [name="status"]:checked').value;
+        document.querySelectorAll('[data-status-label]').forEach(l => {
+            const on = l.dataset.statusLabel === status;
+            l.classList.toggle('bg-emerald-500', on && status === 'Published');
+            l.classList.toggle('bg-slate-700', on && status === 'Draft');
+            l.classList.toggle('text-white', on);
+            l.classList.toggle('text-slate-500', !on);
+        });
+        submitBtn.textContent = status === 'Draft' ? 'Save draft' : (blog && blog.status === 'Published' ? 'Update post' : 'Publish post');
+    };
+    document.querySelectorAll('#blog-form [name="status"]').forEach(r => r.addEventListener('change', syncStatus));
+    syncStatus();
+
+    // ── Cover photo ─────────────────────────────────────────────────────────
+    const dropzone    = document.getElementById('blog-image-dropzone');
+    const fileInput   = document.getElementById('blog-image-input');
     const placeholder = document.getElementById('blog-image-preview-placeholder');
     const previewDiv  = document.getElementById('blog-image-preview');
     const previewImg  = document.getElementById('blog-preview-img');
     const hiddenInput = document.getElementById('blog-image-hidden');
+    const removedFlag = document.getElementById('blog-image-removed');
     const removeBtn   = document.getElementById('blog-remove-img');
 
-    dropzone.onclick = (e) => {
-        if (e.target !== removeBtn && !removeBtn.contains(e.target)) fileInput.click();
-    };
-    fileInput.onchange = (e) => {
-        const file = e.target.files[0];
+    const useImage = async (file) => {
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            previewImg.src = ev.target.result;
-            hiddenInput.value = ev.target.result;
+        try {
+            const dataUrl = await prepareTourImage(file); // same resize/compress as package photos
+            previewImg.src = dataUrl;
+            hiddenInput.value = dataUrl;
+            removedFlag.value = '';
             placeholder.classList.add('hidden');
             previewDiv.classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
+        } catch (err) {
+            fileInput.value = '';
+            showToast(err.message, 'error');
+        }
     };
+    dropzone.onclick = (e) => { if (!removeBtn.contains(e.target)) fileInput.click(); };
+    fileInput.onchange = (e) => useImage(e.target.files[0]);
+    dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add('border-primary'); };
+    dropzone.ondragleave = () => dropzone.classList.remove('border-primary');
+    dropzone.ondrop = (e) => { e.preventDefault(); dropzone.classList.remove('border-primary'); useImage(e.dataTransfer.files[0]); };
     removeBtn.onclick = (e) => {
         e.stopPropagation();
         previewImg.src = '';
         hiddenInput.value = '';
+        removedFlag.value = '1';
         fileInput.value = '';
         placeholder.classList.remove('hidden');
         previewDiv.classList.add('hidden');
     };
 
-    // Form submit
+    // ── Save ────────────────────────────────────────────────────────────────
     document.getElementById('blog-form').onsubmit = async (e) => {
         e.preventDefault();
+        const status = document.querySelector('#blog-form [name="status"]:checked').value;
+        const hasText = editor.innerText.trim().length > 0;
+        if (status === 'Published' && !hasText) {
+            showToast('Write the article before publishing it, or save it as a draft.', 'error');
+            editor.focus();
+            return;
+        }
+        document.getElementById('be-content').value = hasText ? editor.innerHTML : '';
+
         const formData = new FormData(e.target);
         if (blog) formData.append('id', blog.id);
 
-        const submitBtn = e.target.querySelector('[type="submit"]');
-        const origLabel = submitBtn.innerHTML;
+        const origLabel = submitBtn.textContent;
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
 
         try {
             const data = await apiPost('save-blog.php', formData);
             if (!data.success) throw new Error(data.error || 'Save failed');
-
-            showToast(blog ? 'Post updated successfully' : 'Post published successfully');
+            showToast(data.status === 'Published'
+                ? 'Post is live on the Blog page and homepage'
+                : 'Draft saved. It is not visible on the website yet');
             window.closeModal();
             await refreshData();
         } catch (err) {
-            showToast('Error saving post: ' + err.message, 'error');
+            showToast('Could not save the post: ' + err.message, 'error');
             submitBtn.disabled = false;
-            submitBtn.innerHTML = origLabel;
+            submitBtn.textContent = origLabel;
         }
     };
+
+    document.getElementById('bf-title').focus();
 };
 
 window.deleteBlog = async (id) => {
@@ -2517,6 +2642,7 @@ window.deleteDestination = async (id) => {
 
 window.closeModal = () => {
     modalOverlay.classList.add('hidden');
+    modalContent.classList.replace('max-w-4xl', 'max-w-2xl');
 };
 
 // Update a booking's status, optionally with the final amount, an internal

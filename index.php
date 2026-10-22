@@ -3,7 +3,12 @@ require_once 'includes/db.php';
 function homeQuery(PDO $pdo, string $sql): array {
     try { return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC); } catch (PDOException $e) { return []; }
 }
-$homeBlogs = homeQuery($pdo, "SELECT id, title, slug, excerpt, image, author, category, created_at FROM blog_posts WHERE status = 'Published' ORDER BY created_at DESC LIMIT 5");
+require_once 'includes/blog.php';
+// "From the journal": the featured post first, then the newest. Falls back to
+// newest-only if migrate.php has not yet added the featured column.
+$blogCols  = "id, title, slug, excerpt, content, image, author, category, created_at";
+$homeBlogs = homeQuery($pdo, "SELECT $blogCols FROM blog_posts WHERE status = 'Published' ORDER BY featured DESC, created_at DESC LIMIT 3")
+          ?: homeQuery($pdo, "SELECT $blogCols FROM blog_posts WHERE status = 'Published' ORDER BY created_at DESC LIMIT 3");
 
 require_once 'includes/packages.php';
 
@@ -18,6 +23,7 @@ if (empty($homeTours)) {
     $homeTours = homeQuery($pdo, "SELECT * FROM tours WHERE status = 'Active' ORDER BY created_at DESC LIMIT 6");
 }
 $page_title = "Luxit Global Escapes - Travel & Tour | Home";
+$page_css = ['assets/css/blog.css']; // journal cards
 include 'header.php';
 ?>
 			<!-- ═══════════════════════════════════════════
@@ -1506,105 +1512,21 @@ include 'header.php';
 				
 				<!--ALL BLOGS SECTION START-->
 				<?php if (!empty($homeBlogs)) : ?>
-				<div class="sm:pt-22.5 pt-10 pb-40 bg-paleaqua">
-					<div class="container">
-						<!-- TITLE START-->
-						<div class="md:mb-15 mb-7.5 grid grid-cols-12">
-							<div class="xl:col-span-4 lg:col-span-6 col-span-12">
-								<div class="text-left">
-									<h2 class="xl:text-46 md:text-40 text-3xl mb-3.5">Explore<span class="text-citrusyellow"> Latest News</span></h2>
-									<div class="text-base max-lg:mb-7.5">Stay updated with the latest travel insights, tips, and destination guides from our expert team.</div>
-								</div>
+				<section class="hj" aria-labelledby="hj-title">
+					<div class="ba-wrap">
+						<div class="hj-head">
+							<div>
+								<span class="bl-eyebrow">From the journal</span>
+								<h2 id="hj-title">Travel stories &amp; advice</h2>
+								<p>Destination guides and planning tips from our team.</p>
 							</div>
-							<div class="xl:col-span-8 lg:col-span-6 col-span-12">
-								<div class="lg:text-right">
-									<a href="blog.php" class="site-button butn-bg-shape">See More Articles</a>
-								</div>
-							</div>
+							<a href="blog.php">Read the journal <i class="fa-solid fa-arrow-right"></i></a>
 						</div>
-						<!-- TITLE END-->
-						<div>
-							<div class="grid grid-cols-12 md:gap-7.5">
-								<!-- Column 1: up to 3 small cards -->
-								<div class="xl:col-span-4 md:col-span-6 col-span-12">
-									<?php foreach (array_slice($homeBlogs, 0, 3) as $hb) :
-										$hbDay   = date('j', strtotime($hb['created_at']));
-										$hbMonth = date('M', strtotime($hb['created_at']));
-										$hbImg   = !empty($hb['image']) ? htmlspecialchars($hb['image']) : 'assets/images/trv-blog/blog-sm/pic1.jpg';
-										$hbLink  = 'blog-detail.php?slug=' . urlencode($hb['slug']);
-									?>
-									<div class="relative flex mb-7.5">
-										<div class="mr-2.5 relative z-1 rounded-xxl overflow-hidden min-w-25 w-25 h-32.75">
-											<a href="<?php echo $hbLink; ?>"><img src="<?php echo $hbImg; ?>" alt="<?php echo htmlspecialchars($hb['title']); ?>" class="size-full object-cover" width="100" height="131" loading="lazy"></a>
-										</div>
-										<div class="bg-white py-6.25 lg:px-5 px-3 rounded-xxl w-full">
-											<div class="size-10 text-white text-sm leading-none bg-primary text-center flex flex-col items-center justify-center rounded-md absolute top-2.5 right-2.5">
-												<span class="block text-xl leading-none font-bold text-white"><?php echo $hbDay; ?></span><?php echo $hbMonth; ?>
-											</div>
-											<div class="text-lg font-medium text-citrusyellow whitespace-nowrap table font-title leading-none pb-3.75"><?php echo htmlspecialchars($hb['author']); ?></div>
-											<div>
-												<h2><a href="<?php echo $hbLink; ?>" class="duration-500 2xl:text-xl/6 sm:text-lg text-sm font-title font-medium text-primary block hover:text-citrusyellow"><?php echo htmlspecialchars($hb['title']); ?></a></h2>
-											</div>
-										</div>
-									</div>
-									<?php endforeach; ?>
-								</div>
-
-								<!-- Column 2: post 4 as medium featured card -->
-								<?php if (!empty($homeBlogs[3])) :
-									$hb4    = $homeBlogs[3];
-									$hb4Day = date('j', strtotime($hb4['created_at']));
-									$hb4Mon = date('M', strtotime($hb4['created_at']));
-									$hb4Img = !empty($hb4['image']) ? htmlspecialchars($hb4['image']) : 'assets/images/trv-blog/blog-md/pic1.jpg';
-									$hb4Lnk = 'blog-detail.php?slug=' . urlencode($hb4['slug']);
-								?>
-								<div class="xl:col-span-4 md:col-span-6 col-span-12">
-									<div class="relative mb-7.5">
-										<div class="relative z-1 rounded-xl overflow-hidden">
-											<a href="<?php echo $hb4Lnk; ?>"><img src="<?php echo $hb4Img; ?>" alt="<?php echo htmlspecialchars($hb4['title']); ?>" class="object-cover object-center h-52.5 w-full" width="100" height="210" loading="lazy"></a>
-										</div>
-										<div class="size-10 text-primary text-sm leading-none bg-paleaqua text-center flex flex-col items-center justify-center rounded-md absolute top-2.5 right-2.5 z-1">
-											<span class="block text-xl leading-none font-bold"><?php echo $hb4Day; ?></span><?php echo $hb4Mon; ?>
-										</div>
-										<div class="bg-white py-6.25 px-5 rounded-xxl -mt-12.5 md:mx-5 z-1 absolute max-xl:w-[91%] max-md:w-full">
-											<div class="text-lg font-medium text-citrusyellow whitespace-nowrap table font-title leading-none pb-3.75"><?php echo htmlspecialchars($hb4['author']); ?></div>
-											<div>
-												<h2 class="post-title"><a href="<?php echo $hb4Lnk; ?>" class="duration-500 2xl:text-xl/6 sm:text-lg text-sm font-title font-medium text-primary block hover:text-citrusyellow"><?php echo htmlspecialchars($hb4['title']); ?></a></h2>
-											</div>
-										</div>
-									</div>
-								</div>
-								<?php endif; ?>
-
-								<!-- Column 3: post 5 as large featured card -->
-								<?php if (!empty($homeBlogs[4])) :
-									$hb5    = $homeBlogs[4];
-									$hb5Day = date('j', strtotime($hb5['created_at']));
-									$hb5Mon = date('M', strtotime($hb5['created_at']));
-									$hb5Img = !empty($hb5['image']) ? htmlspecialchars($hb5['image']) : 'assets/images/trv-blog/blog-lg/pic1.jpg';
-									$hb5Lnk = 'blog-detail.php?slug=' . urlencode($hb5['slug']);
-								?>
-								<div class="xl:col-span-4 md:col-span-6 col-span-12">
-									<div class="relative mb-7.5 max-xl:left-1/2 max-md:left-0 max-md:-bottom-15">
-										<div class="relative z-1 rounded-xl overflow-hidden">
-											<a href="<?php echo $hb5Lnk; ?>"><img src="<?php echo $hb5Img; ?>" alt="<?php echo htmlspecialchars($hb5['title']); ?>" class="w-full object-cover h-113.25" width="100" height="453" loading="lazy"></a>
-										</div>
-										<div class="size-20 text-primary text-sm leading-none bg-paleaqua text-center flex flex-col items-center justify-center rounded-md absolute top-2.5 right-2.5 z-1">
-											<span class="block text-36 leading-none font-extrabold"><?php echo $hb5Day; ?></span><?php echo $hb5Mon; ?>
-										</div>
-										<div class="pt-15 p-7.5 absolute rounded-xxl z-1 bottom-0 left-0 w-full bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_0%,rgba(0,0,0,0.76)_73%)]">
-											<div class="text-lg font-medium text-citrusyellow whitespace-nowrap table font-title leading-none pb-3.75">By <?php echo htmlspecialchars($hb5['author']); ?></div>
-											<div class="trv-post-title">
-												<h3><a href="<?php echo $hb5Lnk; ?>" class="2xl:text-28 text-2xl font-title font-medium text-white block"><?php echo htmlspecialchars($hb5['title']); ?></a></h3>
-											</div>
-										</div>
-									</div>
-								</div>
-								<?php endif; ?>
-							</div>
+						<div class="ba-grid">
+							<?php foreach ($homeBlogs as $hb) blogCard($hb); ?>
 						</div>
 					</div>
-				</div>
+				</section>
 				<?php endif; ?>
 				<!--ALL BLOGS SECTION END-->
 			</div>

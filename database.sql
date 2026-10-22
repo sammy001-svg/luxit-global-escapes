@@ -260,6 +260,8 @@ CREATE TABLE `blog_posts` (
   `category` varchar(100) DEFAULT 'Travel',
   `tags` varchar(255) DEFAULT NULL,
   `status` enum('Published','Draft') DEFAULT 'Draft',
+  -- Pinned as the lead story on blog.php and first on the homepage.
+  `featured` tinyint(1) DEFAULT 0,
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

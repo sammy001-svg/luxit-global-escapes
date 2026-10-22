@@ -22,7 +22,7 @@ $csrfToken = adminCsrfToken();
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=11">
     <script>
         tailwind.config = {
             theme: {
@@ -145,8 +145,9 @@ $csrfToken = adminCsrfToken();
         // HEX_TAG etc.: guest-supplied text (names, messages) must never close this <script>.
         window.ADMIN_DATA = <?php echo json_encode($adminData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
         window.CSRF_TOKEN = <?php echo json_encode($csrfToken); ?>;
+        window.ADMIN_USER = <?php echo json_encode($_SESSION['admin_username'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
     </script>
-    <script src="js/main.js?v=10"></script>
+    <script src="js/main.js?v=11"></script>
     <script>
         if (!window.ADMIN_DATA) {
             document.getElementById('content-area').innerHTML = '<div class="p-8 text-rose-500 font-bold">CRITICAL ERROR: Data could not be loaded from Database. Please check your .env settings.</div>';
