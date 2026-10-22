@@ -1,0 +1,121 @@
+/*
+ * Package cards (homepage carousels + International / Local / Safari pages).
+ *
+ * Package content comes from the admin panel, so nothing here may assume a
+ * length: every text field is clamped and every card in a row stretches to
+ * the same height. The compiled Tailwind build does not ship line-clamp,
+ * truncate or min-w-0, which is why these live in their own file.
+ */
+
+.pkg-clamp-1 {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.pkg-clamp-2 {
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	overflow: hidden;
+}
+
+.pkg-min-0 { min-width: 0; }
+.pkg-nowrap { white-space: nowrap; flex-shrink: 0; }
+
+/* Keep a long duration from running across the whole image. */
+.pkg-badge {
+	max-width: 85%;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* Equal-height cards: Swiper sets slides to height:100%, which does not
+   stretch them to the tallest sibling. */
+.swiper-slide.pkg-slide {
+	height: auto;
+	display: flex;
+}
+
+.pkg-card {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	width: 100%;
+	/* Without this a long single-line title sets the card's minimum width
+	   and pushes it wider than the slide Swiper sized for it. */
+	min-width: 0;
+}
+
+.pkg-card-body {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+}
+
+/* Reserve two lines so a short or missing description does not shorten the card. */
+.pkg-excerpt { min-height: 2.9em; }
+.pkg-title-2 { min-height: 2.6em; }
+
+.pkg-cta { align-self: flex-start; margin-top: auto; }
+.pkg-card-footer { margin-top: auto; }
+
+/* Homepage Marketing Highlights: give the caption panel a fixed shape so a
+   long title or tagline cannot grow it up over the photo. */
+.pkg-promo-caption .pkg-promo-title { min-height: 2.6em; }
+.pkg-promo-caption .pkg-promo-tagline { min-height: 1.5em; }
+
+/* The hover zoom on promo cards was clipped by Swiper's overflow:hidden. */
+.trv-marketing-tour-swiper { padding-top: 12px; }
+
+.pkg-gap { gap: 1rem; }
+
+.pkg-promo { transition: transform .5s ease, box-shadow .5s ease; }
+.pkg-promo:hover { transform: translateY(-6px); box-shadow: 0 18px 30px rgba(0, 106, 114, .18); }
+.pkg-promo-img { height: 18rem; transition: transform .7s ease; }
+.pkg-promo:hover .pkg-promo-img { transform: scale(1.05); }
+
+/* Listing-page card photo. Uploads come in any aspect ratio, so the frame is
+   fixed and the photo is cropped into it (object-fit: cover). */
+.pkg-listing-img { height: 16rem; }
+@media (min-width: 1280px) { .pkg-listing-img { height: 20rem; } }
+
+/* Title strip over the listing photo: a tint strong enough for white text on
+   a bright upload (the bg-caribbeanlight/80 utility is not in the build). */
+.pkg-overlay { background-color: rgba(6, 97, 104, .55); padding: .75rem 1.5rem; }
+
+/* Listing card body spacing (p-6 is not in the compiled build). */
+.pkg-listing-body { padding: 1.25rem 1.5rem 1.5rem; }
+
+/* Description text with no spaces (pasted URLs, long words) must still wrap. */
+.pkg-excerpt { overflow-wrap: anywhere; }
+
+/* The theme colours every h3 teal, which overrides text-white and made the
+   title unreadable on the teal photo strip. */
+.pkg-overlay h3 { color: #fff; }
+
+/* Promo badge on Marketing Highlights cards; colour chosen in the admin. */
+.pkg-promo-badge {
+	position: absolute;
+	top: 1.25rem;
+	left: 1.25rem;
+	z-index: 10;
+	max-width: calc(100% - 2.5rem);
+	padding: .3rem .8rem;
+	border-radius: 9999px;
+	font-size: .72rem;
+	font-weight: 700;
+	line-height: 1.4;
+	letter-spacing: .05em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, .15);
+}
+.pkg-promo-badge--primary   { background: var(--color-primary, #006A72); color: #fff; }
+.pkg-promo-badge--secondary { background: var(--color-secondary, #85D200); color: #063F44; }
+.pkg-promo-badge--citrus    { background: #FFAA0D; color: #063F44; }
+.pkg-promo-badge--red       { background: #DC2626; color: #fff; }

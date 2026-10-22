@@ -20,6 +20,91 @@ if (empty($homeTours)) {
 $page_title = "Luxit Global Escapes - Travel & Tour | Home";
 include 'header.php';
 ?>
+			<!-- ═══════════════════════════════════════════
+			     QUICK BOOKING MODAL
+			     Kept outside #smooth-content: ScrollSmoother transforms that element,
+			     which would pin this position:fixed overlay to the page instead of the viewport.
+			     ═══════════════════════════════════════════ -->
+			<style>
+			/* Modal responsive overrides */
+			#qb-overlay{overflow-y:auto;}
+			#qb-panel{max-height:calc(100dvh - 32px);overflow-y:auto;}
+			#qb-header-inner{padding:20px 20px;}
+			#qb-form-wrap{padding:20px 20px;}
+			#qb-form-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px;}
+			#qb-form-grid .qb-full{grid-column:span 1;}
+			#qb-form-grid .qb-half{grid-column:span 1;}
+			#qb-actions{display:flex;flex-direction:column;gap:10px;}
+			#qb-actions button{width:100%;height:50px;}
+			@media(min-width:480px){
+			  #qb-header-inner{padding:24px 32px;}
+			  #qb-form-wrap{padding:28px 32px;}
+			  #qb-form-grid{grid-template-columns:1fr 1fr;gap:12px;}
+			  #qb-form-grid .qb-full{grid-column:span 2;}
+			  #qb-actions{flex-direction:row;}
+			  #qb-actions button{width:auto;flex:1;}
+			}
+			.qb-input{width:100%;height:50px;padding:0 16px;border-radius:12px;border:2px solid #f0f4f4;outline:none;font-size:.9rem;box-sizing:border-box;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;background:#fff;}
+			.qb-input:focus{border-color:#006A72;box-shadow:0 0 0 3px rgba(0,106,114,.1);}
+			</style>
+			<div id="qb-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;">
+				<div id="qb-panel" style="background:#fff;border-radius:20px;width:100%;max-width:520px;box-shadow:0 32px 80px rgba(0,106,114,.25);transform:translateY(20px);opacity:0;transition:transform .35s ease,opacity .35s ease;">
+					<!-- Panel header -->
+					<div id="qb-header-inner" style="background:#006A72;border-radius:20px 20px 0 0;display:flex;align-items:flex-start;justify-content:space-between;">
+						<div>
+							<p style="font-size:.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:5px;">Quick Booking</p>
+							<h3 id="qb-tour-name" style="color:#fff;font-size:1.2rem;font-weight:800;line-height:1.2;max-width:340px;"></h3>
+						</div>
+						<button id="qb-close" aria-label="Close" style="color:rgba(255,255,255,.6);background:rgba(255,255,255,.1);border:none;font-size:1.4rem;line-height:1;cursor:pointer;padding:6px 10px;border-radius:8px;flex-shrink:0;margin-left:12px;transition:background .2s;">×</button>
+					</div>
+					<!-- Form -->
+					<div id="qb-form-wrap">
+						<form id="qb-form" novalidate autocomplete="off">
+							<input type="hidden" name="tour_name" id="qb-hidden-tour">
+							<input type="hidden" name="type" id="qb-hidden-type" value="book">
+							<div id="qb-form-grid">
+								<div class="qb-full">
+									<input name="full_name" required type="text" placeholder="Your Full Name *" class="qb-input" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
+								</div>
+								<div class="qb-half">
+									<input name="email" required type="email" placeholder="Email Address *" class="qb-input" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
+								</div>
+								<div class="qb-half">
+									<input name="phone" type="tel" placeholder="Phone Number" class="qb-input" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
+								</div>
+								<div class="qb-half">
+									<input name="travel_date" type="date" id="qb-date" class="qb-input" style="color:#555;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
+								</div>
+								<div class="qb-half">
+									<input name="travelers" type="number" min="1" max="99" value="1" placeholder="No. of Travelers" class="qb-input" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
+								</div>
+								<div class="qb-full">
+									<textarea name="message" rows="2" placeholder="Special requests? (optional)" class="qb-input" style="height:auto;padding:12px 16px;resize:none;font-family:inherit;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'"></textarea>
+								</div>
+							</div>
+							<p id="qb-error" style="color:#e53e3e;font-size:.82rem;margin-bottom:10px;display:none;"></p>
+							<div id="qb-actions">
+								<button type="submit" data-type="book" id="qb-btn-book" style="background:#006A72;color:#fff;border:none;border-radius:12px;font-weight:700;font-size:.88rem;cursor:pointer;transition:background .2s;letter-spacing:.03em;min-height:50px;">
+									<i class="fa fa-calendar-check" style="margin-right:7px;"></i>Book Now
+								</button>
+								<button type="submit" data-type="enquire" id="qb-btn-enquire" style="background:#fff;color:#006A72;border:2px solid #006A72;border-radius:12px;font-weight:700;font-size:.88rem;cursor:pointer;transition:background .2s,color .2s;letter-spacing:.03em;min-height:50px;" onmouseenter="this.style.background='#006A72';this.style.color='#fff'" onmouseleave="this.style.background='#fff';this.style.color='#006A72'">
+									<i class="fa fa-envelope" style="margin-right:7px;"></i>Send Enquiry
+								</button>
+							</div>
+						</form>
+					</div>
+					<!-- Success state -->
+					<div id="qb-success" style="padding:48px 32px;text-align:center;display:none;">
+						<div style="width:64px;height:64px;background:#f0fdf4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+							<i class="fa fa-check" style="color:#16a34a;font-size:1.5rem;"></i>
+						</div>
+						<h4 id="qb-success-msg" style="color:#006A72;font-size:1.1rem;font-weight:700;margin-bottom:8px;"></h4>
+						<p style="color:#6b7280;font-size:.85rem;margin-bottom:24px;">Our team will be in touch with you shortly.</p>
+						<button id="qb-close-success" class="site-button butn-bg-shape">Close</button>
+					</div>
+				</div>
+			</div>
+
 	<div id="smooth-wrapper">
 		<div id="smooth-content">
 			<!-- CONTENT START -->
@@ -281,60 +366,65 @@ include 'header.php';
 							<div class="swiper trv-tours-st1 xl:!pb-29 !pb-22.5">
 								<div class="swiper-wrapper">
 								<?php foreach ($homeTours as $tour) :
-									$tImg   = !empty($tour['image']) ? htmlspecialchars($tour['image']) : 'assets/images/tour/style1/pic1.jpg';
-									$tLink  = 'tour-detail.php?id=' . (int)$tour['id'];
-									$tRating = (float)($tour['rating'] ?? 5);
+									$tImg    = packageImage($tour);
+									$tLink   = 'tour-detail.php?id=' . (int)$tour['id'];
+									$tTitle  = htmlspecialchars($tour['title']);
+									$tRating = (float)($tour['rating'] ?? 0);
+									$tPrice  = (float)($tour['price'] ?? 0);
 									?>
-								<div class="swiper-slide">
-									<div class="mx-3.75">
+								<div class="swiper-slide pkg-slide">
+									<div class="mx-3.75 pkg-card">
 										<div class="rounded-tl-3xl rounded-tr-3xl overflow-hidden relative">
-											<a href="<?php echo $tLink; ?>"><img src="<?php echo $tImg; ?>" alt="<?php echo htmlspecialchars($tour['title']); ?>" class="xl:h-105 h-80 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
+											<a href="<?php echo $tLink; ?>"><img src="<?php echo $tImg; ?>" alt="<?php echo $tTitle; ?>" class="xl:h-105 h-80 w-full object-cover object-center" width="309" height="500" loading="lazy"></a>
 											<?php if (!empty($tour['duration'])) : ?>
-											<div class="absolute top-7.5 left-0 py-2.5 px-5 bg-primary text-white font-semibold text-sm rounded-tr-5xl rounded-br-5xl flex itmes-center">
+											<div class="absolute top-7.5 left-0 py-2.5 px-5 bg-primary text-white font-semibold text-sm rounded-tr-5xl rounded-br-5xl flex items-center pkg-badge">
 												<i class="text-xl mr-2.5 fa-regular fa-calendar-days"></i>
-												<span class="block"><?php echo htmlspecialchars($tour['duration']); ?></span>
+												<span class="block pkg-clamp-1"><?php echo htmlspecialchars($tour['duration']); ?></span>
 											</div>
 											<?php endif; ?>
 											<div class="absolute bottom-0 left-0 right-0 py-3.75 px-7.5 bg-caribbeanlight backdrop-blur duration-500">
-												<h3 class="2xl:text-28 text-2xl font-medium">
+												<h4 class="2xl:text-28 text-2xl font-medium pkg-clamp-1" title="<?php echo htmlspecialchars($tour['location']); ?>">
 													<a href="<?php echo $tLink; ?>" class="text-white">
 														<i class="fa-solid fa-location-dot"></i>
 														<?php echo htmlspecialchars($tour['location']); ?>
 													</a>
-												</h3>
+												</h4>
 											</div>
 										</div>
-										<div class="bg-white p-7.5 rounded-bl-3xl rounded-br-3xl shadow-[0px_18px_18px_rgba(0,106,114,0.15)]">
-											<div class="mb-7.5 flex">
-												<div class="w-20">
-													<span class="text-citrusyellow text-28/[1.3] font-black block">$<?php echo number_format((float)$tour['price']); ?></span>
+										<div class="bg-white p-7.5 rounded-bl-3xl rounded-br-3xl shadow-[0px_18px_18px_rgba(0,106,114,0.15)] pkg-card-body">
+											<div class="mb-7.5 flex pkg-gap">
+												<div class="pkg-nowrap">
+													<span class="text-citrusyellow text-28/[1.3] font-black block"><?php echo $tPrice > 0 ? '$' . number_format($tPrice) : 'On Request'; ?></span>
 													<span class="text-base block">Per Person</span>
 												</div>
-												<div class="w-[calc(100%_-_90px)] text-xl/[1.3] font-title font-medium">
-													<a href="<?php echo $tLink; ?>" class="text-primary hover:text-citrusyellow duration-500"><?php echo htmlspecialchars($tour['title']); ?></a>
-												</div>
+												<h3 class="pkg-min-0 text-xl/[1.3] font-title font-medium pkg-clamp-2 pkg-title-2">
+													<a href="<?php echo $tLink; ?>" class="text-primary hover:text-citrusyellow duration-500" title="<?php echo $tTitle; ?>"><?php echo $tTitle; ?></a>
+												</h3>
 											</div>
-											<div class="flex itmes-center justify-between">
+											<div class="flex items-center justify-between gap-3 pkg-card-footer">
 												<div class="trv-book">
-													<a href="<?php echo $tLink; ?>" class="site-button outline quick-book-btn">Book Now</a>
+													<a href="<?php echo $tLink; ?>" class="site-button outline quick-book-btn" data-tour="<?php echo $tTitle; ?>">Book Now</a>
 												</div>
-												<div>
-													<span>(<?php echo number_format($tRating, 1); ?> Review)</span>
+												<?php if ($tRating > 0) : ?>
+												<div class="pkg-nowrap">
+													<span><?php echo number_format($tRating, 1); ?> Rating</span>
 													<div class="text-citrusyellow">
 														<?php for ($i = 1; $i <= 5; $i++) : ?>
 														<i class="fa-solid fa-star<?php echo $i <= round($tRating) ? '' : ' opacity-30'; ?>"></i>
 														<?php endfor; ?>
 													</div>
 												</div>
+												<?php endif; ?>
 											</div>
 										</div>
 									</div>
 								</div>
 								<?php endforeach; ?>
+								</div>
 								<div class="swiper-button-next"></div>
 								<div class="swiper-button-prev"></div>
 							</div>
-						</div> 
+						</div>
 					</div>
 				</div>
 				<!--EXPLORE POPULAR TOUR END-->
@@ -441,33 +531,36 @@ include 'header.php';
 						<div class="swiper trv-marketing-tour-swiper pb-10">
 							<div class="swiper-wrapper">
 								<?php foreach ($homePromo as $promo) :
-									$pImg   = !empty($promo['image']) ? htmlspecialchars($promo['image']) : 'assets/images/tour/style1/pic1.jpg';
+									$pImg   = packageImage($promo);
 									$pLink  = 'tour-detail.php?id=' . (int)$promo['id'];
+									$pTitle = htmlspecialchars($promo['title']);
 									$pBadge = trim((string)($promo['promo_badge'] ?? ''));
 									$pTag   = trim((string)($promo['promo_tagline'] ?? ''));
 									?>
-								<div class="swiper-slide">
-									<div class="mx-3.75 group">
-										<div class="relative rounded-3xl overflow-hidden shadow-lg transform transition duration-500 group-hover:scale-105">
-											<img src="<?php echo $pImg; ?>" alt="<?php echo htmlspecialchars($promo['title']); ?>" class="w-full h-96 object-cover">
+								<div class="swiper-slide pkg-slide">
+									<div class="mx-3.75 group pkg-card">
+										<div class="relative rounded-3xl overflow-hidden shadow-lg bg-white pkg-card pkg-promo">
+											<div class="overflow-hidden">
+												<img src="<?php echo $pImg; ?>" alt="<?php echo $pTitle; ?>" class="w-full object-cover pkg-promo-img" loading="lazy">
+											</div>
 											<?php if ($pBadge !== '') : ?>
-											<div class="absolute top-5 left-5 <?php echo packagePromoClasses($promo['promo_style'] ?? 'primary'); ?> text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider z-10">
+											<div class="<?php echo packagePromoClasses($promo['promo_style'] ?? 'primary'); ?>">
 												<?php echo htmlspecialchars($pBadge); ?>
 											</div>
 											<?php endif; ?>
-											<div class="absolute bottom-0 left-0 right-0 p-6 bg-white text-center">
-												<h3 class="text-primary text-2xl font-bold mb-2"><?php echo htmlspecialchars($promo['title']); ?></h3>
-												<?php if ($pTag !== '') : ?>
-												<p class="text-secondary text-sm font-semibold italic">"<?php echo htmlspecialchars($pTag); ?>"</p>
-												<?php endif; ?>
-												<a href="<?php echo $pLink; ?>" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md quick-book-btn">BOOK NOW</a>
+											<div class="p-6 text-center pkg-card-body pkg-promo-caption">
+												<h3 class="text-primary text-2xl font-bold mb-2 pkg-clamp-2 pkg-promo-title" title="<?php echo $pTitle; ?>"><?php echo $pTitle; ?></h3>
+												<p class="text-secondary text-sm font-semibold italic pkg-clamp-1 pkg-promo-tagline"><?php echo $pTag !== '' ? '&ldquo;' . htmlspecialchars($pTag) . '&rdquo;' : htmlspecialchars($promo['location'] ?? ''); ?></p>
+												<div class="pkg-card-footer">
+													<a href="<?php echo $pLink; ?>" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md quick-book-btn" data-tour="<?php echo $pTitle; ?>">BOOK NOW</a>
+												</div>
 											</div>
 										</div>
 									</div>
 								</div>
 								<?php endforeach; ?>
+							</div>
 							<div class="swiper-pagination !-bottom-5"></div>
-							<!-- Navigation buttons removed per user request -->
 						</div>
 					</div>
 				</div>
@@ -1468,89 +1561,6 @@ include 'header.php';
 			</div>
 			<!-- CONTENT END -->
 
-			<!-- ═══════════════════════════════════════════
-			     QUICK BOOKING MODAL
-			     ═══════════════════════════════════════════ -->
-			<style>
-			/* Modal responsive overrides */
-			#qb-overlay{overflow-y:auto;}
-			#qb-panel{max-height:calc(100dvh - 32px);overflow-y:auto;}
-			#qb-header-inner{padding:20px 20px;}
-			#qb-form-wrap{padding:20px 20px;}
-			#qb-form-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px;}
-			#qb-form-grid .qb-full{grid-column:span 1;}
-			#qb-form-grid .qb-half{grid-column:span 1;}
-			#qb-actions{display:flex;flex-direction:column;gap:10px;}
-			#qb-actions button{width:100%;height:50px;}
-			@media(min-width:480px){
-			  #qb-header-inner{padding:24px 32px;}
-			  #qb-form-wrap{padding:28px 32px;}
-			  #qb-form-grid{grid-template-columns:1fr 1fr;gap:12px;}
-			  #qb-form-grid .qb-full{grid-column:span 2;}
-			  #qb-actions{flex-direction:row;}
-			  #qb-actions button{width:auto;flex:1;}
-			}
-			.qb-input{width:100%;height:50px;padding:0 16px;border-radius:12px;border:2px solid #f0f4f4;outline:none;font-size:.9rem;box-sizing:border-box;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;background:#fff;}
-			.qb-input:focus{border-color:#006A72;box-shadow:0 0 0 3px rgba(0,106,114,.1);}
-			</style>
-			<div id="qb-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;">
-				<div id="qb-panel" style="background:#fff;border-radius:20px;width:100%;max-width:520px;box-shadow:0 32px 80px rgba(0,106,114,.25);transform:translateY(20px);opacity:0;transition:transform .35s ease,opacity .35s ease;">
-					<!-- Panel header -->
-					<div id="qb-header-inner" style="background:#006A72;border-radius:20px 20px 0 0;display:flex;align-items:flex-start;justify-content:space-between;">
-						<div>
-							<p style="font-size:.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:5px;">Quick Booking</p>
-							<h3 id="qb-tour-name" style="color:#fff;font-size:1.2rem;font-weight:800;line-height:1.2;max-width:340px;"></h3>
-						</div>
-						<button id="qb-close" aria-label="Close" style="color:rgba(255,255,255,.6);background:rgba(255,255,255,.1);border:none;font-size:1.4rem;line-height:1;cursor:pointer;padding:6px 10px;border-radius:8px;flex-shrink:0;margin-left:12px;transition:background .2s;">×</button>
-					</div>
-					<!-- Form -->
-					<div id="qb-form-wrap">
-						<form id="qb-form" novalidate autocomplete="off">
-							<input type="hidden" name="tour_name" id="qb-hidden-tour">
-							<input type="hidden" name="type" id="qb-hidden-type" value="book">
-							<div id="qb-form-grid">
-								<div class="qb-full">
-									<input name="full_name" required type="text" placeholder="Your Full Name *" class="qb-input" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
-								</div>
-								<div class="qb-half">
-									<input name="email" required type="email" placeholder="Email Address *" class="qb-input" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
-								</div>
-								<div class="qb-half">
-									<input name="phone" type="tel" placeholder="Phone Number" class="qb-input" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
-								</div>
-								<div class="qb-half">
-									<input name="travel_date" type="date" id="qb-date" class="qb-input" style="color:#555;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
-								</div>
-								<div class="qb-half">
-									<input name="travelers" type="number" min="1" max="99" value="1" placeholder="No. of Travelers" class="qb-input" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
-								</div>
-								<div class="qb-full">
-									<textarea name="message" rows="2" placeholder="Special requests? (optional)" class="qb-input" style="height:auto;padding:12px 16px;resize:none;font-family:inherit;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'"></textarea>
-								</div>
-							</div>
-							<p id="qb-error" style="color:#e53e3e;font-size:.82rem;margin-bottom:10px;display:none;"></p>
-							<div id="qb-actions">
-								<button type="submit" data-type="book" id="qb-btn-book" style="background:#006A72;color:#fff;border:none;border-radius:12px;font-weight:700;font-size:.88rem;cursor:pointer;transition:background .2s;letter-spacing:.03em;min-height:50px;">
-									<i class="fa fa-calendar-check" style="margin-right:7px;"></i>Book Now
-								</button>
-								<button type="submit" data-type="enquire" id="qb-btn-enquire" style="background:#fff;color:#006A72;border:2px solid #006A72;border-radius:12px;font-weight:700;font-size:.88rem;cursor:pointer;transition:background .2s,color .2s;letter-spacing:.03em;min-height:50px;" onmouseenter="this.style.background='#006A72';this.style.color='#fff'" onmouseleave="this.style.background='#fff';this.style.color='#006A72'">
-									<i class="fa fa-envelope" style="margin-right:7px;"></i>Send Enquiry
-								</button>
-							</div>
-						</form>
-					</div>
-					<!-- Success state -->
-					<div id="qb-success" style="padding:48px 32px;text-align:center;display:none;">
-						<div style="width:64px;height:64px;background:#f0fdf4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-							<i class="fa fa-check" style="color:#16a34a;font-size:1.5rem;"></i>
-						</div>
-						<h4 id="qb-success-msg" style="color:#006A72;font-size:1.1rem;font-weight:700;margin-bottom:8px;"></h4>
-						<p style="color:#6b7280;font-size:.85rem;margin-bottom:24px;">Our team will be in touch with you shortly.</p>
-						<button id="qb-close-success" class="site-button butn-bg-shape">Close</button>
-					</div>
-				</div>
-			</div>
-
 			<script>
 			(function () {
 				var overlay    = document.getElementById('qb-overlay');
@@ -1569,6 +1579,9 @@ include 'header.php';
 				if (dateInput) dateInput.min = new Date().toISOString().split('T')[0];
 
 				function getTourName(btn) {
+					// Cards put the package title on the button; the first heading
+					// in a slide can be the location, not the package name.
+					if (btn.dataset.tour) return btn.dataset.tour;
 					var slide = btn.closest('.swiper-slide');
 					if (!slide) return 'Selected Tour';
 					var h3 = slide.querySelector('h3');

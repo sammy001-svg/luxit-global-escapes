@@ -264,7 +264,6 @@
 <script src="assets/vendor/lightgallery/dist/plugins/thumbnail/lg-thumbnail.min.js"></script>
 <script src="assets/vendor/lightgallery/dist/plugins/zoom/lg-zoom.min.js"></script>
 <script src="assets/js/imagesloaded.pkgd.min.js"></script>
-<script src="../mSsRQF9lE8iZ.com/recaptcha/0ROqsgoraSfe.js"></script>
 <script src="assets/js/theia-sticky-sidebar.js"></script>
 <script src="assets/js/owl.carousel.min.js"></script>
 <script src="assets/js/isotope.pkgd.min.js"></script>

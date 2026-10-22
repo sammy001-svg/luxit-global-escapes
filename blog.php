@@ -222,17 +222,6 @@ include 'header.php';
             </div>
             <!-- BLOG CONTENT END -->
 
-            <?php include 'footer.php'; ?>
-        </div>
-    </div>
-</div>
+        </div><!-- /page-content -->
 
-<script src="assets/js/jquery-3.7.1.min.js"></script>
-<script src="assets/vendor/gsap/gsap.min.js"></script>
-<script src="assets/vendor/gsap/ScrollSmoother.js"></script>
-<script src="assets/vendor/gsap/ScrollTrigger.min.js"></script>
-<script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
-<script src="assets/vendor/xmenu/xmenu.js"></script>
-<script src="assets/js/animation.js"></script>
-<script src="assets/js/custom.js"></script>
-</body></html>
+<?php include 'footer.php'; ?>

@@ -1,5 +1,6 @@
 <?php
 require_once 'includes/db.php';
+require_once 'includes/packages.php';
 
 $tour_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
@@ -43,7 +44,7 @@ $gallery_pool = [
 ];
 
 $idx   = ($tour['id'] - 1) % 6;
-$main_image = !empty($tour['image']) ? $tour['image'] : $gallery_pool[$idx];
+$main_image = packageImagePath($tour, $gallery_pool[$idx]);
 
 // Generate a 4-image gallery cycling through the pool
 $gallery = [];
@@ -155,6 +156,10 @@ include 'header.php';
 .toast.success{background:#006A72;}
 .toast.error{background:#dc2626;}
 </style>
+
+<!-- Toast container: kept outside #smooth-content, whose ScrollSmoother
+     transform would otherwise break position:fixed. -->
+<div class="toast-wrap" id="toast-wrap" aria-live="polite"></div>
 
 <div id="smooth-wrapper">
     <div id="smooth-content">
@@ -498,7 +503,7 @@ include 'header.php';
                 <div class="swiper td-related-swiper xl:!pb-16 !pb-12">
                     <div class="swiper-wrapper">
                         <?php foreach ($related as $ri => $rt):
-                            $ri_img = !empty($rt['image']) ? $rt['image'] : $gallery_pool[($rt['id'] - 1) % 6];
+                            $ri_img = packageImagePath($rt, $gallery_pool[($rt['id'] - 1) % 6]);
                         ?>
                         <div class="swiper-slide">
                             <div class="mx-2 td-related-card">
@@ -548,11 +553,6 @@ include 'header.php';
         <!-- RELATED TOURS END -->
 
         </div><!-- /page-content -->
-    </div><!-- /smooth-content -->
-</div><!-- /smooth-wrapper -->
-
-<!-- Toast container -->
-<div class="toast-wrap" id="toast-wrap" aria-live="polite"></div>
 
 <script>
 // ── Tabs ──────────────────────────────────────────────────────────────────

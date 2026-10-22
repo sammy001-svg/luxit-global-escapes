@@ -15,7 +15,6 @@
     <meta name="robots" content="index, follow">
 
     <!-- CANONICAL URL -->
-    <link rel="canonical" href="https://AMLdcmGvxAMg.com/tailwind/demo/about.php">
 
     <!-- FAVICONS ICON -->
     <link rel="icon" type="image/png" href="assets/about/images/favicon.ico">

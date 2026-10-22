@@ -1,22 +1,40 @@
 const LuxitCarousel = function () {
+	// Package carousels are filled from the admin panel, so they can hold any
+	// number of slides. Swiper's loop mode needs comfortably more slides than are
+	// visible at once; with fewer it clones unevenly and leaves blank gaps. Loop
+	// only when there is enough to scroll, otherwise rewind, and centre a short
+	// row instead of leaving it hanging to the left.
+	const packageCarouselOptions = (el, maxPerView) => {
+		const count = el.querySelectorAll(".swiper-wrapper > .swiper-slide").length;
+		const canLoop = count >= maxPerView * 2;
+		return {
+			loop: canLoop,
+			rewind: !canLoop,
+			watchOverflow: true,
+			centerInsufficientSlides: true,
+			// Scope arrows to this carousel; a bare ".swiper-button-next"
+			// selector also binds every other carousel's arrows on the page.
+			navigation: {
+				nextEl: el.querySelector(".swiper-button-next"),
+				prevEl: el.querySelector(".swiper-button-prev"),
+			},
+		};
+	};
+
 	const handleReviewSlider = function () {
 		const reviewSliderEl = document.querySelector(".reviewtwo-slider");
 
 		if (reviewSliderEl) {
-		  const swiper = new Swiper(".reviewtwo-slider", {
+		  const swiper = new Swiper(reviewSliderEl, {
+			...packageCarouselOptions(reviewSliderEl, 4),
 			slidesPerView: 3,
 			spaceBetween: 20,
-			loop: true,
 			speed: 3000,
 			freeMode: false,
 			autoplay: {
 			  delay: 2000,
 			  pauseOnMouseEnter: true,
 			  disableOnInteraction: false,
-			},
-			navigation: {
-			  nextEl: ".swiper-button-next",
-			  prevEl: ".swiper-button-prev",
 			},
 			breakpoints: {
 			  10: {
@@ -110,22 +128,17 @@ const LuxitCarousel = function () {
 	};
 
 	const handleTrvToursSt1 = function () {
-		var swiper = new Swiper(".trv-tours-st1", {
+		const toursEl = document.querySelector(".trv-tours-st1");
+		if (!toursEl) return;
+
+		var swiper = new Swiper(toursEl, {
+		  ...packageCarouselOptions(toursEl, 4),
 		  slidesPerView: 1,
 		  spaceBetween: 0,
-		  loop: true,
 		  autoplay: {
 			delay: 2500,
 			disableOnInteraction: false,
-		  },
-		  pagination: {
-			el: ".swiper-pagination",
-			clickable: true,
-			dynamicBullets: true,
-		  },
-		  navigation: {
-			nextEl: ".swiper-button-next",
-			prevEl: ".swiper-button-prev",
+			pauseOnMouseEnter: true,
 		  },
 		  breakpoints: {
 			0: {
@@ -1049,22 +1062,19 @@ const LuxitCarousel = function () {
 		if (!carouselEl) return;
 
 		new Swiper(carouselEl, {
+			...packageCarouselOptions(carouselEl, 3),
 			slidesPerView: 1,
 			spaceBetween: 30,
-			loop: true,
 			speed: 1500,
 			autoplay: {
 				delay: 4000,
 				disableOnInteraction: false,
+				pauseOnMouseEnter: true,
 			},
 			pagination: {
 				el: carouselEl.querySelector(".swiper-pagination"),
 				clickable: true,
 				dynamicBullets: true,
-			},
-			navigation: {
-				nextEl: carouselEl.querySelector(".swiper-button-next"),
-				prevEl: carouselEl.querySelector(".swiper-button-prev"),
 			},
 			breakpoints: {
 				0: { slidesPerView: 1 },

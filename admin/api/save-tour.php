@@ -17,10 +17,21 @@ $duration    = trim($_POST['duration']    ?? '');
 $category    = trim($_POST['category']    ?? 'Adventure');
 $status      = in_array(trim($_POST['status'] ?? ''), ['Active', 'Draft', 'Inactive']) ? trim($_POST['status']) : 'Active';
 $description = trim($_POST['description'] ?? '');
-$rating      = (float)($_POST['rating']   ?? 5.0);
+// rating is DECIMAL(2,1): anything above 9.9 is a database error, and the
+// public cards draw five stars, so keep it on a 0–5 scale.
+$rating      = round(max(0, min(5, (float)($_POST['rating'] ?? 5.0))), 1);
 $imageRaw    = $_POST['image'] ?? '';
 $showOnHome  = isset($_POST['showOnHome']) && $_POST['showOnHome'] === 'on' ? 1 : 0;
-$homeSection = trim($_POST['homeSection'] ?? '');
+
+// A featured package must name a section the homepage actually renders,
+// otherwise it is flagged "on the homepage" yet shows up nowhere.
+$allowedSections = ['Explore Popular Tours', 'Marketing Highlights'];
+$homeSection     = trim($_POST['homeSection'] ?? '');
+if (!$showOnHome) {
+    $homeSection = '';
+} elseif (!in_array($homeSection, $allowedSections, true)) {
+    $homeSection = $allowedSections[0];
+}
 
 // Which public package pages this tour appears on. Stored as a comma-separated
 // list so a single package can sit on more than one page (a Maasai Mara trip
@@ -39,6 +50,29 @@ $promoStyle   = in_array($_POST['promoStyle'] ?? '', ['primary', 'secondary', 'c
 if (empty($title) || empty($location) || $price <= 0) {
     echo json_encode(['success' => false, 'error' => 'Title, destination, and price are required.']);
     exit;
+}
+
+if ($price > 99999999) {
+    echo json_encode(['success' => false, 'error' => 'Price is too large.']);
+    exit;
+}
+
+// Lengths the public cards are designed around (and that fit the columns).
+// Rejecting here, rather than letting MySQL truncate silently, tells the admin
+// exactly which field to shorten.
+$limits = [
+    'Title'         => [$title, 120],
+    'Duration'      => [$duration, 40],
+    'Badge text'    => [$promoBadge, 30],
+    'Tagline'       => [$promoTagline, 90],
+    'Destination'   => [$location, 255],
+    'Category'      => [$category, 50],
+];
+foreach ($limits as $label => [$value, $max]) {
+    if (mb_strlen($value) > $max) {
+        echo json_encode(['success' => false, 'error' => "$label is too long (maximum $max characters)."]);
+        exit;
+    }
 }
 
 if ($packagePages === '') {
@@ -68,12 +102,25 @@ if (str_starts_with($imageRaw, 'data:image')) {
             echo json_encode(['success' => false, 'error' => 'Image is too large (max 3 MB).']);
             exit;
         }
+        // The data-URL prefix is client-controlled; check the bytes really
+        // are an image of the claimed type before writing them under assets/.
+        $info = @getimagesizefromstring($decoded);
+        $mimeToExt = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        if ($info === false || !isset($mimeToExt[$info['mime']])) {
+            echo json_encode(['success' => false, 'error' => 'The uploaded file is not a valid JPG, PNG or WEBP image.']);
+            exit;
+        }
+        $ext = $mimeToExt[$info['mime']];
         $uploadDir = __DIR__ . '/../../assets/images/tour/uploads/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
         $filename  = uniqid('tour_', true) . '.' . $ext;
-        file_put_contents($uploadDir . $filename, $decoded);
+        if (file_put_contents($uploadDir . $filename, $decoded) === false) {
+            error_log('save-tour: could not write ' . $uploadDir . $filename);
+            echo json_encode(['success' => false, 'error' => 'The image could not be saved on the server. Check that assets/images/tour/uploads is writable.']);
+            exit;
+        }
         $imagePath = 'assets/images/tour/uploads/' . $filename;
     }
 } elseif (!empty($imageRaw) && str_starts_with($imageRaw, 'assets/')) {

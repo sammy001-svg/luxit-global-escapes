@@ -15,7 +15,6 @@
     <meta name="robots" content="index, follow">
 
     <!-- CANONICAL URL -->
-    <link rel="canonical" href="https://HJH21tQItXin.com/tailwind/demo/destination-2-grid.php">
 
     <!-- FAVICONS ICON -->
     <link rel="icon" type="image/png" href="assets/destination/images/favicon.ico">
@@ -591,6 +590,10 @@
 				</div>
 				<!-- CLIENT LOGO  SECTION End -->
 				
+				<!-- FOOTER START -->
+				<footer class="pt-20 bg-primary bg-cover bg-[url(assets/destination/images/background/ftr-dark-bg.png)]">
+				<div class="-mt-20 relative z-1 bg-citrusyellow">
+					<div class="container md:flex items-center justify-between !py-6.25 2xl:!px-17.5 !px-3.75">
 						<div class="pr-5 max-lg:w-1/2 max-md:!w-full">
 						<div class="text-black font-display lg:text-80 text-5xl leading-[0.75] lg:text-shadow-[2px_3px_0px_rgba(255,255,255,0.72)] pb-5"><span class="text-white inline-block">Subscribe</span> Now!</div>
 							<div class="text-black text-xl font-medium font-title max-md:mb-5">

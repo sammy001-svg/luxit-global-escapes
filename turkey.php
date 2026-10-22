@@ -15,7 +15,6 @@
     <meta name="robots" content="index, follow">
 
     <!-- CANONICAL URL -->
-    <link rel="canonical" href="https://HJH21tQItXin.com/tailwind/demo/destination-2-grid.php">
 
     <!-- FAVICONS ICON -->
     <link rel="icon" type="image/png" href="assets/destination/images/favicon.ico">

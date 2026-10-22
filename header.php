@@ -15,7 +15,6 @@
     <meta name="robots" content="index, follow">
 
     <!-- CANONICAL URL -->
-    <link rel="canonical" href="https://eGNfOZkBzy5m.com/tailwind/demo/index.php">
 
     <!-- FAVICONS ICON -->
     <link rel="icon" type="image/png" href="assets/images/favicon.ico">
@@ -53,6 +52,7 @@
 	<!-- style -->
 	<link rel="stylesheet" href="assets/css/style.css">
 	<link rel="stylesheet" href="assets/css/responsive.css">
+	<link rel="stylesheet" href="assets/css/packages.css">
 	<style>
 	/* ═══════════════════════════════════════
 	   MEGA MENU — Desktop layout & hover

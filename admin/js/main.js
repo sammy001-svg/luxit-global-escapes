@@ -441,6 +441,61 @@ const PACKAGE_PAGES = [
 
 const HOME_SECTIONS = ['Explore Popular Tours', 'Marketing Highlights'];
 
+// Escape a value for interpolation into the HTML templates below. Without it a
+// title containing a quote, or a description containing "</textarea>", breaks
+// the edit form and the package is saved back truncated.
+function escHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// Package photos are resized in the browser before upload. Phone and camera
+// photos are routinely 5–12 MB, well over the server's 3 MB limit, and even
+// when they fit they make the homepage carousels slow to load.
+const TOUR_IMAGE_MAX_EDGE = 1600;
+const TOUR_IMAGE_MAX_BYTES = 2.5 * 1024 * 1024;
+
+function prepareTourImage(file) {
+    return new Promise((resolve, reject) => {
+        if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
+            reject(new Error('Please choose a JPG, PNG or WEBP image.'));
+            return;
+        }
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            const scale = Math.min(1, TOUR_IMAGE_MAX_EDGE / Math.max(img.naturalWidth, img.naturalHeight));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(img.naturalWidth * scale);
+            canvas.height = Math.round(img.naturalHeight * scale);
+            const ctx = canvas.getContext('2d');
+            // JPEG has no alpha; paint white so transparent PNGs don't turn black.
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            let quality = 0.85;
+            let dataUrl = canvas.toDataURL('image/jpeg', quality);
+            // base64 is ~4/3 the size of the bytes it encodes.
+            while (dataUrl.length * 0.75 > TOUR_IMAGE_MAX_BYTES && quality > 0.5) {
+                quality -= 0.1;
+                dataUrl = canvas.toDataURL('image/jpeg', quality);
+            }
+            resolve(dataUrl);
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('That file could not be read as an image.'));
+        };
+        img.src = url;
+    });
+}
+
 // package_pages is stored as a comma-separated string; treat it as a set.
 function tourPages(tour) {
     return String(tour.package_pages || '')
@@ -1967,7 +2022,7 @@ window.openTourModal = (tourId = null) => {
                 <!-- Title Row -->
                 <div class="space-y-2 col-span-2">
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Tour Title</label>
-                    <input type="text" name="title" required value="${tour ? tour.title : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="e.g. Serengeti Luxury Safari">
+                    <input type="text" name="title" required maxlength="120" value="${tour ? escHtml(tour.title) : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="e.g. Serengeti Luxury Safari">
                 </div>
 
                 <!-- Image Upload Row -->
@@ -1980,16 +2035,16 @@ window.openTourModal = (tourId = null) => {
                                 <i class="fas fa-cloud-upload-alt text-xl"></i>
                             </div>
                             <p class="text-xs font-bold text-slate-400">Click or drag to upload image</p>
-                            <p class="text-[10px] text-slate-600">JPG, PNG or WEBP (Max 2MB)</p>
+                            <p class="text-[10px] text-slate-600">JPG, PNG or WEBP. Large photos are resized automatically. Landscape works best.</p>
                         </div>
                         <div id="image-preview" class="relative ${tour && tour.image ? '' : 'hidden'}">
-                            <img src="${tour && tour.image ? (tour.image.startsWith('assets') ? '../' + tour.image : tour.image) : ''}" id="preview-img" class="w-full h-48 object-cover rounded-xl border border-white/5 shadow-2xl">
+                            <img src="${tour && tour.image ? escHtml(tour.image.startsWith('assets') ? '../' + tour.image : tour.image) : ''}" id="preview-img" class="w-full h-48 object-cover rounded-xl border border-white/5 shadow-2xl">
                             <button type="button" id="remove-img" class="absolute top-2 right-2 bg-rose-500 text-white size-8 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                                 <i class="fas fa-trash-alt text-xs"></i>
                             </button>
                         </div>
                     </div>
-                    <input type="hidden" name="image" id="image-path-hidden" value="${tour ? (tour.image || '') : ''}">
+                    <input type="hidden" name="image" id="image-path-hidden" value="${tour ? escHtml(tour.image) : ''}">
                 </div>
 
                 <!-- Destination & Price Row -->
@@ -1997,20 +2052,23 @@ window.openTourModal = (tourId = null) => {
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Destination</label>
                     <select name="location" required class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition appearance-none">
                         <option value="" disabled ${!tour ? 'selected' : ''}>Select Destination</option>
+                        ${tour && tour.location && !destinations.some(d => d.name === tour.location) ? `
+                            <option value="${escHtml(tour.location)}" selected>${escHtml(tour.location)} (current)</option>
+                        ` : ''}
                         ${destinations.map(d => `
-                            <option value="${d.name}" ${tour && tour.location === d.name ? 'selected' : ''}>${d.name}</option>
+                            <option value="${escHtml(d.name)}" ${tour && tour.location === d.name ? 'selected' : ''}>${escHtml(d.name)}</option>
                         `).join('')}
                     </select>
                 </div>
                 <div class="space-y-2">
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Price ($)</label>
-                    <input type="number" name="price" required value="${tour ? tour.price : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="1200">
+                    <input type="number" name="price" required min="1" step="0.01" value="${tour ? escHtml(tour.price) : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="1200">
                 </div>
 
                 <!-- Duration & Category Row -->
                 <div class="space-y-2">
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Duration</label>
-                    <input type="text" name="duration" required value="${tour ? tour.duration : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="e.g. 5 Days / 4 Nights">
+                    <input type="text" name="duration" required maxlength="40" value="${tour ? escHtml(tour.duration) : ''}" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="e.g. 5 Days / 4 Nights">
                 </div>
                 <div class="space-y-2">
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Category</label>
@@ -2043,7 +2101,7 @@ window.openTourModal = (tourId = null) => {
 
                 <div class="space-y-2 col-span-2">
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Description</label>
-                    <textarea name="description" rows="4" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="Short highlights and key features...">${tour ? (tour.description || '') : ''}</textarea>
+                    <textarea name="description" rows="4" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="Short highlights and key features...">${tour ? escHtml(tour.description) : ''}</textarea>
                 </div>
 
                 <!-- ── Where this package appears ─────────────────────────── -->
@@ -2102,7 +2160,7 @@ window.openTourModal = (tourId = null) => {
                         <div class="grid grid-cols-2 gap-4">
                             <div class="space-y-2">
                                 <label class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Badge Text</label>
-                                <input type="text" name="promoBadge" value="${tour ? (tour.promo_badge || '').replace(/"/g, '&quot;') : ''}"
+                                <input type="text" name="promoBadge" maxlength="30" value="${tour ? escHtml(tour.promo_badge) : ''}"
                                        class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 text-sm outline-none focus:border-primary transition" placeholder="e.g. Flash Sale: 40% OFF">
                             </div>
                             <div class="space-y-2">
@@ -2115,7 +2173,7 @@ window.openTourModal = (tourId = null) => {
                             </div>
                             <div class="space-y-2 col-span-2">
                                 <label class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Tagline</label>
-                                <input type="text" name="promoTagline" value="${tour ? (tour.promo_tagline || '').replace(/"/g, '&quot;') : ''}"
+                                <input type="text" name="promoTagline" maxlength="90" value="${tour ? escHtml(tour.promo_tagline) : ''}"
                                        class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 text-sm outline-none focus:border-primary transition" placeholder="e.g. The Land of Fire and Ice awaits you.">
                             </div>
                         </div>
@@ -2145,18 +2203,29 @@ window.openTourModal = (tourId = null) => {
         if (e.target !== removeBtn && !removeBtn.contains(e.target)) fileInput.click();
     };
 
-    fileInput.onchange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                previewImg.src = event.target.result;
-                pathHidden.value = event.target.result; // Store as data URL for prototype
-                previewContainer.classList.add('hidden');
-                previewDiv.classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
+    const useImageFile = async (file) => {
+        if (!file) return;
+        try {
+            const dataUrl = await prepareTourImage(file);
+            previewImg.src = dataUrl;
+            pathHidden.value = dataUrl;
+            previewContainer.classList.add('hidden');
+            previewDiv.classList.remove('hidden');
+        } catch (err) {
+            fileInput.value = '';
+            showToast(err.message, 'error');
         }
+    };
+
+    fileInput.onchange = (e) => useImageFile(e.target.files[0]);
+
+    // The dropzone has always said "drag to upload"; make that true.
+    uploadZone.ondragover = (e) => { e.preventDefault(); uploadZone.classList.add('border-primary'); };
+    uploadZone.ondragleave = () => uploadZone.classList.remove('border-primary');
+    uploadZone.ondrop = (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('border-primary');
+        useImageFile(e.dataTransfer.files[0]);
     };
 
     removeBtn.onclick = (e) => {
