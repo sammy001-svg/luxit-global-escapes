@@ -1,0 +1,12 @@
+/*
+ * Site-wide corrections to the theme, loaded after style.css on every page
+ * that uses header.php.
+ */
+
+/* The theme colours headings teal with plain element selectors, and those
+   beat Tailwind's layered utilities — so a heading marked text-white still
+   rendered teal, unreadable on banner photos. Restore what the markup asks for. */
+:is(h1, h2, h3, h4, h5, h6).text-white { color: #fff; }
+
+/* Inner-page banner titles sit on photos of any brightness. */
+.page-content :is(h1, h2).text-white { text-shadow: 0 2px 18px rgba(0, 0, 0, .35); }

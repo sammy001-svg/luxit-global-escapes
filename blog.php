@@ -42,6 +42,7 @@ if ($page === 1 && $cat === '' && !empty($posts)) {
 $categories = blogQuery($pdo, "SELECT DISTINCT category FROM blog_posts WHERE status='Published' ORDER BY category ASC");
 
 $page_title = "Travel Blog - Luxit Global Escapes";
+$header_variant = 'solid';
 include 'header.php';
 ?>
 

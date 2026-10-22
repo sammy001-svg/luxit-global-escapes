@@ -59,6 +59,7 @@ if (preg_match('/(\d+)\s*[Dd]ay/', $tour['duration'] ?? '', $m)) {
 }
 
 $page_title = htmlspecialchars($tour['title']) . ' - Luxit Global Escapes';
+$header_variant = 'solid';
 include 'header.php';
 ?>
 <style>

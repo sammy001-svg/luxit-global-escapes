@@ -57,6 +57,7 @@ $postDate = date('d F Y', strtotime($post['created_at']));
 $postImg  = !empty($post['image']) ? htmlspecialchars($post['image']) : 'assets/images/trv-blog/blog-lg/pic1.jpg';
 
 $page_title = htmlspecialchars($post['title']) . " - Luxit Global Escapes Blog";
+$header_variant = 'solid';
 include 'header.php';
 ?>
 

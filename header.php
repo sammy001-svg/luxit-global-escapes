@@ -1,3 +1,22 @@
+<?php
+/**
+ * Shared page header: <head>, top contact bar and site navigation.
+ *
+ * Set before including:
+ *   $page_title        <title>, also used for social cards
+ *   $page_description  meta / social description (optional)
+ *   $header_variant    'overlay' (default) — transparent, white links, for
+ *                      pages that open on a dark full-bleed hero (homepage);
+ *                      'solid' — white floating bar with dark links, readable
+ *                      over any inner-page banner.
+ * Close the page with footer.php, which closes the wrappers opened here.
+ */
+$page_title       = $page_title ?? 'Luxit Global Escapes - Luxury Travel & Tour Agency';
+$page_description = $page_description ?? 'Luxit Global Escapes crafts luxury safaris, international holidays and tailor-made journeys, with expert planning and 24/7 support from Nairobi, Kenya.';
+$header_variant   = ($header_variant ?? 'overlay') === 'solid' ? 'solid' : 'overlay';
+$hTitle = htmlspecialchars($page_title, ENT_QUOTES);
+$hDesc  = htmlspecialchars($page_description, ENT_QUOTES);
+?>
 <!DOCTYPE html><html lang="en"><head>
     <!-- Character Encoding -->
 	<meta charset="UTF-8">
@@ -6,31 +25,26 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 	<!-- Title -->
-	<title><?php echo isset($page_title) ? $page_title : "Luxit Global Escapes - Luxury Travel & Tour Agency"; ?></title>
+	<title><?php echo $hTitle; ?></title>
 
-    <meta name="title" content="Luxit Global Escapes - Travel & Tour Tailwind CSS Template | DexignZone">
-    <meta name="description" content="Luxit Global Escapes is a responsive Travel & Tour Tailwind CSS template designed for travel agencies, tour operators, holiday planners, and booking websites.">
-    <meta name="keywords" content="travel HTML template, tour booking template, Tailwind travel website, tourism Tailwind template, holiday booking, responsive travel design, tour operator website, Luxit Global Escapes template, modern travel design, travel agency web design">
-    <meta name="author" content="DexignZone">
+    <meta name="description" content="<?php echo $hDesc; ?>">
+    <meta name="author" content="Luxit Global Escapes">
     <meta name="robots" content="index, follow">
-
-    <!-- CANONICAL URL -->
 
     <!-- FAVICONS ICON -->
     <link rel="icon" type="image/png" href="assets/images/favicon.ico">
 
     <!-- Open Graph / Facebook -->
-    <meta property="og:title" content="Luxit Global Escapes - Luxury Travel & Tour Agency">
-    <meta property="og:description" content="Luxit Global Escapes is a responsive Travel & Tour Tailwind CSS template designed for travel agencies, tour operators, holiday planners, and booking websites.">
+    <meta property="og:title" content="<?php echo $hTitle; ?>">
+    <meta property="og:description" content="<?php echo $hDesc; ?>">
     <meta property="og:image" content="assets/images/seo/og_index.png">
-    <meta property="og:url" content="index.php">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Luxit Global Escapes">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Luxit Global Escapes - Luxury Travel & Tour Agency">
-    <meta name="twitter:description" content="Luxit Global Escapes is a responsive Travel & Tour Tailwind CSS template designed for travel agencies, tour operators, holiday planners, and booking websites.">
+    <meta name="twitter:title" content="<?php echo $hTitle; ?>">
+    <meta name="twitter:description" content="<?php echo $hDesc; ?>">
     <meta name="twitter:image" content="assets/images/seo/og_index.png">
 
     <!-- IE Compatibility -->
@@ -53,10 +67,31 @@
 	<link rel="stylesheet" href="assets/css/style.css">
 	<link rel="stylesheet" href="assets/css/responsive.css">
 	<link rel="stylesheet" href="assets/css/packages.css">
+	<link rel="stylesheet" href="assets/css/site.css">
 	<style>
 	/* Top contact bar: the md:gap-x-48 / sm:gap-x-10 utilities are not in the
 	   compiled build, which left the address, phone and email touching. */
 	.site-topbar-inner { column-gap: clamp(18px, 4vw, 56px); }
+
+	/* Solid header variant (inner pages): a white floating bar with dark links,
+	   readable over light and dark banners alike. Once scrolled the header
+	   turns fixed and teal (is-fixed), so these only apply at rest. */
+	.site-header--solid:not(.is-fixed) .main-bar-wraper > div {
+	  background: #fff;
+	  box-shadow: 0 12px 32px rgba(6, 97, 104, .12);
+	}
+	@media (min-width: 1024px) {
+	  .site-header--solid:not(.is-fixed) { top: 62px; }
+	  .site-header--solid:not(.is-fixed) .main-bar-wraper > div { min-height: 88px; }
+	  .site-header--solid:not(.is-fixed) .navbar-nav > li > a { color: #0d2f32; }
+	  .site-header--solid:not(.is-fixed) .navbar-nav > li > a:hover { color: var(--color-secondary, #85D200); }
+	  .site-header--solid:not(.is-fixed) .quick-search { color: #0d2f32; }
+	  .site-header--solid:not(.is-fixed) .toggle-nav-btn > span { background: #0d2f32; }
+	}
+	.site-header--solid:not(.is-fixed) .xmenu-toggler { background: #066168; border-radius: 10px; }
+	@media (max-width: 1023px) {
+	  .site-header--solid:not(.is-fixed) { top: 54px; left: 10px; right: 10px; }
+	}
 
 	/* ═══════════════════════════════════════
 	   MEGA MENU — Desktop layout & hover
@@ -187,7 +222,7 @@
 			</div>
 		</div>
 	</div>
-	<header class="site-header sticky-header absolute lg:left-8.75 lg:right-8.75 lg:top-[44px] left-0 right-0 top-[44px] duration-500 z-999 [.site-header.is-fixed]:fixed [.site-header.is-fixed]:animate-header-scroll-animation [.site-header.is-fixed]:bg-primary [.site-header.is-fixed]:rounded-b-3xl [.site-header.is-fixed]:top-0">
+	<header class="site-header site-header--<?php echo $header_variant; ?> sticky-header absolute lg:left-8.75 lg:right-8.75 lg:top-[44px] left-0 right-0 top-[44px] duration-500 z-999 [.site-header.is-fixed]:fixed [.site-header.is-fixed]:animate-header-scroll-animation [.site-header.is-fixed]:bg-primary [.site-header.is-fixed]:rounded-b-3xl [.site-header.is-fixed]:top-0">
 		<div class="main-bar-wraper">
 			<div class="w-full lg:min-h-30 min-h-20 lg:ps-8.75 px-4 lg:pe-13.75 duration-500 rounded-5xl flex items-center justify-between">
 				<div class="flex relative w-full">

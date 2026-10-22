@@ -272,5 +272,9 @@
 <script src="assets/js/dz.ajax.js"></script>
 <script src="assets/js/animation.js"></script>
 <script src="assets/js/custom.js"></script>
+<?php
+// Page-specific scripts, printed after the shared libraries they rely on.
+if (!empty($page_scripts)) echo $page_scripts;
+?>
 
 </body></html>
