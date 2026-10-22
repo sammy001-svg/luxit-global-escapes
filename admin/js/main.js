@@ -45,6 +45,7 @@ let state = {
     tourStatusFilter: 'All',
     tourPageFilter: 'All',
     bookingFilter: 'All',
+    bookingType: 'All',
     financeTab: 'quotations',
     isRefreshing: false
 };
@@ -126,6 +127,23 @@ async function refreshData({ silent = false } = {}) {
 }
 window.refreshData = refreshData;
 
+// New website bookings arrive without the admin having to reload: check once a
+// minute while the panel is visible and no form is open (a refresh would not
+// touch an open modal, but there is no point fetching behind one).
+const pendingIds = () => new Set((state.data.bookings || []).filter(b => b.status === 'Pending').map(b => b.id));
+setInterval(async () => {
+    if (document.hidden || !modalOverlay.classList.contains('hidden')) return;
+    const before = pendingIds();
+    if (!(await refreshData({ silent: true }))) return;
+    const fresh = (state.data.bookings || []).filter(b => b.status === 'Pending' && !before.has(b.id));
+    if (fresh.length === 1) {
+        const info = bookingInfo(fresh[0]);
+        showToast(`New ${info.type === 'Enquiry' ? 'enquiry' : 'booking request'} from ${fresh[0].user}: ${info.tour}`);
+    } else if (fresh.length > 1) {
+        showToast(`${fresh.length} new booking requests`);
+    }
+}, 60000);
+
 // Re-render the active tab, preserving scroll position so the admin does not
 // lose their place in a long table after saving a row.
 function rerenderCurrentTab() {
@@ -133,6 +151,7 @@ function rerenderCurrentTab() {
     destroyCharts();
     const render = tabs[state.currentTab];
     if (typeof render === 'function') render();
+    updateBookingBadge();
     if (contentArea) contentArea.scrollTop = scrollTop;
 }
 
@@ -175,7 +194,8 @@ function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.id = 'admin-toast';
     toast.className = `fixed bottom-6 right-6 z-[99999] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-bold text-white ${colors[type] || colors.success} translate-y-0 opacity-100 transition-all duration-300`;
-    toast.innerHTML = `<i class="fas ${icons[type] || icons.success} text-base"></i><span>${message}</span>`;
+    // Messages can carry server errors and guest names: always text, never HTML.
+    toast.innerHTML = `<i class="fas ${icons[type] || icons.success} text-base"></i><span>${escHtml(message)}</span>`;
     document.body.appendChild(toast);
 
     setTimeout(() => {
@@ -259,6 +279,7 @@ function switchTab(tab) {
         if (tabs[tab]) {
             console.log(`Executing tab function for ${tab}`);
             tabs[tab]();
+            updateBookingBadge();
         } else {
             console.error(`Tab ${tab} not found`);
         }
@@ -331,9 +352,9 @@ function renderDashboard() {
                                 </div>
                                 <div class="min-w-0">
                                     <p class="text-sm font-medium leading-snug">
-                                        <span class="text-primary">${item.user}</span> ${item.action}
+                                        <span class="text-primary">${escHtml(item.user)}</span> ${escHtml(item.action)}
                                     </p>
-                                    <p class="text-xs text-slate-400 font-bold opacity-80 mt-0.5 truncate" title="${item.target}">${item.target}</p>
+                                    <p class="text-xs text-slate-400 font-bold opacity-80 mt-0.5 truncate" title="${escHtml(item.target)}">${escHtml(item.target)}</p>
                                     <p class="text-[10px] text-slate-600 mt-0.5">${timeAgo(item.created_at)}</p>
                                 </div>
                             </div>
@@ -790,118 +811,182 @@ function renderDestinations() {
     `;
 }
 
+// Normalise a booking row. Newer rows have structured columns; rows saved
+// before migrate.php packed everything into the tour name as
+// "[Booking] Title | Phone: x | Travelers: N | Note: y".
+function bookingInfo(b) {
+    const info = {
+        type: b.type || 'Booking',
+        tour: b.tour || '',
+        phone: b.phone || '',
+        travelers: b.travelers || null,
+        note: b.message || '',
+    };
+    const m = info.tour.match(/^\[(Booking|Enquiry)\]\s*/);
+    if (m) {
+        info.type = m[1];
+        const parts = info.tour.slice(m[0].length).split('|').map(s => s.trim());
+        info.tour = parts.shift();
+        parts.forEach(seg => {
+            if (seg.startsWith('Phone:')) info.phone = seg.slice(6).trim();
+            else if (seg.startsWith('Travelers:')) info.travelers = parseInt(seg.slice(10), 10) || null;
+            else if (seg.startsWith('Note:')) info.note = seg.slice(5).trim();
+        });
+    }
+    return info;
+}
+
+function bookingMoney(n) {
+    return '$' + Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+function bookingDate(d) {
+    if (!d) return '—';
+    const x = new Date(String(d).replace(' ', 'T'));
+    return isNaN(x) ? escHtml(d) : x.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// Enquiries reuse the status column: Pending = open, Cancelled = closed.
+function bookingStatusLabel(status, type) {
+    if (type === 'Enquiry') return { Pending: 'Open', Cancelled: 'Closed', Confirmed: 'Answered' }[status] || status;
+    return { Pending: 'Awaiting confirmation' }[status] || status;
+}
+
+// Pending-count badge on the Bookings menu item, refreshed with every render.
+function updateBookingBadge() {
+    const link = document.querySelector('.sidebar-link[data-tab="bookings"]');
+    if (!link) return;
+    const n = (state.data.bookings || []).filter(b => b.status === 'Pending').length;
+    let badge = link.querySelector('.booking-badge');
+    if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'booking-badge ml-auto min-w-5 h-5 px-1.5 rounded-full bg-amber-400 text-dark-900 text-[10px] font-black flex items-center justify-center';
+        link.appendChild(badge);
+    }
+    badge.textContent = n > 99 ? '99+' : String(n);
+    badge.style.display = n ? '' : 'none';
+    badge.title = n + ' awaiting action';
+}
+
 function renderBookings() {
-    const { bookings } = state.data;
-    const filteredBookings = bookings.filter(b => {
-        const matchesSearch = b.user.toLowerCase().includes(state.searchQuery) || 
-                              b.tour.toLowerCase().includes(state.searchQuery) || 
-                              b.id.toLowerCase().includes(state.searchQuery);
-        const matchesFilter = state.bookingFilter === 'All' || b.status === state.bookingFilter;
-        return matchesSearch && matchesFilter;
+    const all = (state.data.bookings || []).map(b => ({ ...b, info: bookingInfo(b) }));
+    const q = state.searchQuery;
+    const list = all.filter(b => {
+        const hay = [b.user, b.email, b.info.tour, b.id, b.info.phone].join(' ').toLowerCase();
+        return (!q || hay.includes(q))
+            && (state.bookingFilter === 'All' || b.status === state.bookingFilter)
+            && (state.bookingType === 'All' || b.info.type === state.bookingType);
     });
 
+    const pending = all.filter(b => b.status === 'Pending');
     const stats = {
-        total: bookings.length,
-        pending: bookings.filter(b => b.status === 'Pending').length,
-        revenue: bookings.filter(b => b.status === 'Confirmed').reduce((sum, b) => sum + b.amount, 0)
+        awaiting: pending.filter(b => b.info.type === 'Booking').length,
+        enquiries: pending.filter(b => b.info.type === 'Enquiry').length,
+        pipeline: pending.filter(b => b.info.type === 'Booking').reduce((s, b) => s + Number(b.amount || 0), 0),
+        revenue: all.filter(b => b.status === 'Confirmed' && b.info.type === 'Booking').reduce((s, b) => s + Number(b.amount || 0), 0),
     };
+    const pill = (active, label, onclick) => `
+        <button onclick="${onclick}" class="px-4 py-1.5 rounded-lg text-xs font-bold transition ${active ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-white'}">${label}</button>`;
 
     contentArea.innerHTML = `
         <div class="space-y-8 animate-fade-in pb-12">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold">Bookings Management</h1>
-                    <p class="text-slate-500 mt-1">Review and manage your incoming travel requests</p>
+                    <h1 class="text-3xl font-bold">Bookings</h1>
+                    <p class="text-slate-500 mt-1">Requests from the website land here as pending. Review each one and confirm or decline it.</p>
                 </div>
-                <div class="flex items-center space-x-2 bg-slate-800/50 p-1 rounded-xl border border-white/5">
-                    ${['All', 'Pending', 'Confirmed', 'Cancelled'].map(f => `
-                        <button onclick="window.setBookingFilter('${f}')" 
-                                class="px-4 py-1.5 rounded-lg text-xs font-bold transition ${state.bookingFilter === f ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-white'}">
-                            ${f}
-                        </button>
-                    `).join('')}
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex items-center space-x-1 bg-slate-800/50 p-1 rounded-xl border border-white/5">
+                        ${['All', 'Booking', 'Enquiry'].map(t => pill(state.bookingType === t, t === 'All' ? 'All types' : t === 'Booking' ? 'Bookings' : 'Enquiries', `window.setBookingType('${t}')`)).join('')}
+                    </div>
+                    <div class="flex items-center space-x-1 bg-slate-800/50 p-1 rounded-xl border border-white/5">
+                        ${['All', 'Pending', 'Confirmed', 'Cancelled'].map(f => pill(state.bookingFilter === f, f, `window.setBookingFilter('${f}')`)).join('')}
+                    </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="glass-card p-6 rounded-2xl border border-white/5">
-                    <p class="text-xs text-slate-400 font-bold uppercase mb-2">Total Bookings</p>
-                    <p class="text-2xl font-bold">${stats.total}</p>
+                    <p class="text-xs text-slate-400 font-bold uppercase mb-2">Awaiting Confirmation</p>
+                    <p class="text-2xl font-bold text-amber-400">${stats.awaiting}</p>
                 </div>
                 <div class="glass-card p-6 rounded-2xl border border-white/5">
-                    <p class="text-xs text-slate-400 font-bold uppercase mb-2">Pending Action</p>
-                    <p class="text-2xl font-bold text-amber-400">${stats.pending}</p>
+                    <p class="text-xs text-slate-400 font-bold uppercase mb-2">Open Enquiries</p>
+                    <p class="text-2xl font-bold text-sky-400">${stats.enquiries}</p>
+                </div>
+                <div class="glass-card p-6 rounded-2xl border border-white/5">
+                    <p class="text-xs text-slate-400 font-bold uppercase mb-2">Pending Value (est.)</p>
+                    <p class="text-2xl font-bold">${bookingMoney(stats.pipeline)}</p>
                 </div>
                 <div class="glass-card p-6 rounded-2xl border border-white/5">
                     <p class="text-xs text-slate-400 font-bold uppercase mb-2">Confirmed Revenue</p>
-                    <p class="text-2xl font-bold text-emerald-400">$${stats.revenue.toLocaleString()}</p>
+                    <p class="text-2xl font-bold text-emerald-400">${bookingMoney(stats.revenue)}</p>
                 </div>
             </div>
 
-            <div class="glass-card rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
+            <div class="glass-card rounded-2xl overflow-hidden border border-white/5 shadow-2xl overflow-x-auto">
                 <table class="w-full admin-table text-left border-collapse">
                     <thead>
                         <tr class="bg-white/5">
-                            <th class="p-4 text-xs font-bold uppercase text-slate-500">Booking Details</th>
-                            <th class="p-4 text-xs font-bold uppercase text-slate-500">Tour & Date</th>
+                            <th class="p-4 text-xs font-bold uppercase text-slate-500">Guest</th>
+                            <th class="p-4 text-xs font-bold uppercase text-slate-500">Trip</th>
                             <th class="p-4 text-xs font-bold uppercase text-slate-500">Amount</th>
                             <th class="p-4 text-xs font-bold uppercase text-slate-500">Status</th>
                             <th class="p-4 text-xs font-bold uppercase text-slate-500 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${filteredBookings.length > 0 ? filteredBookings.map(booking => `
-                            <tr class="border-t border-white/5 hover:bg-white/5 transition group">
+                        ${list.length ? list.map(b => {
+                            const isNew = b.status === 'Pending' && b.created_at && (Date.now() - new Date(String(b.created_at).replace(' ', 'T'))) < 864e5;
+                            const id = escHtml(b.id);
+                            return `
+                            <tr class="border-t border-white/5 hover:bg-white/5 transition group cursor-pointer" onclick="window.viewBookingDetails('${id}')">
                                 <td class="p-4">
                                     <div class="flex items-center">
-                                        <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mr-3">
-                                            <span class="text-xs font-bold text-primary">${booking.user.charAt(0)}</span>
+                                        <div class="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center mr-3 shrink-0">
+                                            <span class="text-xs font-bold text-primary">${escHtml((b.user || '?').charAt(0).toUpperCase())}</span>
                                         </div>
-                                        <div>
-                                            <div class="text-sm font-bold text-white group-hover:text-primary transition">${booking.user}</div>
-                                            <div class="text-[10px] text-slate-500 font-mono">${booking.id}</div>
+                                        <div class="min-w-0">
+                                            <div class="text-sm font-bold text-white group-hover:text-primary transition">${escHtml(b.user)}${isNew ? ' <span class="ml-1 px-1.5 py-0.5 rounded bg-amber-400 text-dark-900 text-[9px] font-black align-middle">NEW</span>' : ''}</div>
+                                            <div class="text-[11px] text-slate-500">${escHtml(b.email)}</div>
+                                            <div class="text-[10px] text-slate-600 font-mono">${id}</div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="p-4">
-                                    <div class="text-sm font-medium">${booking.tour}</div>
-                                    <div class="text-xs text-slate-500">${booking.date}</div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${b.info.type === 'Enquiry' ? 'bg-sky-400/10 text-sky-400' : 'bg-amber-400/10 text-amber-400'}">${b.info.type}</span>
+                                        <span class="text-sm font-medium">${escHtml(b.info.tour)}</span>
+                                    </div>
+                                    <div class="text-xs text-slate-500">${bookingDate(b.date)}${b.info.travelers ? ` · ${Number(b.info.travelers)} traveller${b.info.travelers > 1 ? 's' : ''}` : ''}</div>
                                 </td>
                                 <td class="p-4">
-                                    <div class="text-sm font-bold text-secondary text-base">$${booking.amount}</div>
+                                    <div class="text-sm font-bold text-secondary">${bookingMoney(b.amount)}</div>
+                                    ${b.status === 'Pending' && b.info.type === 'Booking' ? '<div class="text-[10px] text-slate-500">estimate</div>' : ''}
                                 </td>
                                 <td class="p-4">
-                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold ${getBookingStatusClass(booking.status)}">
-                                        <i class="fas fa-circle mr-1.5 text-[6px]"></i>
-                                        ${booking.status}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold ${getBookingStatusClass(b.status)}">
+                                        <i class="fas fa-circle mr-1.5 text-[6px]"></i>${bookingStatusLabel(b.status, b.info.type)}
                                     </span>
                                 </td>
-                                <td class="p-4 text-right">
+                                <td class="p-4 text-right" onclick="event.stopPropagation()">
                                     <div class="flex items-center justify-end space-x-2">
-                                        ${booking.status === 'Pending' ? `
-                                            <button onclick="window.confirmBooking('${booking.id}')" class="p-2 hover:bg-emerald-500/20 text-emerald-500 rounded-lg transition" title="Confirm">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            <button onclick="window.cancelBooking('${booking.id}')" class="p-2 hover:bg-rose-500/20 text-rose-500 rounded-lg transition" title="Cancel">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        ` : ''}
-                                        <button onclick="window.viewBookingDetails('${booking.id}')" class="p-2 hover:bg-white/10 text-slate-400 rounded-lg transition" title="Details">
-                                            <i class="fas fa-eye"></i>
+                                        <button onclick="window.viewBookingDetails('${id}')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${b.status === 'Pending' ? 'bg-primary text-white hover:bg-primary/80' : 'bg-white/5 text-slate-300 hover:bg-white/10'}">
+                                            ${b.status === 'Pending' ? 'Review' : 'View'}
                                         </button>
-                                        <button onclick="window.deleteBooking('${booking.id}')" class="p-2 hover:bg-rose-500/20 text-rose-500 rounded-lg transition" title="Delete">
+                                        <button onclick="window.deleteBooking('${id}')" class="p-2 hover:bg-rose-500/20 text-rose-500 rounded-lg transition" title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
                                 </td>
-                            </tr>
-                        `).join('') : `
+                            </tr>`;
+                        }).join('') : `
                             <tr>
                                 <td colspan="5" class="p-12 text-center">
                                     <div class="flex flex-col items-center">
                                         <i class="fas fa-inbox text-4xl text-slate-700 mb-4"></i>
-                                        <p class="text-slate-500 font-bold">No bookings found matching your criteria</p>
-                                        <button onclick="window.setBookingFilter('All')" class="text-primary text-sm mt-2 hover:underline">Clear Filters</button>
+                                        <p class="text-slate-500 font-bold">No bookings match these filters</p>
+                                        <button onclick="window.setBookingFilter('All'); window.setBookingType('All')" class="text-primary text-sm mt-2 hover:underline">Clear filters</button>
                                     </div>
                                 </td>
                             </tr>
@@ -947,15 +1032,15 @@ function renderCustomers() {
                                 <td class="p-4">
                                     <div class="flex items-center">
                                         <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-                                            <span class="text-xs font-bold text-primary">${cust.name.charAt(0)}</span>
+                                            <span class="text-xs font-bold text-primary">${escHtml(String(cust.name || '?').charAt(0))}</span>
                                         </div>
                                         <div>
-                                            <div class="text-sm font-bold text-white group-hover:text-primary transition">${cust.name}</div>
-                                            <div class="text-[10px] text-slate-500 font-medium tracking-tight">${cust.email}</div>
+                                            <div class="text-sm font-bold text-white group-hover:text-primary transition">${escHtml(cust.name)}</div>
+                                            <div class="text-[10px] text-slate-500 font-medium tracking-tight">${escHtml(cust.email)}</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="p-4 text-sm">${cust.country || 'Not Set'}</td>
+                                <td class="p-4 text-sm">${escHtml(cust.country || 'Not Set')}</td>
                                 <td class="p-4 text-center">
                                     <span class="px-2 py-1 rounded-md bg-white/5 text-xs font-bold">${cust.bookings || 0}</span>
                                 </td>
@@ -1084,7 +1169,7 @@ function renderAnalytics() {
                                             <div class="w-8 h-8 rounded-lg bg-primary/10 mr-3 overflow-hidden flex-shrink-0 flex items-center justify-center">
                                                 <i class="fas fa-route text-primary text-[10px]"></i>
                                             </div>
-                                            <span class="text-sm font-bold group-hover:text-primary transition truncate max-w-[150px]">${tour.name}</span>
+                                            <span class="text-sm font-bold group-hover:text-primary transition truncate max-w-[150px]">${escHtml(tour.name)}</span>
                                         </td>
                                         <td class="p-4 text-sm font-medium">${tour.bookings}</td>
                                         <td class="p-4 text-sm font-bold text-secondary">$${parseFloat(tour.revenue || 0).toLocaleString()}</td>
@@ -1315,8 +1400,8 @@ function renderQuotations(quotes) {
                     ${quotes.map(q => `
                         <tr class="border-t border-white/5 hover:bg-white/5 transition group">
                             <td class="p-4 text-xs font-mono text-slate-500">${q.id}</td>
-                            <td class="p-4 font-bold text-sm text-white">${q.customer_name}</td>
-                            <td class="p-4 text-sm text-slate-400">${q.tour_name}</td>
+                            <td class="p-4 font-bold text-sm text-white">${escHtml(q.customer_name)}</td>
+                            <td class="p-4 text-sm text-slate-400">${escHtml(q.tour_name)}</td>
                             <td class="p-4 font-bold text-emerald-400">$${parseFloat(q.amount).toLocaleString()}</td>
                             <td class="p-4">
                                 <span class="px-2 py-1 rounded-md text-[10px] font-black uppercase ${getQuotationStatusClass(q.status)}">${q.status}</span>
@@ -1353,7 +1438,7 @@ function renderInvoices(invoices) {
                     ${invoices.map(i => `
                         <tr class="border-t border-white/5 hover:bg-white/5 transition group">
                             <td class="p-4 text-xs font-mono text-slate-500">${i.id}</td>
-                            <td class="p-4 font-bold text-sm text-white">${i.customer_name}</td>
+                            <td class="p-4 font-bold text-sm text-white">${escHtml(i.customer_name)}</td>
                             <td class="p-4 text-sm text-slate-400">${i.due_date}</td>
                             <td class="p-4 font-bold text-secondary">$${parseFloat(i.amount).toLocaleString()}</td>
                             <td class="p-4">
@@ -2104,6 +2189,33 @@ window.openTourModal = (tourId = null) => {
                     <textarea name="description" rows="4" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition" placeholder="Short highlights and key features...">${tour ? escHtml(tour.description) : ''}</textarea>
                 </div>
 
+                <!-- ── Package page content ─────────────────────────────── -->
+                <div class="col-span-2 pt-4 mt-2 border-t border-white/5 space-y-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Package Page Content</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">One item per line. Anything left empty is simply not shown on the package page.</p>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Highlights</label>
+                        <textarea name="highlights" rows="4" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition text-sm" placeholder="Big Five game drives at dawn and dusk&#10;Two nights in a private conservancy camp">${tour ? escHtml(tour.highlights) : ''}</textarea>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Day-by-Day Itinerary</label>
+                        <textarea name="itinerary" rows="6" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition text-sm" placeholder="Arrival in Nairobi: Meet your guide and transfer to your hotel.&#10;Into the Maasai Mara: Scenic drive to camp, afternoon game drive.">${tour ? escHtml(tour.itinerary) : ''}</textarea>
+                        <p class="text-[10px] text-slate-500">One line per day, as <span class="text-slate-300">Day title: what happens</span>. Days are numbered automatically.</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Included</label>
+                            <textarea name="inclusions" rows="5" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition text-sm" placeholder="Park entry fees&#10;All game drives">${tour ? escHtml(tour.inclusions) : ''}</textarea>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Not Included</label>
+                            <textarea name="exclusions" rows="5" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition text-sm" placeholder="International flights&#10;Travel insurance">${tour ? escHtml(tour.exclusions) : ''}</textarea>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- ── Where this package appears ─────────────────────────── -->
                 <div class="col-span-2 pt-4 mt-2 border-t border-white/5 space-y-4">
                     <div>
@@ -2407,28 +2519,59 @@ window.closeModal = () => {
     modalOverlay.classList.add('hidden');
 };
 
-window.confirmBooking = async (id) => {
+// Update a booking's status, optionally with the final amount, an internal
+// note or a type change (enquiry -> booking).
+async function updateBooking(id, status, extra = {}, okMessage = 'Booking updated') {
     try {
-        const data = await apiPost('update-booking-status.php', { id, status: 'Confirmed' });
+        const data = await apiPost('update-booking-status.php', { id, status, ...extra });
         if (data.success) {
-            showToast('Booking confirmed successfully');
+            showToast(okMessage);
+            window.closeModal();
             await refreshData();
         } else {
-            showToast(data.error || 'Failed to confirm booking', 'error');
+            showToast(data.error || 'Could not update the booking', 'error');
         }
     } catch (e) { showToast('Network error. Please try again.', 'error'); }
-};
+}
 
-window.cancelBooking = async (id) => {
-    try {
-        const data = await apiPost('update-booking-status.php', { id, status: 'Cancelled' });
-        if (data.success) {
-            showToast('Booking cancelled');
-            await refreshData();
-        } else {
-            showToast(data.error || 'Failed to cancel booking', 'error');
-        }
-    } catch (e) { showToast('Network error. Please try again.', 'error'); }
+window.confirmBooking = (id, extra = {}) => updateBooking(id, 'Confirmed', extra, 'Booking confirmed');
+window.cancelBooking = (id, extra = {}) => updateBooking(id, 'Cancelled', extra, 'Booking declined');
+
+// Collect the review form's amount / note so every action saves them.
+function bookingFormExtras() {
+    const extra = {};
+    const amount = document.getElementById('bk-amount');
+    const note = document.getElementById('bk-note');
+    if (amount && amount.value !== '') extra.amount = amount.value;
+    if (note) extra.admin_note = note.value;
+    return extra;
+}
+
+window.bookingAction = (id, action) => {
+    const b = state.data.bookings.find(x => x.id === id);
+    if (!b) return;
+    const extra = bookingFormExtras();
+    switch (action) {
+        case 'confirm':
+            updateBooking(id, 'Confirmed', extra, 'Booking confirmed');
+            break;
+        case 'decline':
+            if (!confirm('Decline this booking request?')) return;
+            updateBooking(id, 'Cancelled', extra, 'Booking declined');
+            break;
+        case 'convert':
+            updateBooking(id, 'Pending', { ...extra, type: 'Booking' }, 'Enquiry converted to a booking request');
+            break;
+        case 'close':
+            updateBooking(id, 'Cancelled', extra, 'Enquiry closed');
+            break;
+        case 'reopen':
+            updateBooking(id, 'Pending', extra, 'Moved back to pending');
+            break;
+        case 'save':
+            updateBooking(id, b.status, extra, 'Saved');
+            break;
+    }
 };
 
 window.deleteBooking = async (id) => {
@@ -2437,6 +2580,7 @@ window.deleteBooking = async (id) => {
         const data = await apiPost('delete-booking.php', { id });
         if (data.success) {
             showToast('Booking deleted');
+            window.closeModal();
             await refreshData();
         } else {
             showToast(data.error || 'Failed to delete booking', 'error');
@@ -2447,100 +2591,103 @@ window.deleteBooking = async (id) => {
 window.viewBookingDetails = (id) => {
     const booking = state.data.bookings.find(b => b.id === id);
     if (!booking) return;
+    const info = bookingInfo(booking);
+    const isEnquiry = info.type === 'Enquiry';
+    const pending = booking.status === 'Pending';
+    const ref = escHtml(booking.id);
+    const firstName = String(booking.user || '').split(' ')[0];
 
-    // Parse packed tour field: "[Booking] Tour Name | Phone: x | Travelers: N | Note: y"
-    const raw = booking.tour || '';
-    let type = 'Booking';
-    let tourName = raw;
-    let phone = '—';
-    let travelers = '—';
-    let note = '—';
+    // Quick-reply links, pre-filled so the team only has to add specifics.
+    const subject = `${isEnquiry ? 'Your question' : 'Your booking request'} ${booking.id} – ${info.tour}`;
+    const body = `Dear ${firstName},\n\nThank you for your ${isEnquiry ? 'question about' : 'booking request for'} ${info.tour}` +
+                 `${booking.date && !isEnquiry ? ` on ${bookingDate(booking.date)}` : ''}.\n\n\n\nKind regards,\nLuxit Global Escapes\n+254 737 800 900`;
+    const mailto = `mailto:${encodeURIComponent(booking.email || '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const digits = String(info.phone || '').replace(/[^\d]/g, '');
+    const wa = digits ? `https://wa.me/${digits}?text=${encodeURIComponent(`Hello ${firstName}, this is Luxit Global Escapes about your ${isEnquiry ? 'question' : 'booking request'} ${booking.id} for ${info.tour}.`)}` : '';
 
-    const prefixMatch = raw.match(/^\[(Booking|Enquiry)\]\s*/);
-    if (prefixMatch) {
-        type = prefixMatch[1];
-        tourName = raw.slice(prefixMatch[0].length);
-    }
-
-    tourName.split('|').slice(1).map(s => s.trim()).forEach(seg => {
-        if (seg.startsWith('Phone:'))     phone     = seg.slice(6).trim();
-        else if (seg.startsWith('Travelers:')) travelers = seg.slice(10).trim();
-        else if (seg.startsWith('Note:'))  note      = seg.slice(5).trim();
-    });
-    tourName = tourName.split('|')[0].trim();
-
-    const statusClass = getBookingStatusClass(booking.status);
-    const typeColor = type === 'Enquiry' ? 'text-sky-400 bg-sky-400/10' : 'text-amber-400 bg-amber-400/10';
+    const field = (label, value) => `
+        <div class="space-y-1">
+            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">${label}</p>
+            <p class="text-white font-medium break-words">${value}</p>
+        </div>`;
 
     modalOverlay.classList.remove('hidden');
     modalContent.innerHTML = `
-        <div class="p-8 space-y-6 max-w-lg w-full">
+        <div class="p-8 space-y-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scroll">
             <div class="flex items-start justify-between border-b border-white/5 pb-4">
                 <div>
-                    <div class="flex items-center gap-3 mb-1">
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${typeColor}">
-                            <i class="fas fa-${type === 'Enquiry' ? 'question-circle' : 'calendar-check'} mr-1.5"></i>
-                            ${type}
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${isEnquiry ? 'text-sky-400 bg-sky-400/10' : 'text-amber-400 bg-amber-400/10'}">
+                            <i class="fas fa-${isEnquiry ? 'question-circle' : 'calendar-check'} mr-1.5"></i>${info.type}
                         </span>
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${statusClass}">
-                            <i class="fas fa-circle mr-1.5 text-[6px]"></i>
-                            ${booking.status}
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${getBookingStatusClass(booking.status)}">
+                            <i class="fas fa-circle mr-1.5 text-[6px]"></i>${bookingStatusLabel(booking.status, info.type)}
                         </span>
                     </div>
-                    <h2 class="text-xl font-bold text-white">${tourName}</h2>
-                    <p class="text-xs font-mono text-slate-500 mt-0.5">${booking.id}</p>
+                    <h2 class="text-xl font-bold text-white">${escHtml(info.tour)}</h2>
+                    <p class="text-xs text-slate-500 mt-1"><span class="font-mono">${ref}</span> · received ${bookingDate(booking.created_at)}</p>
                 </div>
-                <button type="button" onclick="window.closeModal()" class="text-slate-500 hover:text-white text-lg mt-1">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button type="button" onclick="window.closeModal()" class="text-slate-500 hover:text-white text-lg mt-1" aria-label="Close"><i class="fas fa-times"></i></button>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 text-sm">
-                <div class="space-y-1">
-                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Client Name</p>
-                    <p class="text-white font-medium">${booking.user || '—'}</p>
-                </div>
-                <div class="space-y-1">
-                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Email</p>
-                    <p class="text-white font-medium break-all">${booking.email || '—'}</p>
-                </div>
-                <div class="space-y-1">
-                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Phone</p>
-                    <p class="text-white font-medium">${phone}</p>
-                </div>
-                <div class="space-y-1">
-                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Travelers</p>
-                    <p class="text-white font-medium">${travelers}</p>
-                </div>
-                <div class="space-y-1">
-                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Travel Date</p>
-                    <p class="text-white font-medium">${booking.date || '—'}</p>
-                </div>
-                <div class="space-y-1">
-                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Submitted</p>
-                    <p class="text-white font-medium">${booking.created_at ? new Date(booking.created_at).toLocaleDateString() : '—'}</p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                ${field(isEnquiry ? 'Preferred date' : 'Travel date', isEnquiry && booking.date === (booking.created_at || '').slice(0, 10) ? 'Not given' : bookingDate(booking.date))}
+                ${field('Travellers', info.travelers ? Number(info.travelers) : '—')}
+                ${field(pending && !isEnquiry ? 'Estimate' : 'Amount', bookingMoney(booking.amount))}
+                ${field('Package', booking.tour_id ? `<a href="../tour-detail.php?id=${Number(booking.tour_id)}" target="_blank" rel="noopener" class="text-primary hover:underline">View page <i class="fas fa-arrow-up-right-from-square text-[10px]"></i></a>` : '—')}
+            </div>
+
+            <div class="rounded-xl bg-white/5 p-4 grid sm:grid-cols-3 gap-4 text-sm">
+                ${field('Guest', escHtml(booking.user || '—'))}
+                ${field('Email', booking.email ? `<a href="mailto:${escHtml(booking.email)}" class="hover:text-primary">${escHtml(booking.email)}</a>` : '—')}
+                ${field('Phone', info.phone ? `<a href="tel:${escHtml(info.phone)}" class="hover:text-primary">${escHtml(info.phone)}</a>` : '—')}
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                <a href="${escHtml(mailto)}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm font-bold transition"><i class="fas fa-envelope"></i> Reply by email</a>
+                ${wa ? `<a href="${escHtml(wa)}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 text-sm font-bold transition"><i class="fab fa-whatsapp"></i> WhatsApp</a>` : ''}
+                ${info.phone ? `<a href="tel:${escHtml(info.phone)}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm font-bold transition"><i class="fas fa-phone"></i> Call</a>` : ''}
+            </div>
+
+            ${info.note ? `
+            <div class="rounded-xl border border-white/10 p-4 space-y-1">
+                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">${isEnquiry ? 'Their question' : 'Message from guest'}</p>
+                <p class="text-sm text-slate-200 whitespace-pre-line">${escHtml(info.note)}</p>
+            </div>` : ''}
+
+            <div class="grid sm:grid-cols-3 gap-4">
+                ${!isEnquiry ? `
+                <div class="space-y-2">
+                    <label for="bk-amount" class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Final amount ($)</label>
+                    <input id="bk-amount" type="number" min="0" step="0.01" value="${Number(booking.amount || 0)}"
+                           class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 text-sm outline-none focus:border-primary transition">
+                    <p class="text-[10px] text-slate-500">Adjust before confirming if the quote changed.</p>
+                </div>` : ''}
+                <div class="space-y-2 ${isEnquiry ? 'sm:col-span-3' : 'sm:col-span-2'}">
+                    <label for="bk-note" class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Internal note</label>
+                    <textarea id="bk-note" rows="3" maxlength="2000" placeholder="Only visible to your team, e.g. lodge confirmed, deposit due 1 Nov"
+                              class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 text-sm outline-none focus:border-primary transition">${escHtml(booking.admin_note || '')}</textarea>
                 </div>
             </div>
 
-            ${note !== '—' ? `
-            <div class="bg-white/5 rounded-xl p-4 space-y-1">
-                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Client Note</p>
-                <p class="text-sm text-slate-300">${note}</p>
-            </div>` : ''}
-
-            ${booking.status === 'Pending' ? `
-            <div class="flex gap-3 pt-2">
-                <button onclick="window.confirmBooking('${booking.id}'); window.closeModal();"
-                        class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition text-sm">
-                    <i class="fas fa-check mr-2"></i> Confirm
-                </button>
-                <button onclick="window.cancelBooking('${booking.id}'); window.closeModal();"
-                        class="flex-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 font-bold py-3 rounded-xl transition text-sm">
-                    <i class="fas fa-times mr-2"></i> Cancel
-                </button>
-            </div>` : ''}
+            <div class="flex flex-wrap gap-3 pt-2 border-t border-white/5">
+                ${pending && !isEnquiry ? `
+                    <button onclick="window.bookingAction('${ref}', 'confirm')" class="flex-1 min-w-40 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition text-sm"><i class="fas fa-check mr-2"></i>Confirm booking</button>
+                    <button onclick="window.bookingAction('${ref}', 'decline')" class="flex-1 min-w-32 bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 font-bold py-3 rounded-xl transition text-sm"><i class="fas fa-times mr-2"></i>Decline</button>` : ''}
+                ${pending && isEnquiry ? `
+                    <button onclick="window.bookingAction('${ref}', 'convert')" class="flex-1 min-w-40 bg-primary hover:bg-primary/80 text-white font-bold py-3 rounded-xl transition text-sm"><i class="fas fa-arrow-right mr-2"></i>Convert to booking</button>
+                    <button onclick="window.bookingAction('${ref}', 'close')" class="flex-1 min-w-32 bg-white/5 hover:bg-white/10 text-slate-300 font-bold py-3 rounded-xl transition text-sm"><i class="fas fa-check-double mr-2"></i>Close enquiry</button>` : ''}
+                ${!pending ? `
+                    <button onclick="window.bookingAction('${ref}', 'reopen')" class="px-5 bg-white/5 hover:bg-white/10 text-slate-300 font-bold py-3 rounded-xl transition text-sm"><i class="fas fa-rotate-left mr-2"></i>Move back to pending</button>` : ''}
+                <button onclick="window.bookingAction('${ref}', 'save')" class="px-5 bg-white/5 hover:bg-white/10 text-slate-300 font-bold py-3 rounded-xl transition text-sm">Save note</button>
+            </div>
         </div>
     `;
+};
+
+window.setBookingType = (type) => {
+    state.bookingType = type;
+    renderBookings();
 };
 
 window.setBookingFilter = (filter) => {
@@ -2738,7 +2885,7 @@ window.openQuotationModal = (quoteId = null) => {
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Customer</label>
                     <select name="customer_id" required class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition">
                         <option value="" disabled ${!quote ? 'selected' : ''}>Select Client</option>
-                        ${customers.map(c => `<option value="${c.id}" ${quote && quote.customer_id === c.id ? 'selected' : ''}>${c.name} (${c.id})</option>`).join('')}
+                        ${customers.map(c => `<option value="${c.id}" ${quote && quote.customer_id === c.id ? 'selected' : ''}>${escHtml(c.name)} (${escHtml(c.id)})</option>`).join('')}
                     </select>
                 </div>
 
@@ -2803,7 +2950,7 @@ window.openInvoiceModal = (invoiceId = null) => {
                     <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Customer</label>
                     <select name="customer_id" required class="w-full bg-dark-900 border border-white/10 rounded-xl p-3 outline-none focus:border-primary transition">
                         <option value="" disabled ${!inv ? 'selected' : ''}>Select Client</option>
-                        ${customers.map(c => `<option value="${c.id}" ${inv && inv.customer_id === c.id ? 'selected' : ''}>${c.name} (${c.id})</option>`).join('')}
+                        ${customers.map(c => `<option value="${c.id}" ${inv && inv.customer_id === c.id ? 'selected' : ''}>${escHtml(c.name)} (${escHtml(c.id)})</option>`).join('')}
                     </select>
                 </div>
 

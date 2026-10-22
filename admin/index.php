@@ -142,7 +142,8 @@ $csrfToken = adminCsrfToken();
     $adminData = getAdminDashboardData($pdo);
     ?>
     <script>
-        window.ADMIN_DATA = <?php echo json_encode($adminData); ?>;
+        // HEX_TAG etc.: guest-supplied text (names, messages) must never close this <script>.
+        window.ADMIN_DATA = <?php echo json_encode($adminData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
         window.CSRF_TOKEN = <?php echo json_encode($csrfToken); ?>;
     </script>
     <script src="js/main.js?v=10"></script>

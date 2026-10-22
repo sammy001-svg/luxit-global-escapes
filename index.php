@@ -61,6 +61,9 @@ include 'header.php';
 					<div id="qb-form-wrap">
 						<form id="qb-form" novalidate autocomplete="off">
 							<input type="hidden" name="tour_name" id="qb-hidden-tour">
+							<input type="hidden" name="tour_id" id="qb-hidden-tour-id">
+							<!-- Spam trap: hidden from people, filled in by bots. -->
+							<input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
 							<input type="hidden" name="type" id="qb-hidden-type" value="book">
 							<div id="qb-form-grid">
 								<div class="qb-full">
@@ -70,7 +73,7 @@ include 'header.php';
 									<input name="email" required type="email" placeholder="Email Address *" class="qb-input" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
 								</div>
 								<div class="qb-half">
-									<input name="phone" type="tel" placeholder="Phone Number" class="qb-input" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
+									<input name="phone" type="tel" placeholder="Phone Number *" class="qb-input" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
 								</div>
 								<div class="qb-half">
 									<input name="travel_date" type="date" id="qb-date" class="qb-input" style="color:#555;" onfocus="this.style.borderColor='#006A72'" onblur="this.style.borderColor='#f0f4f4'">
@@ -449,7 +452,7 @@ include 'header.php';
 											</div>
 											<div class="flex items-center justify-between gap-3 pkg-card-footer">
 												<div class="trv-book">
-													<a href="<?php echo $tLink; ?>" class="site-button outline quick-book-btn" data-tour="<?php echo $tTitle; ?>">Book Now</a>
+													<a href="<?php echo $tLink; ?>" class="site-button outline quick-book-btn" data-tour="<?php echo $tTitle; ?>" data-tour-id="<?php echo (int)$tour['id']; ?>">Book Now</a>
 												</div>
 												<?php if ($tRating > 0) : ?>
 												<div class="pkg-nowrap">
@@ -598,7 +601,7 @@ include 'header.php';
 												<h3 class="text-primary text-2xl font-bold mb-2 pkg-clamp-2 pkg-promo-title" title="<?php echo $pTitle; ?>"><?php echo $pTitle; ?></h3>
 												<p class="text-secondary text-sm font-semibold italic pkg-clamp-1 pkg-promo-tagline"><?php echo $pTag !== '' ? '&ldquo;' . htmlspecialchars($pTag) . '&rdquo;' : htmlspecialchars($promo['location'] ?? ''); ?></p>
 												<div class="pkg-card-footer">
-													<a href="<?php echo $pLink; ?>" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md quick-book-btn" data-tour="<?php echo $pTitle; ?>">BOOK NOW</a>
+													<a href="<?php echo $pLink; ?>" class="mt-4 inline-block bg-citrusyellow text-primary px-5 py-2 rounded-full font-black text-sm hover:bg-primary hover:text-white transition-colors duration-300 shadow-md quick-book-btn" data-tour="<?php echo $pTitle; ?>" data-tour-id="<?php echo (int)$promo['id']; ?>">BOOK NOW</a>
 												</div>
 											</div>
 										</div>
@@ -1613,6 +1616,7 @@ include 'header.php';
 				var panel      = document.getElementById('qb-panel');
 				var tourNameEl = document.getElementById('qb-tour-name');
 				var hiddenTour = document.getElementById('qb-hidden-tour');
+				var hiddenTourId = document.getElementById('qb-hidden-tour-id');
 				var hiddenType = document.getElementById('qb-hidden-type');
 				var form       = document.getElementById('qb-form');
 				var errorEl    = document.getElementById('qb-error');
@@ -1622,7 +1626,7 @@ include 'header.php';
 				var dateInput  = document.getElementById('qb-date');
 				var lastType   = 'book'; // track which submit button was clicked
 
-				if (dateInput) dateInput.min = new Date().toISOString().split('T')[0];
+				if (dateInput) dateInput.min = new Date(Date.now() + 864e5).toISOString().split('T')[0]; // from tomorrow, as booking-handler.php requires
 
 				function getTourName(btn) {
 					// Cards put the package title on the button; the first heading
@@ -1644,10 +1648,11 @@ include 'header.php';
 					e.innerHTML = '<i class="fa fa-envelope" style="margin-right:7px;"></i>Send Enquiry';
 				}
 
-				function openModal(tourName) {
+				function openModal(tourName, tourId) {
 					form.reset();
 					hiddenTour.value = tourName;
-					if (dateInput) dateInput.min = new Date().toISOString().split('T')[0];
+					hiddenTourId.value = tourId;
+					if (dateInput) dateInput.min = new Date(Date.now() + 864e5).toISOString().split('T')[0]; // from tomorrow, as booking-handler.php requires
 					tourNameEl.textContent = tourName;
 					errorEl.style.display = 'none';
 					formWrap.style.display = 'block';
@@ -1680,7 +1685,8 @@ include 'header.php';
 					var btn = e.target.closest('.quick-book-btn');
 					if (!btn) return;
 					e.preventDefault();
-					openModal(getTourName(btn));
+					// booking-handler.php looks the package up by id (and prices it server-side).
+					openModal(getTourName(btn), btn.dataset.tourId || '');
 				});
 
 				// Track which submit button was last clicked

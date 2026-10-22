@@ -30,17 +30,32 @@ if (!function_exists('getAdminDashboardData')) {
 
         $destinations = adminSafeQuery($pdo, "SELECT * FROM destinations ORDER BY name ASC");
 
-        // Bookings — alias columns the JS expects
-        $bookings = adminSafeQuery($pdo,
-            "SELECT id,
+        // Bookings — alias columns the JS expects. The structured columns
+        // (type, phone, travelers…) arrive with migrate.php; until it has run,
+        // fall back to the original columns rather than showing no bookings.
+        $bookingCols = "id,
                     user_name    AS user,
                     email,
                     tour_name    AS tour,
                     booking_date AS date,
                     amount,
                     status,
-                    created_at
-             FROM bookings ORDER BY created_at DESC");
+                    created_at";
+        try {
+            $bookings = $pdo->query(
+                "SELECT $bookingCols, type, tour_id, phone, travelers, message, admin_note, updated_at
+                 FROM bookings ORDER BY (status = 'Pending') DESC, created_at DESC"
+            )->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            $bookings = adminSafeQuery($pdo, "SELECT $bookingCols FROM bookings ORDER BY created_at DESC");
+        }
+        // PDO returns DECIMAL as a string; the panel sums these, and
+        // "0" + "1200.00" in JavaScript is "01200.00", not 1200.
+        foreach ($bookings as &$b) {
+            $b['amount']    = (float)$b['amount'];
+            $b['travelers'] = isset($b['travelers']) ? (int)$b['travelers'] : null;
+        }
+        unset($b);
 
         // Customers — alias columns the JS expects
         $customers = adminSafeQuery($pdo,

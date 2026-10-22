@@ -158,6 +158,35 @@ if (!function_exists('renderPackageCard')) {
     }
 }
 
+if (!function_exists('packageLines')) {
+    /** Non-empty lines of a one-item-per-line admin field (highlights, inclusions…). */
+    function packageLines(?string $text): array {
+        return array_values(array_filter(array_map('trim', preg_split('/\R/u', (string)$text)), 'strlen'));
+    }
+}
+
+if (!function_exists('packageItinerary')) {
+    /**
+     * Itinerary days from the admin field: one line per day, "Title: details".
+     * A line without a colon is all details, titled "Day N".
+     *
+     * @return array<int, array{title: string, details: string}>
+     */
+    function packageItinerary(?string $text): array {
+        $days = [];
+        foreach (packageLines($text) as $i => $line) {
+            $pos = mb_strpos($line, ':');
+            if ($pos !== false && $pos > 0 && $pos <= 80) {
+                $days[] = ['title'   => trim(mb_substr($line, 0, $pos)),
+                           'details' => trim(mb_substr($line, $pos + 1))];
+            } else {
+                $days[] = ['title' => 'Day ' . ($i + 1), 'details' => $line];
+            }
+        }
+        return $days;
+    }
+}
+
 if (!function_exists('packagePromoClasses')) {
     /**
      * CSS classes for a promo badge colour chosen in the admin panel.

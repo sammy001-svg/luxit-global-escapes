@@ -104,6 +104,17 @@ $columnMigrations = [
     ['tours', 'promo_badge',   "varchar(100) DEFAULT NULL"],
     ['tours', 'promo_style',   "varchar(20) DEFAULT 'primary'"],
     ['tours', 'promo_tagline', "varchar(255) DEFAULT NULL"],
+    ['tours', 'highlights',    "text DEFAULT NULL"],
+    ['tours', 'itinerary',     "text DEFAULT NULL"],
+    ['tours', 'inclusions',    "text DEFAULT NULL"],
+    ['tours', 'exclusions',    "text DEFAULT NULL"],
+    ['bookings', 'type',       "enum('Booking','Enquiry') DEFAULT 'Booking'"],
+    ['bookings', 'tour_id',    "int(11) DEFAULT NULL"],
+    ['bookings', 'phone',      "varchar(40) DEFAULT NULL"],
+    ['bookings', 'travelers',  "int(11) DEFAULT 1"],
+    ['bookings', 'message',    "text DEFAULT NULL"],
+    ['bookings', 'admin_note', "text DEFAULT NULL"],
+    ['bookings', 'updated_at', "timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP"],
 ];
 
 echo "\nChecking for missing columns...\n";
@@ -163,6 +174,46 @@ try {
     }
 } catch (PDOException $e) {
     echo "  Backfill skipped — " . $e->getMessage() . "\n";
+}
+
+// ── Unpack legacy bookings ───────────────────────────────────────────────────
+// Before bookings had their own columns, booking-handler.php packed everything
+// into tour_name: "[Booking] Title | Phone: x | Travelers: N | Note: y".
+// Split those rows into the real columns once. Rows already unpacked no longer
+// start with "[", so this is safe to re-run.
+try {
+    $legacy = $pdo->query(
+        "SELECT id, tour_name FROM bookings WHERE tour_name LIKE '[Booking]%' OR tour_name LIKE '[Enquiry]%'"
+    )->fetchAll(PDO::FETCH_ASSOC);
+
+    if (!empty($legacy)) {
+        echo "\nUnpacking " . count($legacy) . " legacy booking(s)...\n";
+        $upd = $pdo->prepare(
+            "UPDATE bookings SET type = ?, tour_name = ?, phone = ?, travelers = ?, message = ? WHERE id = ?"
+        );
+        $findTour = $pdo->prepare("SELECT id FROM tours WHERE title = ? LIMIT 1");
+        $setTour  = $pdo->prepare("UPDATE bookings SET tour_id = ? WHERE id = ? AND tour_id IS NULL");
+
+        foreach ($legacy as $b) {
+            $raw  = $b['tour_name'];
+            $type = str_starts_with($raw, '[Enquiry]') ? 'Enquiry' : 'Booking';
+            $raw  = trim(preg_replace('/^\[(Booking|Enquiry)\]\s*/', '', $raw));
+            $parts = array_map('trim', explode('|', $raw));
+            $title = array_shift($parts);
+            $phone = null; $travelers = 1; $note = null;
+            foreach ($parts as $p) {
+                if (stripos($p, 'Phone:') === 0)          $phone = trim(substr($p, 6));
+                elseif (stripos($p, 'Travelers:') === 0)  $travelers = max(1, (int)substr($p, 10));
+                elseif (stripos($p, 'Note:') === 0)       $note = trim(substr($p, 5));
+            }
+            $upd->execute([$type, $title, $phone, $travelers, $note, $b['id']]);
+            $findTour->execute([$title]);
+            if ($tid = $findTour->fetchColumn()) $setTour->execute([$tid, $b['id']]);
+            echo "  {$b['id']}: $type — $title\n";
+        }
+    }
+} catch (PDOException $e) {
+    echo "  Booking unpack skipped — " . $e->getMessage() . "\n";
 }
 
 // ── Summary ──────────────────────────────────────────────────────────────────

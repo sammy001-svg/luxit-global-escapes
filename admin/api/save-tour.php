@@ -47,6 +47,17 @@ $promoTagline = trim($_POST['promoTagline'] ?? '');
 $promoStyle   = in_array($_POST['promoStyle'] ?? '', ['primary', 'secondary', 'citrus', 'red'], true)
                 ? $_POST['promoStyle'] : 'primary';
 
+// Package page content, one item per line. Blank lines are dropped; an empty
+// field hides its section on the public page rather than showing filler.
+$listField = function (string $key): string {
+    $lines = preg_split('/\R/u', (string)($_POST[$key] ?? ''));
+    return implode("\n", array_values(array_filter(array_map('trim', $lines), 'strlen')));
+};
+$highlights = $listField('highlights');
+$itinerary  = $listField('itinerary');
+$inclusions = $listField('inclusions');
+$exclusions = $listField('exclusions');
+
 if (empty($title) || empty($location) || $price <= 0) {
     echo json_encode(['success' => false, 'error' => 'Title, destination, and price are required.']);
     exit;
@@ -67,6 +78,10 @@ $limits = [
     'Tagline'       => [$promoTagline, 90],
     'Destination'   => [$location, 255],
     'Category'      => [$category, 50],
+    'Highlights'    => [$highlights, 4000],
+    'Itinerary'     => [$itinerary, 20000],
+    'Included'      => [$inclusions, 4000],
+    'Not included'  => [$exclusions, 4000],
 ];
 foreach ($limits as $label => [$value, $max]) {
     if (mb_strlen($value) > $max) {
@@ -141,23 +156,27 @@ try {
         $stmt = $pdo->prepare(
             "UPDATE tours SET title=?, location=?, price=?, duration=?, category=?, status=?, description=?,
                     rating=?, image=?, show_on_home=?, home_section=?, package_pages=?,
-                    promo_badge=?, promo_style=?, promo_tagline=?
+                    promo_badge=?, promo_style=?, promo_tagline=?,
+                    highlights=?, itinerary=?, inclusions=?, exclusions=?
              WHERE id=?"
         );
         $stmt->execute([$title, $location, $price, $duration, $category, $status, $description,
                         $rating, $imagePath, $showOnHome, $homeSection, $packagePages,
-                        $promoBadge, $promoStyle, $promoTagline, $id]);
+                        $promoBadge, $promoStyle, $promoTagline,
+                        $highlights, $itinerary, $inclusions, $exclusions, $id]);
         $newId = $id;
     } else {
         $stmt = $pdo->prepare(
             "INSERT INTO tours (title, location, price, duration, category, status, description,
                     rating, image, show_on_home, home_section, package_pages,
-                    promo_badge, promo_style, promo_tagline)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    promo_badge, promo_style, promo_tagline,
+                    highlights, itinerary, inclusions, exclusions)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         $stmt->execute([$title, $location, $price, $duration, $category, $status, $description,
                         $rating, $imagePath, $showOnHome, $homeSection, $packagePages,
-                        $promoBadge, $promoStyle, $promoTagline]);
+                        $promoBadge, $promoStyle, $promoTagline,
+                        $highlights, $itinerary, $inclusions, $exclusions]);
         $newId = (int)$pdo->lastInsertId();
     }
 

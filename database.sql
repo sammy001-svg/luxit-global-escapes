@@ -91,6 +91,12 @@ CREATE TABLE `tours` (
   `promo_badge` varchar(100) DEFAULT NULL,
   `promo_style` varchar(20) DEFAULT 'primary',
   `promo_tagline` varchar(255) DEFAULT NULL,
+  -- Package page content, entered in the admin one item per line. Sections
+  -- with nothing entered are hidden rather than filled with generic copy.
+  `highlights` text DEFAULT NULL,
+  `itinerary` text DEFAULT NULL,
+  `inclusions` text DEFAULT NULL,
+  `exclusions` text DEFAULT NULL,
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -120,8 +126,18 @@ CREATE TABLE `bookings` (
   `booking_date` date NOT NULL,
   `amount` decimal(10,2) NOT NULL,
   `status` enum('Confirmed', 'Pending', 'Cancelled') DEFAULT 'Pending',
+  -- Structured booking details. Older rows packed phone / travellers / notes
+  -- into tour_name; the admin panel still reads that format for them.
+  `type` enum('Booking', 'Enquiry') DEFAULT 'Booking',
+  `tour_id` int(11) DEFAULT NULL,
+  `phone` varchar(40) DEFAULT NULL,
+  `travelers` int(11) DEFAULT 1,
+  `message` text DEFAULT NULL,
+  `admin_note` text DEFAULT NULL,
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `tour_id` (`tour_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO `bookings` (`id`, `user_name`, `email`, `tour_name`, `booking_date`, `amount`, `status`) VALUES
