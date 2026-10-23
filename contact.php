@@ -1,243 +1,280 @@
 <?php
-$page_title = 'Contact Luxit Global Escapes - Plan Your Luxury Trip';
-$page_description = 'Get in touch with Luxit Global Escapes. Our travel experts are ready to help you plan your next luxury adventure. Reach out to us for personalized travel consultation.';
-$header_variant = 'solid';
+$page_title       = 'Contact Us | Luxit Global Escapes';
+$page_description = 'Talk to the Luxit Global Escapes travel team in Karen, Nairobi. Call, WhatsApp or send us a message and we will reply within 24 hours.';
+$page_css         = ['assets/css/contact.css'];
+$header_variant   = 'solid';
 include 'header.php';
+
+$phoneDisplay = '+254 737 800 900';
+$phoneLink    = '+254737800900';
+$waNumber     = '254737800900';
+$email        = 'info@luxitglobalescapes.com';
+$address      = 'Tana House, Karen, Nairobi, Kenya';
+$mapQuery     = rawurlencode($address);
+$topics       = ['Plan a trip', 'Existing booking', 'Group or corporate travel', 'Partnerships', 'Something else'];
+// Pre-filled from links on destination pages, e.g. contact.php?topic=Plan+a+trip&destination=Kenya
+$preTopic     = in_array($_GET['topic'] ?? '', $topics, true) ? $_GET['topic'] : $topics[0];
+$preDest      = mb_substr(trim((string)($_GET['destination'] ?? '')), 0, 100);
+// Destination suggestions come from the mega-menu list in header.php.
+$destOptions  = [];
+foreach (($mmRegions ?? []) as [$regionName, , , , $places]) {
+    $destOptions[] = $regionName;
+    foreach (array_keys($places) as $p) $destOptions[] = $p;
+}
 ?>
-	<div id="smooth-wrapper">
-		<div id="smooth-content">
-			<!-- CONTENT START -->
-			<div class="page-content">
-				<div class="relative bg-cover bg-center w-full bg-white overflow-hidden" style="background-image: url('assets/Contact/images/background/inr-banner.jpg');">
-						<div class="bg-black/60 absolute left-0 top-0 size-full"></div>
-						<div class="inr-banner-height flex w-full lg:h-160 md:h-135 h-100 pb-10 items-baseline mx-auto">
-							<div class="relative md:mt-60 mt-45 flex items-center justify-center w-full flex-col z-5">
-								<div>
-									<h2 class="lg:text-60 md:text-52 text-28 relative text-white">Contact Us</h2>
-								</div>
-								<!-- BREADCRUMB ROW -->                            
-								<div>
-									<ul class="inline-block">
-										<li class="text-base pr-7.5 relative inline-block font-semibold text-white after:content-['-'] after:absolute after:right-2 after:-top-1.5 after:text-white after:text-26 after:font-normal">
-											<a href="index.php" class="text-white">Home</a></li>
-										<li class="relative inline-block text-base font-semibold text-white">Contact Us</li>
-									</ul>
-								</div>
-							</div>
-							<!-- BREADCRUMB ROW END -->                        
-						</div>
-						<div class="h-50 w-full absolute top-50 left-0 z-1">            
-							<div class="inline-block whitespace-nowrap animate-moveCloud">
-								<img src="assets/Contact/images/inr-banner-cloud.png" alt="Image" class="h-47.5">
-							</div>
-						</div>
-						<div class="inr-plane-wrap absolute w-1/2 right-0 top-0 bottom-0 z-1">
-							<div class="mt-60 animate-slide-right"><img src="assets/Contact/images/airplane.png" alt="Image" class="animate-slide-top-fast" width="378" height="146"></div>
-						</div>
-						<div class="absolute right-11.25 bottom-16.25 animate-slide-top2"><img src="assets/Contact/images/hotballon-Left.png" alt="Image" class="md:w-21 w-10" width="84" height="121"></div>
-						<div class="inr-balloon-right absolute md:-right-15 -right-10 top-41.25 animate-slide-top"><img src="assets/Contact/images/hotballon-right.png" alt="Image" class="md:w-37.5 w-20" width="230" height="333"></div>
-					</div>
-				<!-- INNER PAGE BANNER END -->
-				
-				<!-- CONTACT SECTION START -->
-				<div class="xl:pt-30 pt-12.5 bg-white">
-					<div class="container">
-						<div class="grid grid-cols-12 gap-7.5 items-center">
-							<div class="lg:col-span-6 col-span-12">
-								<div class="relative rounded-6xl overflow-hidden shadow-2xl">
-									<img src="assets/Contact/images/Image-cont.png" alt="Contact Image" class="w-full h-auto object-cover">
-								</div>
-							</div>
-							<div class="lg:col-span-6 col-span-12">
-								<div class="cf-panel bg-paleaqua sm:p-16 p-7 rounded-6xl flex flex-col justify-center gap-y-8 sm:gap-y-12">
-									<div>
-										<h2 class="xl:text-64 md:text-52 sm:text-4xl text-3xl mb-4 font-bold">Get In <span class="text-citrusyellow">Touch</span></h2>
-										<p class="sm:text-xl text-base text-primary/70 max-w-lg leading-relaxed">We are here to help you. Send us a message and we will get back to you as soon as possible.</p>
-									</div>
-									<form class="dzForm" action="assets/script/contact.php">
-										<div class="dzFormMsg"></div>
-										<div class="grid grid-cols-12 xl:gap-y-8 gap-x-6 gap-y-4 sm:gap-y-6">
-											<div class="sm:col-span-6 col-span-12">
-												<input name="dzName" required type="text" class="cf-input w-full sm:h-20 h-14 sm:px-8 px-5 rounded-3xl bg-white border-2 border-primary/5 outline-none focus:border-citrusyellow duration-300 placeholder:text-primary/40 sm:text-xl text-base shadow-sm" placeholder="Your Name">
-											</div>
-											<div class="sm:col-span-6 col-span-12">
-												<input name="dzEmail" required type="email" class="cf-input w-full sm:h-20 h-14 sm:px-8 px-5 rounded-3xl bg-white border-2 border-primary/5 outline-none focus:border-citrusyellow duration-300 placeholder:text-primary/40 sm:text-xl text-base shadow-sm" placeholder="Email Address">
-											</div>
-											<div class="col-span-12">
-												<input name="dzPhoneNumber" required type="tel" class="cf-input w-full sm:h-20 h-14 sm:px-8 px-5 rounded-3xl bg-white border-2 border-primary/5 outline-none focus:border-citrusyellow duration-300 placeholder:text-primary/40 sm:text-xl text-base shadow-sm" placeholder="Phone Number">
-											</div>
-											<div class="col-span-12">
-												<textarea name="dzMessage" required class="cf-textarea w-full sm:h-52 h-36 sm:p-8 p-4 rounded-3xl bg-white border-2 border-primary/5 outline-none focus:border-citrusyellow duration-300 placeholder:text-primary/40 sm:text-xl text-base shadow-sm" placeholder="Your Message"></textarea>
-											</div>
-											<div class="col-span-12 mt-2">
-												<button type="submit" name="submit" class="cf-submit site-button butn-bg-shape w-full sm:h-20 h-14 sm:text-2xl text-lg font-bold shadow-lg justify-center flex">Send Message</button>
-											</div>
-										</div>
-									</form>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
 
-				<!-- MAP SECTION START -->
-				<div class="xl:pt-30 pt-12.5 md:pb-30 pb-12.5">
-					<div class="container">
-						<div class="cf-map relative rounded-6xl overflow-hidden shadow-xl border-8 border-paleaqua" style="height: clamp(280px, 55vw, 750px);">
-							<iframe 
-								width="100%" 
-								height="100%" 
-								id="gmap_canvas" 
-								src="https://maps.google.com/maps?q=Tana%20house,%20karen,%20nairobi,%20kenya&t=&z=15&ie=UTF8&iwloc=&output=embed" 
-								frameborder="0" 
-								scrolling="no" 
-								marginheight="0" 
-								marginwidth="0">
-							</iframe>
-						</div>
-					</div>
-				</div>
-				<!-- MAP SECTION END -->
-				<!-- CONTACT SECTION END -->
-				
-				<!--POPULAR DESTINATION SECTION START-->
-				<div class="relative overflow-hidden md:pb-22.5 pb-10 md:pt-30 pt-17.5 bg-contain bg-[bottom_center] bg-repeat-x bg-[url(assets/about/images/background/Cloud-bg.png)]">
-					<div class="container">
-						<!-- TITLE START-->
-						<div class="text-center max-w-150 mx-auto md:mb-15 mb-7.5">
-							<h2 class="xl:text-46 md:text-40 text-3xl mb-2.5"><span class="text-citrusyellow">Popular </span>Destination</h2>
-							<p class="text-base">Destinations worth exploring! Here are a few popular spots</p>
-							<div class="-mt-7">
-								<img src="assets/about/images/background/Title-Separator.png" alt="Image" class="w-117.5 inline-block" width="470" height="70">
-							</div>
-						</div>
-						<!-- TITLE END-->
-						<div>
-							<div class="swiper reviewtwo-slider !relative !z-1 !-mt-7.5 xl:!pb-29 !pb-22.5">
-								<div class="swiper-wrapper pt-7.5">
-									<div class="swiper-slide">
-										<div class="relative z-1 group">
-											<div class="rounded-3xl overflow-hidden">
-												<a href="destinations.php"><img src="assets/about/images/destinations/style1/pic1.jpg" width="309" height="500" alt="Image" class="w-full h-125 object-cover object-center"></a>
-											</div>
-											<div>
-												<h3 class="text-28"><a href="destinations.php" class="block text-black bg-white text-center p-5 rounded-3xl absolute left-0 right-0 -bottom-px duration-500 group-hover:text-secondary group-hover:bg-primary">Paris</a></h3>
-											</div>
-											<div class="absolute -z-1 top-0 left-1/2 -translate-x-1/2 duration-500 group-hover:-top-7.5">
-												<img src="assets/about/images/destinations/hotballon-right.png" alt="image" width="155" height="233" class="w-full max-w-75 mx-auto block duration-500">
-											</div>
-										</div>
-									</div>
+<div id="smooth-wrapper">
+    <div id="smooth-content">
+        <div class="page-content">
 
-									<div class="swiper-slide">
-										<div class="relative z-1 group">
-											<div class="rounded-3xl overflow-hidden">
-												<a href="destinations.php"><img src="assets/about/images/destinations/style1/pic2.jpg" width="309" height="500" alt="Image" class="w-full h-125 object-cover object-center"></a>
-											</div>
-											<div>
-												<h3 class="text-28"><a href="destinations.php" class="block text-black bg-white text-center p-5 rounded-3xl absolute left-0 right-0 -bottom-px duration-500 group-hover:text-secondary group-hover:bg-primary">Maldives</a></h3>
-											</div>
-											<div class="absolute -z-1 top-0 left-1/2 -translate-x-1/2 duration-500 group-hover:-top-7.5">
-												<img src="assets/about/images/destinations/hotballon-right.png" alt="image" width="155" height="233" class="w-full max-w-75 mx-auto block duration-500">
-											</div>
-										</div>
-									</div>
+        <div class="ct">
+            <header class="ct-hero">
+                <div class="ct-wrap">
+                    <span class="ct-eyebrow">Contact us</span>
+                    <h1 class="ct-title">Let's plan your next journey</h1>
+                    <p class="ct-intro">Whether you have a destination in mind or just a feeling, our travel specialists will help you shape it. Send a message, call or WhatsApp us; we reply within 24 hours.</p>
+                </div>
+            </header>
 
-									<div class="swiper-slide">
-										<div class="relative z-1 group">
-											<div class="rounded-3xl overflow-hidden">
-												<a href="destinations.php"><img src="assets/about/images/destinations/style1/pic3.jpg" width="309" height="500" alt="Image" class="w-full h-125 object-cover object-center"></a>
-											</div>
-											<div>
-												<h3 class="text-28"><a href="destinations.php" class="block text-black bg-white text-center p-5 rounded-3xl absolute left-0 right-0 -bottom-px duration-500 group-hover:text-secondary group-hover:bg-primary">Hong Kong</a></h3>
-											</div>
-											<div class="absolute -z-1 top-0 left-1/2 -translate-x-1/2 duration-500 group-hover:-top-7.5">
-												<img src="assets/about/images/destinations/hotballon-right.png" alt="image" width="155" height="233" class="w-full max-w-75 mx-auto block duration-500">
-											</div>
-										</div>
-									</div>
+            <div class="ct-wrap">
+                <div class="ct-quick">
+                    <a class="ct-qcard" href="tel:<?php echo $phoneLink; ?>">
+                        <span class="ct-qicon"><i class="fa-solid fa-phone"></i></span>
+                        <span><small>Call us</small><strong><?php echo $phoneDisplay; ?></strong><span class="ct-qnote">Speak to a travel specialist</span></span>
+                    </a>
+                    <a class="ct-qcard ct-qcard--wa" href="https://wa.me/<?php echo $waNumber; ?>?text=<?php echo rawurlencode('Hello Luxit Global Escapes, I would like help planning a trip.'); ?>" target="_blank" rel="noopener">
+                        <span class="ct-qicon"><i class="fa-brands fa-whatsapp"></i></span>
+                        <span><small>WhatsApp</small><strong>Chat with us</strong><span class="ct-qnote">Quick questions, quick answers</span></span>
+                    </a>
+                    <a class="ct-qcard" href="mailto:<?php echo $email; ?>">
+                        <span class="ct-qicon"><i class="fa-solid fa-envelope"></i></span>
+                        <span><small>Email</small><strong><?php echo $email; ?></strong><span class="ct-qnote">We reply within 24 hours</span></span>
+                    </a>
+                </div>
 
-									<div class="swiper-slide">
-										<div class="relative z-1 group">
-											<div class="rounded-3xl overflow-hidden">
-												<a href="destinations.php"><img src="assets/about/images/destinations/style1/pic4.jpg" width="309" height="500" alt="Image" class="w-full h-125 object-cover object-center"></a>
-											</div>
-											<div>
-												<h3 class="text-28"><a href="destinations.php" class="block text-black bg-white text-center p-5 rounded-3xl absolute left-0 right-0 -bottom-px duration-500 group-hover:text-secondary group-hover:bg-primary">Thailand</a></h3>
-											</div>
-											<div class="absolute -z-1 top-0 left-1/2 -translate-x-1/2 duration-500 group-hover:-top-7.5">
-												<img src="assets/about/images/destinations/hotballon-right.png" alt="image" width="155" height="233" class="w-full max-w-75 mx-auto block duration-500">
-											</div>
-										</div>
-									</div>
+                <div class="ct-main">
+                    <section class="ct-card ct-form-card" aria-labelledby="ct-form-title">
+                        <div id="ct-form-wrap">
+                            <h2 class="ct-h2" id="ct-form-title">Send us a message</h2>
+                            <p class="ct-sub">Tell us a little about what you have in mind. The more we know, the better our first reply will be.</p>
 
-									<div class="swiper-slide">
-										<div class="relative z-1 group">
-											<div class="rounded-3xl overflow-hidden">
-												<a href="destinations.php"><img src="assets/about/images/destinations/style1/pic5.jpg" width="309" height="500" alt="Image" class="w-full h-125 object-cover object-center"></a>
-											</div>
-											<div>
-												<h3 class="text-28"><a href="destinations.php" class="block text-black bg-white text-center p-5 rounded-3xl absolute left-0 right-0 -bottom-px duration-500 group-hover:text-secondary group-hover:bg-primary">Bangkok</a></h3>
-											</div>
-											<div class="absolute -z-1 top-0 left-1/2 -translate-x-1/2 duration-500 group-hover:-top-7.5">
-												<img src="assets/about/images/destinations/hotballon-right.png" alt="image" width="155" height="233" class="w-full max-w-75 mx-auto block duration-500">
-											</div>
-										</div>
-									</div>
+                            <form id="ct-form" novalidate>
+                                <input type="text" name="website" class="ct-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+                                <div class="ct-grid">
+                                    <div class="ct-error" id="ct-error" role="alert"></div>
 
-									<div class="swiper-slide">
-										<div class="relative z-1 group">
-											<div class="rounded-3xl overflow-hidden">
-												<a href="destinations.php"><img src="assets/about/images/destinations/style1/pic6.jpg" width="309" height="500" alt="Image" class="w-full h-125 object-cover object-center"></a>
-											</div>
-											<div>
-												<h3 class="text-28"><a href="destinations.php" class="block text-black bg-white text-center p-5 rounded-3xl absolute left-0 right-0 -bottom-px duration-500 group-hover:text-secondary group-hover:bg-primary">Tokyo</a></h3>
-											</div>
-											<div class="absolute -z-1 top-0 left-1/2 -translate-x-1/2 duration-500 group-hover:-top-7.5">
-												<img src="assets/about/images/destinations/hotballon-right.png" alt="image" width="155" height="233" class="w-full max-w-75 mx-auto block duration-500">
-											</div>
-										</div>
-									</div>
+                                    <fieldset class="ct-field" style="border:0;padding:0;margin:0">
+                                        <legend class="ct-label" style="margin-bottom:8px">What can we help with?</legend>
+                                        <div class="ct-topics">
+                                            <?php foreach ($topics as $i => $t) : ?>
+                                            <label class="ct-chip"><input type="radio" name="topic" value="<?php echo htmlspecialchars($t); ?>"<?php echo $t === $preTopic ? ' checked' : ''; ?>><span><?php echo htmlspecialchars($t); ?></span></label>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </fieldset>
 
-									<div class="swiper-slide">
-										<div class="relative z-1 group">
-											<div class="rounded-3xl overflow-hidden">
-												<a href="destinations.php"><img src="assets/about/images/destinations/style1/pic7.jpg" width="309" height="500" alt="Image" class="w-full h-125 object-cover object-center"></a>
-											</div>
-											<div>
-												<h3 class="text-28"><a href="destinations.php" class="block text-black bg-white text-center p-5 rounded-3xl absolute left-0 right-0 -bottom-px duration-500 group-hover:text-secondary group-hover:bg-primary">Spain</a></h3>
-											</div>
-											<div class="absolute -z-1 top-0 left-1/2 -translate-x-1/2 duration-500 group-hover:-top-7.5">
-												<img src="assets/about/images/destinations/hotballon-right.png" alt="image" width="155" height="233" class="w-full max-w-75 mx-auto block duration-500">
-											</div>
-										</div>
-									</div>
+                                    <div class="ct-grid ct-grid--2">
+                                        <div class="ct-field">
+                                            <label class="ct-label" for="ct-name">Full name</label>
+                                            <input class="ct-input" id="ct-name" name="full_name" autocomplete="name" maxlength="100" required>
+                                        </div>
+                                        <div class="ct-field">
+                                            <label class="ct-label" for="ct-email">Email</label>
+                                            <input class="ct-input" id="ct-email" name="email" type="email" autocomplete="email" maxlength="100" required>
+                                        </div>
+                                    </div>
 
-									<div class="swiper-slide">
-										<div class="relative z-1 group">
-											<div class="rounded-3xl overflow-hidden">
-												<a href="destinations.php"><img src="assets/about/images/destinations/style1/pic8.jpg" width="309" height="500" alt="Image" class="w-full h-125 object-cover object-center"></a>
-											</div>
-											<div>
-												<h3 class="text-28"><a href="destinations.php" class="block text-black bg-white text-center p-5 rounded-3xl absolute left-0 right-0 -bottom-px duration-500 group-hover:text-secondary group-hover:bg-primary">California</a></h3>
-											</div>
-											<div class="absolute -z-1 top-0 left-1/2 -translate-x-1/2 duration-500 group-hover:-top-7.5">
-												<img src="assets/about/images/destinations/hotballon-right.png" alt="image" width="155" height="233" class="w-full max-w-75 mx-auto block duration-500">
-											</div>
-										</div>
-									</div>
-								</div>
-								<div class="swiper-button-next"></div>
-								<div class="swiper-button-prev"></div>
-							</div>
-						</div> 
-					</div>
-					<div class="absolute -left-28.75 top-2/5 w-57.5 opacity-50 animate-slide-top2"><img src="assets/about/images/hotballon-Left.png" alt="image" width="233" height="333"></div>
-					<div class="absolute -right-13.75 top-2/5 w-27.5 animate-slide-top"><img src="assets/about/images/hotballon-right.png" alt="image" width="110" height="166"></div>
-				</div>
-				<!--POPULAR DESTINATION SECTION END-->
+                                    <div class="ct-grid ct-grid--2">
+                                        <div class="ct-field">
+                                            <label class="ct-label" for="ct-phone">Phone / WhatsApp <em id="ct-phone-opt">(optional)</em></label>
+                                            <input class="ct-input" id="ct-phone" name="phone" type="tel" autocomplete="tel" placeholder="+254 700 000 000">
+                                        </div>
+                                        <div class="ct-field">
+                                            <label class="ct-label" for="ct-method">Best way to reach you</label>
+                                            <select class="ct-input" id="ct-method" name="contact_method">
+                                                <option>Email</option>
+                                                <option>WhatsApp</option>
+                                                <option>Phone call</option>
+                                            </select>
+                                        </div>
+                                    </div>
 
-			</div>
-			<!-- CONTENT END -->
+                                    <div class="ct-trip" id="ct-trip">
+                                        <p class="ct-trip-title">Your trip (if you know)</p>
+                                        <div class="ct-grid ct-grid--3">
+                                            <div class="ct-field">
+                                                <label class="ct-label" for="ct-dest">Destination</label>
+                                                <input class="ct-input" id="ct-dest" name="destination" list="ct-dest-list" maxlength="100" placeholder="e.g. Kenya, Zanzibar" value="<?php echo htmlspecialchars($preDest); ?>">
+                                                <datalist id="ct-dest-list"><?php foreach ($destOptions as $d) echo '<option value="' . htmlspecialchars($d) . '">'; ?></datalist>
+                                            </div>
+                                            <div class="ct-field">
+                                                <label class="ct-label" for="ct-month">When</label>
+                                                <input class="ct-input" id="ct-month" name="travel_month" type="month" min="<?php echo date('Y-m'); ?>">
+                                            </div>
+                                            <div class="ct-field">
+                                                <label class="ct-label" for="ct-trav">Travellers</label>
+                                                <input class="ct-input" id="ct-trav" name="travelers" type="number" min="1" max="500" inputmode="numeric" placeholder="2">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="ct-field">
+                                        <label class="ct-label" for="ct-msg">Your message</label>
+                                        <textarea class="ct-input" id="ct-msg" name="message" maxlength="3000" required placeholder="Dates, budget, who is travelling, the experiences you are dreaming of…"></textarea>
+                                    </div>
+
+                                    <div class="ct-actions">
+                                        <span class="ct-privacy"><i class="fa-solid fa-lock"></i> We only use your details to reply to you.</span>
+                                        <button type="submit" class="ct-submit" id="ct-submit"><span>Send message</span> <i class="fa-solid fa-paper-plane"></i></button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="ct-success" id="ct-success" role="status" tabindex="-1">
+                            <div class="ct-success-icon"><i class="fa-solid fa-check"></i></div>
+                            <h2 class="ct-h2">Message sent</h2>
+                            <span class="ct-ref" id="ct-ref"></span>
+                            <p id="ct-success-msg"></p>
+                            <div class="ct-success-actions">
+                                <a class="ct-btn ct-btn--primary" href="international-packages.php">Browse packages</a>
+                                <button type="button" class="ct-btn" id="ct-again">Send another message</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <aside class="ct-aside" aria-label="Contact details">
+                        <div class="ct-card ct-info">
+                            <h3>Talk to us directly</h3>
+                            <div class="ct-info-row"><i class="fa-solid fa-phone"></i><div><small>Phone</small><a href="tel:<?php echo $phoneLink; ?>"><?php echo $phoneDisplay; ?></a></div></div>
+                            <div class="ct-info-row"><i class="fa-brands fa-whatsapp"></i><div><small>WhatsApp</small><a href="https://wa.me/<?php echo $waNumber; ?>" target="_blank" rel="noopener"><?php echo $phoneDisplay; ?></a></div></div>
+                            <div class="ct-info-row"><i class="fa-solid fa-envelope"></i><div><small>Email</small><a href="mailto:<?php echo $email; ?>"><?php echo $email; ?></a></div></div>
+                            <div class="ct-info-row"><i class="fa-solid fa-location-dot"></i><div><small>Office</small><span><?php echo $address; ?></span></div></div>
+                            <div class="ct-social" aria-label="Follow us">
+                                <a href="https://www.facebook.com/luxitafrica" target="_blank" rel="noopener" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                                <a href="https://x.com/Luxitafrica" target="_blank" rel="noopener" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
+                                <a href="https://www.instagram.com/p/DIoeX4NuF4S/" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                                <a href="https://www.tiktok.com/@luxitglobalescapes" target="_blank" rel="noopener" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+                            </div>
+                        </div>
+
+                        <div class="ct-card ct-map">
+                            <iframe title="Map: <?php echo $address; ?>" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+                                    src="https://maps.google.com/maps?q=<?php echo $mapQuery; ?>&amp;z=15&amp;output=embed"></iframe>
+                            <div class="ct-map-foot">
+                                <span>Karen, Nairobi</span>
+                                <a href="https://www.google.com/maps/dir/?api=1&amp;destination=<?php echo $mapQuery; ?>" target="_blank" rel="noopener">Get directions <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+
+            <section class="ct-faq" aria-labelledby="ct-faq-title">
+                <div class="ct-wrap ct-faq-grid">
+                    <div>
+                        <span class="ct-eyebrow">Good to know</span>
+                        <h2 id="ct-faq-title">Before you get in touch</h2>
+                        <p class="ct-sub">A few answers to the questions we are asked most often.</p>
+                    </div>
+                    <div>
+                        <details class="ct-qa" open>
+                            <summary>How quickly will you reply?</summary>
+                            <div>Within 24 hours, by your preferred method: email, phone or WhatsApp. For anything urgent, calling or WhatsApp is fastest.</div>
+                        </details>
+                        <details class="ct-qa">
+                            <summary>Does it cost anything to ask for a quote?</summary>
+                            <div>No. Asking questions and requesting a quote is free. We only arrange payment once you are happy with a confirmed itinerary.</div>
+                        </details>
+                        <details class="ct-qa">
+                            <summary>Can you tailor a package to me?</summary>
+                            <div>Yes. Every package on our site can be adjusted to your dates, group size and budget, and we also plan trips from scratch.</div>
+                        </details>
+                        <details class="ct-qa">
+                            <summary>I already have a booking. How do I change it?</summary>
+                            <div>Choose "Existing booking" above and include your booking reference (it starts with BK-). Our team will pick it up from there.</div>
+                        </details>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        </div><!-- /page-content -->
+
+<?php ob_start(); ?>
+<script>
+(function () {
+    var form = document.getElementById('ct-form');
+    var wrap = document.getElementById('ct-form-wrap');
+    var success = document.getElementById('ct-success');
+    var errorBox = document.getElementById('ct-error');
+    var submit = document.getElementById('ct-submit');
+    var method = document.getElementById('ct-method');
+    var phone = document.getElementById('ct-phone');
+    var trip = document.getElementById('ct-trip');
+
+    // Phone becomes required when they ask to be called or messaged.
+    var syncMethod = function () {
+        var needsPhone = method.value !== 'Email';
+        phone.required = needsPhone;
+        document.getElementById('ct-phone-opt').hidden = needsPhone;
+    };
+    method.addEventListener('change', syncMethod);
+    syncMethod();
+
+    // Trip details only matter when planning a trip or a group.
+    var syncTopic = function () {
+        var t = form.querySelector('[name="topic"]:checked').value;
+        trip.hidden = !(t === 'Plan a trip' || t === 'Group or corporate travel');
+    };
+    form.querySelectorAll('[name="topic"]').forEach(function (r) { r.addEventListener('change', syncTopic); });
+    syncTopic();
+
+    var showError = function (msg, field) {
+        errorBox.textContent = msg;
+        errorBox.classList.add('is-on');
+        form.querySelectorAll('[aria-invalid]').forEach(function (el) { el.removeAttribute('aria-invalid'); });
+        if (field) { field.setAttribute('aria-invalid', 'true'); field.focus(); }
+    };
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        errorBox.classList.remove('is-on');
+        var checks = [
+            [!form.full_name.value.trim(), 'Please enter your name.', form.full_name],
+            [!/^\S+@\S+\.\S+$/.test(form.email.value.trim()), 'Please enter a valid email address.', form.email],
+            [phone.required && !phone.value.trim(), 'Please add your phone number so we can ' + (method.value === 'WhatsApp' ? 'message you on WhatsApp.' : 'call you.'), phone],
+            [!form.message.value.trim(), 'Please tell us a little about what you need.', form.message],
+        ];
+        for (var i = 0; i < checks.length; i++) {
+            if (checks[i][0]) { showError(checks[i][1], checks[i][2]); return; }
+        }
+        submit.disabled = true;
+        submit.querySelector('span').textContent = 'Sending…';
+
+        var data = new FormData(form);
+        if (trip.hidden) { data.delete('destination'); data.delete('travel_month'); data.delete('travelers'); }
+
+        fetch('contact-handler.php', { method: 'POST', body: data })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (!res.success) { showError(res.error || 'Something went wrong. Please try again.'); return; }
+                document.getElementById('ct-ref').textContent = 'Ref ' + res.booking_id;
+                document.getElementById('ct-success-msg').textContent = res.message;
+                wrap.style.display = 'none';
+                success.classList.add('is-on');
+                success.focus();
+            })
+            .catch(function () { showError('We could not reach our server. Please check your connection, or call +254 737 800 900.'); })
+            .then(function () { submit.disabled = false; submit.querySelector('span').textContent = 'Send message'; });
+    });
+
+    document.getElementById('ct-again').addEventListener('click', function () {
+        form.reset(); syncMethod(); syncTopic();
+        success.classList.remove('is-on');
+        wrap.style.display = '';
+    });
+})();
+</script>
+<?php $page_scripts = ob_get_clean(); ?>
 
 <?php include 'footer.php'; ?>

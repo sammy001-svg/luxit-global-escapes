@@ -177,7 +177,7 @@
 					</div>
 					<div class="py-10 text-white relative z-1 font-normal after:absolute after:bg-primary after:max-w-135 after:h-px after:left-1/2 after:top-0 after:-translate-x-1/2">
 						<div class="container">
-							<p class="copyrights-text text-center text-sm font-semibold">© <span class="current-year">2024</span> <a href="https://www.dexignzone.com/"><span class="inline-block text-citrusyellow uppercase text-center text-sm font-semibold">Luxit Global Escapes</span></a> All  Rights Reserved.</p>
+							<p class="copyrights-text text-center text-sm font-semibold">© <span class="current-year">2024</span> <a href="index.php"><span class="inline-block text-citrusyellow uppercase text-center text-sm font-semibold">Luxit Global Escapes</span></a> All  Rights Reserved.</p>
 						</div>
 					</div>		
 				</div>
