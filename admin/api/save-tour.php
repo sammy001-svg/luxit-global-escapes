@@ -151,7 +151,7 @@ if (str_starts_with($imageRaw, 'data:image')) {
 }
 
 // ── Preserve existing image if none supplied for an update ────────────────────
-if (empty($imagePath) && $id) {
+if (empty($imagePath) && $id && ($_POST['image_removed'] ?? '') !== '1') {
     $stmt = $pdo->prepare("SELECT image FROM tours WHERE id = ?");
     $stmt->execute([$id]);
     $existing = $stmt->fetchColumn();
