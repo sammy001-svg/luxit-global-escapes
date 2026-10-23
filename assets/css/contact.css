@@ -102,8 +102,7 @@ textarea.ct-input { height: auto; min-height: 140px; padding: 12px 14px; resize:
 .ct-map-foot a { color: var(--ct-teal); font-weight: 700; display: inline-flex; gap: 6px; align-items: center; }
 
 /* ── FAQ ────────────────────────────────────────────────────── */
-/* Bottom padding clears footer.php's subscribe band (pulled up 160px). */
-.ct-faq { background: var(--ct-tint); padding: 72px 0 240px; }
+.ct-faq { background: var(--ct-tint); padding: 72px 0 96px; }
 .ct-faq-grid { display: grid; gap: 32px; }
 @media (min-width: 1024px) { .ct-faq-grid { grid-template-columns: 1fr 1.6fr; gap: 56px; } }
 .ct-faq h2 { font-family: var(--ct-serif); font-weight: 600; color: var(--ct-ink); font-size: clamp(1.8rem, 3vw, 2.4rem); line-height: 1.15; margin: 8px 0 12px; }

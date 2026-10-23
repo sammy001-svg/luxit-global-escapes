@@ -1,0 +1,75 @@
+/* Site footer (footer.php). */
+
+.ft {
+	--ft-bg: #05302f;
+	--ft-bg-2: #042524;
+	--ft-text: rgba(255, 255, 255, .72);
+	--ft-muted: rgba(255, 255, 255, .5);
+	--ft-line: rgba(255, 255, 255, .1);
+	--ft-gold: #FFD214;
+	--ft-teal: #0a8a8f;
+	background: var(--ft-bg);
+	color: var(--ft-text);
+	font-size: .95rem;
+	position: relative;
+	z-index: 1;
+}
+.ft a { color: inherit; transition: color .2s; }
+.ft a:hover { color: #fff; }
+.ft a:focus-visible, .ft button:focus-visible, .ft input:focus-visible { outline: 2px solid var(--ft-gold); outline-offset: 3px; }
+.ft-wrap { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.ft-eyebrow { font-size: .72rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--ft-gold); }
+
+/* Newsletter band */
+.ft-top { padding-top: 64px; }
+.ft-news { display: grid; gap: 24px; align-items: center; padding: 32px; border-radius: 22px; background: linear-gradient(135deg, rgba(10, 138, 143, .35), rgba(255, 255, 255, .04)); border: 1px solid var(--ft-line); }
+@media (min-width: 900px) { .ft-news { grid-template-columns: 1fr minmax(320px, 440px); padding: 36px 44px; } }
+.ft-news h3 { font-family: 'Playfair Display', Georgia, serif; font-weight: 600; color: #fff; font-size: clamp(1.5rem, 2.6vw, 2rem); line-height: 1.2; margin: 8px 0 8px; }
+.ft-news p { margin: 0; color: var(--ft-text); line-height: 1.6; }
+.ft-news-row { display: flex; gap: 8px; padding: 6px; border-radius: 999px; background: #fff; }
+.ft-news-row input { flex: 1 1 auto; min-width: 0; height: 46px; padding: 0 16px; border: 0; border-radius: 999px; font: inherit; color: #10201f; background: transparent; outline: none; }
+.ft-news-row button { flex: 0 0 auto; height: 46px; padding: 0 22px; border: 0; border-radius: 999px; background: #066168; color: #fff; font-weight: 700; cursor: pointer; transition: background .2s; }
+.ft-news-row button:hover { background: #054f55; }
+.ft-news-row button:disabled { opacity: .7; cursor: progress; }
+.ft-news-msg { min-height: 1.4em; margin: 10px 4px 0 !important; font-size: .88rem; }
+.ft-news-msg.is-ok { color: #8ee6a8 !important; }
+.ft-news-msg.is-error { color: #ffb4a8 !important; }
+.ft-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+/* Main columns */
+.ft-main { display: grid; gap: 36px 28px; padding-top: 56px; padding-bottom: 48px; grid-template-columns: 1fr 1fr; }
+.ft-brand, .ft-plan { grid-column: 1 / -1; }
+@media (min-width: 768px) { .ft-main { grid-template-columns: repeat(3, 1fr); } .ft-plan { grid-column: auto; } }
+@media (min-width: 1100px) { .ft-main { grid-template-columns: 1.4fr 1fr 1.1fr 1fr 1.2fr; } .ft-brand { grid-column: auto; } }
+
+.ft-logo { display: inline-block; padding: 10px 14px; border-radius: 14px; background: #fff; margin-bottom: 18px; }
+.ft-logo img { display: block; width: 150px; height: auto; }
+.ft-brand p { margin: 0 0 18px; line-height: 1.65; max-width: 26em; }
+.ft-contact { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ft-contact li { display: flex; gap: 12px; align-items: flex-start; }
+.ft-contact i { width: 18px; margin-top: 3px; color: var(--ft-gold); text-align: center; }
+
+.ft-col h3 { margin: 0 0 16px; font-size: .78rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: #fff; }
+.ft-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ft-col li a { display: inline-block; }
+.ft-col li a:hover { transform: translateX(3px); }
+.ft-plan p { margin: 0 0 16px; line-height: 1.6; }
+.ft-btn { display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 20px; border-radius: 999px; background: var(--ft-gold); color: #10201f !important; font-weight: 700; }
+.ft-btn:hover { background: #fff; }
+.ft-social { display: flex; gap: 10px; margin-top: 22px; }
+.ft-social a { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--ft-line); color: #fff; transition: background .2s, border-color .2s, color .2s; }
+.ft-social a:hover { background: var(--ft-gold); border-color: var(--ft-gold); color: #10201f; }
+
+/* Bottom bar */
+.ft-bottom { background: var(--ft-bg-2); border-top: 1px solid var(--ft-line); }
+.ft-bottom-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 24px; padding-top: 20px; padding-bottom: 20px; font-size: .85rem; color: var(--ft-muted); }
+.ft-bottom-row p { margin: 0; }
+.ft-bottom-links { display: flex; gap: 20px; }
+
+/* The fixed scroll-to-top button sits bottom-right; keep the bar's links clear of it on phones. */
+@media (max-width: 639px) {
+	.ft-news { padding: 24px 20px; }
+	.ft-news-row { flex-direction: column; border-radius: 18px; }
+	.ft-news-row button { width: 100%; }
+	.ft-bottom-row { padding-right: 76px; }
+}

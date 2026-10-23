@@ -72,6 +72,7 @@ $hImage = htmlspecialchars($page_image ?? 'assets/images/seo/og_index.png', ENT_
 	<link rel="stylesheet" href="assets/css/packages.css">
 	<link rel="stylesheet" href="assets/css/site.css">
 	<link rel="stylesheet" href="assets/css/menu.css">
+	<link rel="stylesheet" href="assets/css/footer.css">
 <?php foreach (($page_css ?? []) as $css) : ?>
 	<link rel="stylesheet" href="<?php echo htmlspecialchars($css, ENT_QUOTES); ?>">
 <?php endforeach; ?>

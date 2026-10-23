@@ -100,8 +100,8 @@
 .dst-jump a { padding: 8px 16px; border-radius: 999px; background: #fff; border: 1px solid var(--dst-line); font-weight: 600; font-size: .88rem; color: var(--dst-ink); }
 .dst-jump a:hover { border-color: var(--dst-teal); color: var(--dst-teal); }
 
-/* Closing call to action. Bottom padding clears footer.php's raised band. */
-.dst-cta-wrap { background: var(--dst-tint); padding: 64px 0 240px; }
+/* Closing call to action. */
+.dst-cta-wrap { background: var(--dst-tint); padding: 64px 0 96px; }
 .dst-cta { display: grid; gap: 24px; align-items: center; padding: 40px; border-radius: 26px; color: #fff; background: linear-gradient(135deg, #077a82 0%, var(--dst-teal) 50%, #04454a 100%); }
 @media (min-width: 900px) { .dst-cta { grid-template-columns: 1fr auto; padding: 48px 56px; } }
 .dst-cta h2 { font-family: var(--dst-serif); font-weight: 600; font-size: clamp(1.7rem, 3vw, 2.3rem); color: #fff; margin: 0 0 8px; }

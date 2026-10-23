@@ -138,8 +138,7 @@ textarea.pk-input { height: auto; min-height: 84px; padding: 11px 14px; resize: 
 .pk-help a { display: flex; align-items: center; gap: 10px; padding: 6px 0; color: var(--pk-teal); font-weight: 600; }
 
 /* ── Related ────────────────────────────────────────────────── */
-/* Bottom padding clears footer.php's subscribe band (pulled up 160px). */
-.pk-more { background: var(--pk-tint); padding: 72px 0 240px; }
+.pk-more { background: var(--pk-tint); padding: 72px 0 96px; }
 .pk-more-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px; margin-bottom: 28px; }
 .pk-more-head h2 { font-family: var(--pk-serif); font-weight: 600; color: var(--pk-ink); font-size: clamp(1.7rem, 3vw, 2.3rem); margin: 0; }
 .pk-more-head a { color: var(--pk-teal); font-weight: 700; display: inline-flex; gap: 8px; align-items: center; }

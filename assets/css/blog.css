@@ -128,9 +128,7 @@
 .ba-cta a:hover { background: #fff; transform: translateY(-1px); }
 
 /* ── Keep reading ───────────────────────────────────────────── */
-/* Bottom padding: footer.php's subscribe band is pulled up 160px over
-   whatever precedes it, which is what clipped the old sidebar card. */
-.ba-more { background: var(--ba-tint); padding: 72px 0 240px; }
+.ba-more { background: var(--ba-tint); padding: 72px 0 96px; }
 .ba-more-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 32px; }
 .ba-more-head h2 { font-family: var(--ba-serif); font-size: clamp(1.7rem, 3vw, 2.3rem); font-weight: 600; color: var(--ba-ink); margin: 0; }
 .ba-more-head a { font-weight: 700; color: var(--ba-teal); font-size: .95rem; display: inline-flex; align-items: center; gap: 8px; }
@@ -179,7 +177,7 @@
 .bl-filter[aria-current] { background: var(--ba-teal); border-color: var(--ba-teal); color: #fff; }
 .bl-filter[aria-current] span { background: rgba(255, 255, 255, .2); color: #fff; }
 
-.bl-body { background: var(--ba-tint); padding: 8px 0 240px; } /* bottom: clears footer.php's raised subscribe band */
+.bl-body { background: var(--ba-tint); padding: 8px 0 96px; }
 
 /* Lead story */
 .bl-lead { display: grid; background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 16px 44px rgba(6, 97, 104, .1); margin-bottom: 40px; color: inherit; transition: box-shadow .3s; }
@@ -216,7 +214,7 @@
 .bl-empty a { display: inline-flex; padding: 11px 22px; border-radius: 999px; background: var(--ba-teal); color: #fff; font-weight: 700; }
 
 /* Homepage section */
-.hj { padding: 88px 0 230px; background: var(--ba-tint, #eef7f6); }
+.hj { padding: 88px 0 96px; background: var(--ba-tint, #eef7f6); }
 .hj-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 32px; }
 .hj-head h2 { font-family: var(--ba-serif); font-weight: 600; color: var(--ba-ink); font-size: clamp(1.9rem, 3.4vw, 2.7rem); line-height: 1.15; margin: 6px 0 0; }
 .hj-head p { color: var(--ba-muted); margin: 8px 0 0; max-width: 34em; }
