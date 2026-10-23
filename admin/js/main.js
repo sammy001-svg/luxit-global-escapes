@@ -462,6 +462,17 @@ const PACKAGE_PAGES = [
 
 const HOME_SECTIONS = ['Explore Popular Tours', 'Marketing Highlights'];
 
+// Travel-style pages a package can also appear on (tours.travel_styles).
+const TRAVEL_STYLES = [
+    { key: 'romantic',   label: 'Romantic',   icon: 'fa-heart' },
+    { key: 'wellness',   label: 'Wellness',   icon: 'fa-spa' },
+    { key: 'halal',      label: 'Halal',      icon: 'fa-moon' },
+    { key: 'kosher',     label: 'Kosher',     icon: 'fa-star-of-david' },
+    { key: 'faith',      label: 'Faith',      icon: 'fa-place-of-worship' },
+    { key: 'accessible', label: 'Accessible', icon: 'fa-wheelchair' },
+    { key: 'mice',       label: 'MICE',       icon: 'fa-briefcase' },
+];
+
 // Escape a value for interpolation into the HTML templates below. Without it a
 // title containing a quote, or a description containing "</textarea>", breaks
 // the edit form and the package is saved back truncated.
@@ -2365,6 +2376,23 @@ window.openTourModal = (tourId = null) => {
                             }).join('')}
                         </div>
                         <p class="text-[10px] text-slate-500">Tick every page this package belongs on. A package with none selected will not appear anywhere.</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Travel Styles <span class="text-slate-600 normal-case">(optional)</span></label>
+                        <div class="flex flex-wrap gap-2">
+                            ${TRAVEL_STYLES.map(s => {
+                                const on = tour ? String(tour.travel_styles || '').split(',').map(x => x.trim()).includes(s.key) : false;
+                                return `
+                                <label class="cursor-pointer">
+                                    <input type="checkbox" name="travelStyles[]" value="${s.key}" class="sr-only peer" ${on ? 'checked' : ''}>
+                                    <span class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold transition border-white/10 bg-dark-900 text-slate-400 peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-white hover:border-white/20">
+                                        <i class="fas ${s.icon}"></i>${s.label}
+                                    </span>
+                                </label>`;
+                            }).join('')}
+                        </div>
+                        <p class="text-[10px] text-slate-500">Also list this package on these travel-style pages (Tours menu), e.g. a honeymoon package under Romantic.</p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-6">

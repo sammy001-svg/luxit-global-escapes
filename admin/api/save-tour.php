@@ -41,6 +41,12 @@ $pagesInput   = $_POST['packagePages'] ?? [];
 if (!is_array($pagesInput)) $pagesInput = [$pagesInput];
 $packagePages = implode(',', array_values(array_intersect($allowedPages, $pagesInput)));
 
+// Travel-style pages (romantic-travel.php etc.) this package is listed on.
+$allowedStyles = ['romantic', 'wellness', 'halal', 'kosher', 'faith', 'accessible', 'mice'];
+$stylesInput   = $_POST['travelStyles'] ?? [];
+if (!is_array($stylesInput)) $stylesInput = [$stylesInput];
+$travelStyles  = implode(',', array_values(array_intersect($allowedStyles, $stylesInput)));
+
 // Optional promotion for the homepage Marketing Highlights carousel.
 $promoBadge   = trim($_POST['promoBadge']   ?? '');
 $promoTagline = trim($_POST['promoTagline'] ?? '');
@@ -157,26 +163,26 @@ try {
             "UPDATE tours SET title=?, location=?, price=?, duration=?, category=?, status=?, description=?,
                     rating=?, image=?, show_on_home=?, home_section=?, package_pages=?,
                     promo_badge=?, promo_style=?, promo_tagline=?,
-                    highlights=?, itinerary=?, inclusions=?, exclusions=?
+                    highlights=?, itinerary=?, inclusions=?, exclusions=?, travel_styles=?
              WHERE id=?"
         );
         $stmt->execute([$title, $location, $price, $duration, $category, $status, $description,
                         $rating, $imagePath, $showOnHome, $homeSection, $packagePages,
                         $promoBadge, $promoStyle, $promoTagline,
-                        $highlights, $itinerary, $inclusions, $exclusions, $id]);
+                        $highlights, $itinerary, $inclusions, $exclusions, $travelStyles, $id]);
         $newId = $id;
     } else {
         $stmt = $pdo->prepare(
             "INSERT INTO tours (title, location, price, duration, category, status, description,
                     rating, image, show_on_home, home_section, package_pages,
                     promo_badge, promo_style, promo_tagline,
-                    highlights, itinerary, inclusions, exclusions)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    highlights, itinerary, inclusions, exclusions, travel_styles)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         $stmt->execute([$title, $location, $price, $duration, $category, $status, $description,
                         $rating, $imagePath, $showOnHome, $homeSection, $packagePages,
                         $promoBadge, $promoStyle, $promoTagline,
-                        $highlights, $itinerary, $inclusions, $exclusions]);
+                        $highlights, $itinerary, $inclusions, $exclusions, $travelStyles]);
         $newId = (int)$pdo->lastInsertId();
     }
 

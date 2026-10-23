@@ -87,6 +87,9 @@ CREATE TABLE `tours` (
   -- International / Local / Safari. Replaces the old implicit routing that
   -- guessed the page from the location text.
   `package_pages` varchar(100) DEFAULT NULL,
+  -- Travel-style pages (romantic, wellness, halal, kosher, faith, accessible,
+  -- mice) this tour is listed on. Comma-separated, chosen in the admin.
+  `travel_styles` varchar(150) DEFAULT NULL,
   -- Optional promotion shown in the homepage Marketing Highlights carousel.
   `promo_badge` varchar(100) DEFAULT NULL,
   `promo_style` varchar(20) DEFAULT 'primary',

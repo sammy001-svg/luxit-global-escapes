@@ -108,6 +108,7 @@ $columnMigrations = [
     ['tours', 'itinerary',     "text DEFAULT NULL"],
     ['tours', 'inclusions',    "text DEFAULT NULL"],
     ['tours', 'exclusions',    "text DEFAULT NULL"],
+    ['tours', 'travel_styles', "varchar(150) DEFAULT NULL"],
     ['bookings', 'type',       "enum('Booking','Enquiry') DEFAULT 'Booking'"],
     ['bookings', 'tour_id',    "int(11) DEFAULT NULL"],
     ['bookings', 'phone',      "varchar(40) DEFAULT NULL"],

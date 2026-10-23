@@ -5,7 +5,7 @@
  * utilities the old page relied on (its price-card badges rendered blank).
  */
 
-.pk, .pk-hero, .pk-more, .pk-bar {
+.pk, .pk-hero, .pk-more, .pk-bar, .dst {
 	--pk-ink: #10201f;
 	--pk-text: #3a4846;
 	--pk-muted: #6b7a78;
