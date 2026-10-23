@@ -152,6 +152,7 @@ function rerenderCurrentTab() {
     const render = tabs[state.currentTab];
     if (typeof render === 'function') render();
     updateBookingBadge();
+    updateSchemaBanner();
     if (contentArea) contentArea.scrollTop = scrollTop;
 }
 
@@ -284,6 +285,7 @@ function switchTab(tab) {
             console.log(`Executing tab function for ${tab}`);
             tabs[tab]();
             updateBookingBadge();
+            updateSchemaBanner();
         } else {
             console.error(`Tab ${tab} not found`);
         }
@@ -698,6 +700,37 @@ function bookingStatusLabel(status, type) {
     if (type === 'Enquiry') return { Pending: 'Open', Cancelled: 'Closed', Confirmed: 'Answered' }[status] || status;
     return { Pending: 'Awaiting confirmation' }[status] || status;
 }
+
+// Database out of date: every save would fail with "schema is out of date",
+// so say so once, at the top of every page, with a one-click fix.
+function updateSchemaBanner() {
+    const el = document.getElementById('schema-banner');
+    if (!el) return;
+    const missing = state.data.schemaMissing || [];
+    if (!missing.length) { el.className = 'hidden'; el.innerHTML = ''; return; }
+    el.className = 'mx-4 sm:mx-6 lg:mx-8 mt-4 rounded-2xl p-4 bg-amber-500/10 border border-amber-500/40 text-amber-100 flex flex-wrap items-center justify-between gap-3';
+    el.innerHTML = `
+        <div class="text-sm">
+            <p class="font-bold"><i class="fas fa-database mr-2"></i>Your database needs a quick update</p>
+            <p class="text-amber-200/80 mt-0.5">The website was upgraded but the database was not, so saving packages, posts and bookings will fail until it is updated. This only adds the missing parts; no data is changed or removed.</p>
+            <p class="text-[11px] text-amber-200/60 mt-1">Missing: ${missing.map(escHtml).join(', ')}</p>
+        </div>
+        <button id="schema-fix-btn" onclick="window.runDatabaseUpdate()" class="shrink-0 px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-dark-900 text-sm font-bold"><i class="fas fa-wrench mr-2"></i>Update database</button>`;
+}
+
+window.runDatabaseUpdate = async () => {
+    const btn = document.getElementById('schema-fix-btn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating…'; }
+    try {
+        const data = await apiPost('run-migrations.php', {});
+        await refreshData({ silent: true });
+        if (!data.success) throw new Error(data.error || 'The update did not complete.');
+        showToast('Database updated. You can save again now.');
+    } catch (err) {
+        showToast(err.message, 'error');
+        updateSchemaBanner();
+    }
+};
 
 // Pending-count badge on the Bookings menu item, refreshed with every render.
 function updateBookingBadge() {

@@ -106,6 +106,9 @@ $csrfToken = adminCsrfToken();
             </div>
         </header>
 
+        <!-- Shown when the database is missing tables/columns (see updateSchemaBanner in main.js) -->
+        <div id="schema-banner" class="hidden"></div>
+
         <!-- Dynamic Content Area -->
         <section id="content-area" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scroll">
             <!-- Content will be injected here -->
@@ -136,8 +139,8 @@ $csrfToken = adminCsrfToken();
         window.openMobileNav = () => { document.getElementById('sidebar').classList.remove('-translate-x-full'); document.getElementById('nav-overlay').classList.remove('hidden'); };
         window.closeMobileNav = () => { document.getElementById('sidebar').classList.add('-translate-x-full'); document.getElementById('nav-overlay').classList.add('hidden'); };
     </script>
-    <script src="js/main.js?v=15"></script>
-    <script src="js/packages.js?v=15"></script>
+    <script src="js/main.js?v=16"></script>
+    <script src="js/packages.js?v=16"></script>
     <script>
         if (!window.ADMIN_DATA) {
             document.getElementById('content-area').innerHTML = '<div class="p-8 text-rose-500 font-bold">CRITICAL ERROR: Data could not be loaded from Database. Please check your .env settings.</div>';

@@ -248,6 +248,8 @@ if (!function_exists('getAdminDashboardData')) {
             ],
             'blogPosts'    => $blogPosts,
             'newsletter'   => $newsletter,
+            // Columns/tables the code needs but the database lacks (migrate.php fixes it).
+            'schemaMissing' => (function () use ($pdo) { require_once __DIR__ . '/../../includes/schema.php'; return schemaMissing($pdo); })(),
             'settings'     => (function () use ($pdo) { try { return $pdo->query("SELECT name, value FROM site_settings")->fetchAll(PDO::FETCH_KEY_PAIR); } catch (PDOException $e) { return []; } })(),
         ];
     }

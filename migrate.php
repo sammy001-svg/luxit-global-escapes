@@ -17,6 +17,7 @@ $isCli = (php_sapi_name() === 'cli');
 if (!$isCli) header('Content-Type: text/plain; charset=utf-8');
 
 require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/schema.php';
 
 $schemaFile = __DIR__ . '/database.sql';
 if (!file_exists($schemaFile)) {
@@ -97,29 +98,9 @@ if (!empty($created)) {
 // ── Column migrations ────────────────────────────────────────────────────────
 // Columns added to existing tables after the initial release. Each is applied
 // only if absent, so this is safe to run repeatedly.
-$columnMigrations = [
-    ['tours', 'show_on_home',  "tinyint(1) DEFAULT 0"],
-    ['tours', 'home_section',  "varchar(100) DEFAULT NULL"],
-    ['tours', 'package_pages', "varchar(100) DEFAULT NULL"],
-    ['tours', 'promo_badge',   "varchar(100) DEFAULT NULL"],
-    ['tours', 'promo_style',   "varchar(20) DEFAULT 'primary'"],
-    ['tours', 'promo_tagline', "varchar(255) DEFAULT NULL"],
-    ['tours', 'highlights',    "text DEFAULT NULL"],
-    ['tours', 'itinerary',     "text DEFAULT NULL"],
-    ['tours', 'inclusions',    "text DEFAULT NULL"],
-    ['tours', 'exclusions',    "text DEFAULT NULL"],
-    ['tours', 'travel_styles', "varchar(150) DEFAULT NULL"],
-    ['tours', 'home_sections', "varchar(100) DEFAULT NULL"],
-    ['tours', 'home_order',    "int(11) DEFAULT 0"],
-    ['bookings', 'type',       "enum('Booking','Enquiry') DEFAULT 'Booking'"],
-    ['bookings', 'tour_id',    "int(11) DEFAULT NULL"],
-    ['bookings', 'phone',      "varchar(40) DEFAULT NULL"],
-    ['bookings', 'travelers',  "int(11) DEFAULT 1"],
-    ['bookings', 'message',    "text DEFAULT NULL"],
-    ['bookings', 'admin_note', "text DEFAULT NULL"],
-    ['bookings', 'updated_at', "timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP"],
-    ['blog_posts', 'featured', "tinyint(1) DEFAULT 0"],
-];
+// The expected columns live in includes/schema.php (also used by the admin
+// panel to detect an out-of-date database).
+$columnMigrations = SCHEMA_COLUMNS;
 
 echo "\nChecking for missing columns...\n";
 $addedColumns = [];
