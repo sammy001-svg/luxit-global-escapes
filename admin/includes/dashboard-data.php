@@ -112,6 +112,7 @@ if (!function_exists('getAdminDashboardData')) {
         $expenses = adminSafeQuery($pdo, "SELECT * FROM expenses ORDER BY expense_date DESC");
 
         $blogPosts = adminSafeQuery($pdo, "SELECT * FROM blog_posts ORDER BY created_at DESC");
+        $newsletter = adminSafeQuery($pdo, "SELECT email, source, created_at FROM newsletter_subscribers ORDER BY created_at DESC");
 
         // ── Analytics ─────────────────────────────────────────────────────────
         // Every figure below is computed from real rows. The panel previously
@@ -246,6 +247,8 @@ if (!function_exists('getAdminDashboardData')) {
                 'expenses'   => $expenses,
             ],
             'blogPosts'    => $blogPosts,
+            'newsletter'   => $newsletter,
+            'settings'     => (function () use ($pdo) { try { return $pdo->query("SELECT name, value FROM site_settings")->fetchAll(PDO::FETCH_KEY_PAIR); } catch (PDOException $e) { return []; } })(),
         ];
     }
 }

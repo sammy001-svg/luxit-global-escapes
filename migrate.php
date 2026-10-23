@@ -109,6 +109,8 @@ $columnMigrations = [
     ['tours', 'inclusions',    "text DEFAULT NULL"],
     ['tours', 'exclusions',    "text DEFAULT NULL"],
     ['tours', 'travel_styles', "varchar(150) DEFAULT NULL"],
+    ['tours', 'home_sections', "varchar(100) DEFAULT NULL"],
+    ['tours', 'home_order',    "int(11) DEFAULT 0"],
     ['bookings', 'type',       "enum('Booking','Enquiry') DEFAULT 'Booking'"],
     ['bookings', 'tour_id',    "int(11) DEFAULT NULL"],
     ['bookings', 'phone',      "varchar(40) DEFAULT NULL"],
@@ -176,6 +178,32 @@ try {
     }
 } catch (PDOException $e) {
     echo "  Backfill skipped — " . $e->getMessage() . "\n";
+}
+
+// ── Backfill home_sections ───────────────────────────────────────────────────
+// The homepage used to have "Explore Popular Tours" and "Marketing Highlights"
+// (show_on_home + home_section). Carry those choices over once: popular tours
+// go to the Safari / Local / International sections their package pages
+// allow, highlights become special offers.
+if (in_array('tours.home_sections', $addedColumns, true)) {
+    try {
+        $rows = $pdo->query("SELECT id, home_section, package_pages FROM tours WHERE show_on_home = 1")->fetchAll(PDO::FETCH_ASSOC);
+        $upd = $pdo->prepare("UPDATE tours SET home_sections = ? WHERE id = ?");
+        foreach ($rows as $r) {
+            if ($r['home_section'] === 'Marketing Highlights') {
+                $secs = ['offers'];
+            } else {
+                $pages = array_map('trim', explode(',', strtolower((string)$r['package_pages'])));
+                $secs = array_values(array_intersect(['safari', 'local', 'international'], $pages)) ?: ['international'];
+            }
+            $upd->execute([implode(',', $secs), $r['id']]);
+            echo "  homepage: #{$r['id']} -> " . implode(', ', $secs) . "
+";
+        }
+    } catch (PDOException $e) {
+        echo "  Homepage backfill skipped — " . $e->getMessage() . "
+";
+    }
 }
 
 // ── Unpack legacy bookings ───────────────────────────────────────────────────

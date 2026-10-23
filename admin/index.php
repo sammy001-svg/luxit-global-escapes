@@ -59,6 +59,9 @@ $csrfToken = adminCsrfToken();
             <a href="#" class="sidebar-link" data-tab="tours">
                 <i class="fas fa-route mr-3"></i> Tour Packages
             </a>
+            <a href="#" class="sidebar-link" data-tab="homepage">
+                <i class="fas fa-house mr-3"></i> Homepage
+            </a>
             <a href="#" class="sidebar-link" data-tab="destinations">
                 <i class="fas fa-map-marker-alt mr-3"></i> Destinations
             </a>
@@ -147,7 +150,7 @@ $csrfToken = adminCsrfToken();
         window.CSRF_TOKEN = <?php echo json_encode($csrfToken); ?>;
         window.ADMIN_USER = <?php echo json_encode($_SESSION['admin_username'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
     </script>
-    <script src="js/main.js?v=12"></script>
+    <script src="js/main.js?v=14"></script>
     <script>
         if (!window.ADMIN_DATA) {
             document.getElementById('content-area').innerHTML = '<div class="p-8 text-rose-500 font-bold">CRITICAL ERROR: Data could not be loaded from Database. Please check your .env settings.</div>';

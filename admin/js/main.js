@@ -236,6 +236,7 @@ const tabs = {
     dashboard: renderDashboard,
     bookings: renderBookings,
     tours: renderTours,
+    homepage: renderHomepage,
     destinations: renderDestinations,
     customers: renderCustomers,
     finance: renderFinance,
@@ -460,7 +461,18 @@ const PACKAGE_PAGES = [
     { key: 'Safari',        label: 'Safari',        icon: 'fa-binoculars', file: 'safari-packages.php' },
 ];
 
-const HOME_SECTIONS = ['Explore Popular Tours', 'Marketing Highlights'];
+// Homepage sections a package can be shown in (tours.home_sections).
+// "page" is the package page a package must be on to qualify.
+const HOMEPAGE_SECTIONS = [
+    { key: 'safari',        label: 'Safari',         icon: 'fa-paw',        page: 'Safari',        title: 'Safari Packages' },
+    { key: 'local',         label: 'Local',          icon: 'fa-location-dot', page: 'Local',       title: 'Local Packages' },
+    { key: 'international', label: 'International',  icon: 'fa-plane',      page: 'International', title: 'International Packages' },
+    { key: 'offers',        label: 'Special offer',  icon: 'fa-tag',        page: null,            title: 'Special Offers' },
+];
+
+function tourHomeSections(tour) {
+    return String(tour.home_sections || '').split(',').map(s => s.trim()).filter(Boolean);
+}
 
 // Travel-style pages a package can also appear on (tours.travel_styles).
 const TRAVEL_STYLES = [
@@ -549,7 +561,7 @@ function renderTours() {
         total:  tours.length,
         active: tours.filter(t => t.status === 'Active').length,
         value:  tours.filter(t => t.status === 'Active').reduce((sum, t) => sum + Number(t.price || 0), 0),
-        onHome: tours.filter(t => Number(t.show_on_home) === 1 && t.status === 'Active').length,
+        onHome: tours.filter(t => tourHomeSections(t).length && t.status === 'Active').length,
     };
 
     // A package with no page assignment is invisible on the public site. This is
@@ -675,13 +687,13 @@ function renderTours() {
                                             : `<span class="px-2 py-1 rounded-md text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/20">
                                                    <i class="fas fa-eye-slash mr-1"></i>No page — hidden
                                                </span>`}
-                                        ${Number(tour.show_on_home) === 1 ? `
-                                            <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-secondary/15 text-secondary border border-secondary/20" title="${tour.home_section || 'Homepage'}">
-                                                <i class="fas fa-house mr-1"></i>${tour.home_section === 'Marketing Highlights' ? 'Promo' : 'Home'}
+                                        ${tourHomeSections(tour).length ? `
+                                            <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-secondary/15 text-secondary border border-secondary/20" title="Homepage: ${tourHomeSections(tour).map(k => (HOMEPAGE_SECTIONS.find(x => x.key === k) || {}).title).filter(Boolean).join(', ')}">
+                                                <i class="fas fa-house mr-1"></i>Home
                                             </span>` : ''}
                                         ${tour.promo_badge ? `
                                             <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/20">
-                                                <i class="fas fa-bullhorn mr-1"></i>${tour.promo_badge}
+                                                <i class="fas fa-bullhorn mr-1"></i>${escHtml(tour.promo_badge)}
                                             </span>` : ''}
                                     </div>
                                 </div>
@@ -1021,6 +1033,23 @@ function renderCustomers() {
                     <i class="fas fa-user-plus mr-2"></i> Add Client
                 </button>
             </div>
+
+            ${(() => {
+                const subs = state.data.newsletter || [];
+                const recent = subs.slice(0, 4);
+                return `
+            <div class="glass-card rounded-2xl p-6 border border-white/5 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-primary/15 text-primary flex items-center justify-center"><i class="fas fa-envelope-open-text"></i></div>
+                    <div>
+                        <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Newsletter subscribers</p>
+                        <p class="text-2xl font-bold">${subs.length}</p>
+                        ${recent.length ? `<p class="text-xs text-slate-500 mt-1">Latest: ${recent.map(r => escHtml(r.email)).join(', ')}</p>` : '<p class="text-xs text-slate-500 mt-1">Sign-ups from the website footer appear here.</p>'}
+                    </div>
+                </div>
+                ${subs.length ? `<a href="api/export-subscribers.php" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-sm font-bold transition"><i class="fas fa-download mr-2"></i>Download CSV</a>` : ''}
+            </div>`;
+            })()}
 
             <div class="glass-card rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
                 <table class="w-full admin-table text-left border-collapse">
@@ -2395,33 +2424,26 @@ window.openTourModal = (tourId = null) => {
                         <p class="text-[10px] text-slate-500">Also list this package on these travel-style pages (Tours menu), e.g. a honeymoon package under Romantic.</p>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-6">
-                        <div class="space-y-2">
-                            <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Homepage</label>
-                            <div class="flex items-center space-x-3 p-3.5 bg-dark-900 border border-white/10 rounded-xl">
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" name="showOnHome" id="show-on-home-toggle" class="sr-only peer" ${tour && Number(tour.show_on_home) === 1 ? 'checked' : ''}
-                                           onchange="window.toggleHomeSection(this.checked)">
-                                    <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                                </label>
-                                <span class="text-xs font-bold text-slate-400">Feature on homepage</span>
-                            </div>
+                    <div class="space-y-2">
+                        <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Show on the homepage <span class="text-slate-600 normal-case">(optional)</span></label>
+                        <div class="flex flex-wrap gap-2" id="home-sections">
+                            ${HOMEPAGE_SECTIONS.map(s => {
+                                const on = tour ? tourHomeSections(tour).includes(s.key) : false;
+                                return `
+                                <label class="cursor-pointer">
+                                    <input type="checkbox" name="homeSections[]" value="${s.key}" class="sr-only peer" ${on ? 'checked' : ''} onchange="window.togglePromoFields()">
+                                    <span class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold transition border-white/10 bg-dark-900 text-slate-400 peer-checked:border-secondary peer-checked:bg-secondary/10 peer-checked:text-white hover:border-white/20">
+                                        <i class="fas ${s.icon}"></i>${s.label}
+                                    </span>
+                                </label>`;
+                            }).join('')}
                         </div>
-
-                        <div id="home-section-container" class="space-y-2 transition-opacity ${(!tour || Number(tour.show_on_home) !== 1) ? 'opacity-40 pointer-events-none' : ''}">
-                            <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Homepage Section</label>
-                            <select name="homeSection" id="home-section-select" class="w-full bg-dark-900 border border-white/10 rounded-xl p-3.5 outline-none focus:border-primary transition appearance-none"
-                                    onchange="window.togglePromoFields(this.value)">
-                                ${HOME_SECTIONS.map(s => `
-                                    <option value="${s}" ${tour && tour.home_section === s ? 'selected' : ''}>${s}</option>
-                                `).join('')}
-                            </select>
-                        </div>
+                        <p class="text-[10px] text-slate-500">Safari, Local and International only work if the package is also on that page above. You can also manage this, and the order, in the Homepage tab.</p>
                     </div>
 
-                    <!-- Promo fields only matter for the Marketing Highlights carousel -->
-                    <div id="promo-fields" class="space-y-4 rounded-xl border border-white/10 bg-dark-900/50 p-4 transition-opacity ${(tour && tour.home_section === 'Marketing Highlights' && Number(tour.show_on_home) === 1) ? '' : 'opacity-40 pointer-events-none'}">
-                        <p class="text-xs font-bold text-slate-300"><i class="fas fa-bullhorn mr-1.5 text-secondary"></i>Promotion — shown on the homepage Marketing Highlights carousel</p>
+                    <!-- Promo fields only matter for the homepage Special Offers section -->
+                    <div id="promo-fields" class="space-y-4 rounded-xl border border-white/10 bg-dark-900/50 p-4 transition-opacity ${tour && tourHomeSections(tour).includes('offers') ? '' : 'opacity-40 pointer-events-none'}">
+                        <p class="text-xs font-bold text-slate-300"><i class="fas fa-bullhorn mr-1.5 text-secondary"></i>Promotion — shown when the package is in Special Offers</p>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="space-y-2">
                                 <label class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Badge Text</label>
@@ -2539,24 +2561,152 @@ window.setTourPageFilter = (page) => {
     renderTours();
 };
 
-// The homepage section dropdown is meaningless unless the package is featured,
-// and the promo fields only apply to the Marketing Highlights carousel.
-window.toggleHomeSection = (enabled) => {
-    const container = document.getElementById('home-section-container');
-    if (container) {
-        container.classList.toggle('opacity-40', !enabled);
-        container.classList.toggle('pointer-events-none', !enabled);
-    }
-    const select = document.getElementById('home-section-select');
-    window.togglePromoFields(enabled && select ? select.value : '');
-};
-
-window.togglePromoFields = (section) => {
+// Promo badge / tagline only apply to the homepage Special Offers section.
+window.togglePromoFields = () => {
     const promo = document.getElementById('promo-fields');
+    const offers = document.querySelector('#home-sections input[value="offers"]');
     if (!promo) return;
-    const active = section === 'Marketing Highlights';
+    const active = !!(offers && offers.checked);
     promo.classList.toggle('opacity-40', !active);
     promo.classList.toggle('pointer-events-none', !active);
+};
+
+// ── Homepage tab ─────────────────────────────────────────────────────────────
+// Choose which packages appear in each homepage section, in what order, and
+// switch whole sections on or off. Backed by tours.home_sections /
+// tours.home_order and site_settings (admin/api/update-homepage.php).
+const HOMEPAGE_LIMIT = 6;
+
+function homeSectionOn(key) {
+    return ((state.data.settings || {})[`home_${key}_enabled`] ?? '1') !== '0';
+}
+
+function renderHomepage() {
+    const tours = (state.data.tours || []).filter(t => t.status === 'Active');
+    const img = (src) => escHtml(String(src || '').startsWith('assets') ? '../' + src : (src || ''));
+    const onPage = (t, page) => !page || String(t.package_pages || '').split(',').map(x => x.trim()).includes(page);
+
+    const sectionHtml = (sec) => {
+        const enabled = homeSectionOn(sec.key);
+        const shown = tours.filter(t => tourHomeSections(t).includes(sec.key))
+            .sort((a, b) => (Number(a.home_order) || 0) - (Number(b.home_order) || 0) || String(b.created_at).localeCompare(String(a.created_at)));
+        const eligible = tours.filter(t => onPage(t, sec.page) && !tourHomeSections(t).includes(sec.key));
+        const live = enabled && shown.length > 0;
+        const status = !enabled ? ['Section switched off', 'bg-slate-500/15 text-slate-400']
+                     : !shown.length ? ['Hidden: no packages chosen', 'bg-amber-400/10 text-amber-400']
+                     : ['Live on homepage', 'bg-emerald-500/10 text-emerald-400'];
+
+        return `
+        <div class="glass-card rounded-2xl border border-white/5 overflow-hidden">
+            <div class="flex flex-wrap items-center justify-between gap-4 p-5 border-b border-white/5">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center"><i class="fas ${sec.icon}"></i></div>
+                    <div>
+                        <h2 class="text-lg font-bold">${sec.title}</h2>
+                        <p class="text-xs text-slate-500">${sec.page ? `Packages on the ${sec.page} page` : 'Any active package'} · shows up to ${HOMEPAGE_LIMIT}</p>
+                    </div>
+                    <span class="ml-2 px-2 py-1 rounded-md text-[10px] font-bold ${status[1]}">${status[0]}</span>
+                </div>
+                <label class="flex items-center gap-3 cursor-pointer select-none">
+                    <span class="text-xs font-bold text-slate-400">Show section</span>
+                    <span class="relative inline-flex">
+                        <input type="checkbox" class="sr-only peer" ${enabled ? 'checked' : ''} onchange="window.setHomeSectionEnabled('${sec.key}', this.checked)">
+                        <span class="w-11 h-6 bg-slate-700 rounded-full peer-checked:bg-primary transition after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></span>
+                    </span>
+                </label>
+            </div>
+            <div class="p-5 space-y-4 ${enabled ? '' : 'opacity-50'}">
+                ${shown.length ? `
+                <ol class="space-y-2">
+                    ${shown.map((t, i) => `
+                    <li class="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 ${i >= HOMEPAGE_LIMIT ? 'opacity-50' : ''}">
+                        <span class="w-6 text-center text-xs font-bold text-slate-500">${i + 1}</span>
+                        ${t.image ? `<img src="${img(t.image)}" alt="" class="w-12 h-12 rounded-lg object-cover">` : '<div class="w-12 h-12 rounded-lg bg-primary/10"></div>'}
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-bold truncate">${escHtml(t.title)}</p>
+                            <p class="text-xs text-slate-500 truncate">${escHtml(t.location)} · $${Number(t.price).toLocaleString()}${sec.key === 'offers' && t.promo_badge ? ` · <span class="text-rose-400">${escHtml(t.promo_badge)}</span>` : ''}${i >= HOMEPAGE_LIMIT ? ' · not shown (over the limit)' : ''}</p>
+                        </div>
+                        <button class="p-2 rounded-lg hover:bg-white/10 text-slate-400 disabled:opacity-30" title="Move up" ${i === 0 ? 'disabled' : ''} onclick="window.moveHomePackage('${sec.key}', ${Number(t.id)}, -1)"><i class="fas fa-arrow-up text-xs"></i></button>
+                        <button class="p-2 rounded-lg hover:bg-white/10 text-slate-400 disabled:opacity-30" title="Move down" ${i === shown.length - 1 ? 'disabled' : ''} onclick="window.moveHomePackage('${sec.key}', ${Number(t.id)}, 1)"><i class="fas fa-arrow-down text-xs"></i></button>
+                        <button class="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold" onclick="window.toggleHomePackage('${sec.key}', ${Number(t.id)}, false)">Remove</button>
+                    </li>`).join('')}
+                </ol>` : `<p class="text-sm text-slate-500">No packages chosen yet${live ? '' : ', so this section is not shown on the homepage'}. Add one below.</p>`}
+
+                ${eligible.length ? `
+                <div class="flex flex-wrap items-center gap-2">
+                    <select id="home-add-${sec.key}" class="flex-1 min-w-60 bg-dark-900 border border-white/10 rounded-xl p-3 text-sm outline-none focus:border-primary">
+                        <option value="">Add a package to ${sec.title}…</option>
+                        ${eligible.map(t => `<option value="${Number(t.id)}">${escHtml(t.title)} (${escHtml(t.location)})</option>`).join('')}
+                    </select>
+                    <button class="px-5 py-3 rounded-xl bg-primary text-white text-sm font-bold" onclick="window.addHomePackage('${sec.key}')"><i class="fas fa-plus mr-2"></i>Add</button>
+                </div>` : `<p class="text-xs text-slate-500">${sec.page ? `Every active package on the ${sec.page} page is already in this section.` : 'Every active package is already in this section.'}</p>`}
+                ${sec.key === 'offers' ? '<p class="text-[11px] text-slate-500">Badge text and tagline for offers are set in each package\'s form (Promotion).</p>' : ''}
+            </div>
+        </div>`;
+    };
+
+    contentArea.innerHTML = `
+        <div class="space-y-8 animate-fade-in pb-12">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold">Homepage</h1>
+                    <p class="text-slate-500 mt-1">Choose the packages shown in each homepage section and the order they appear in. Changes are live straight away.</p>
+                </div>
+                <a href="../index.php" target="_blank" rel="noopener" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-sm font-bold transition"><i class="fas fa-arrow-up-right-from-square mr-2"></i>View homepage</a>
+            </div>
+            ${HOMEPAGE_SECTIONS.map(sectionHtml).join('')}
+        </div>`;
+}
+
+async function homeApi(params, ok) {
+    try {
+        const data = await apiPost('update-homepage.php', params);
+        if (!data.success) throw new Error(data.error || 'Update failed');
+        if (ok) showToast(ok);
+        await refreshData({ silent: true });
+    } catch (err) {
+        showToast(err.message, 'error');
+        renderHomepage();
+    }
+}
+
+window.setHomeSectionEnabled = (section, on) =>
+    homeApi({ action: 'enable', section, on: on ? '1' : '0' }, on ? 'Section shown on the homepage' : 'Section hidden from the homepage');
+
+window.toggleHomePackage = (section, id, on) =>
+    homeApi({ action: 'toggle', section, id, on: on ? '1' : '0' }, on ? 'Added to the homepage' : 'Removed from the homepage');
+
+// Sorted ids of the active packages in a section, as the homepage orders them.
+function homeSectionIds(section) {
+    return state.data.tours.filter(t => t.status === 'Active' && tourHomeSections(t).includes(section))
+        .sort((a, b) => (Number(a.home_order) || 0) - (Number(b.home_order) || 0) || String(b.created_at).localeCompare(String(a.created_at)))
+        .map(t => Number(t.id));
+}
+
+window.addHomePackage = async (section) => {
+    const sel = document.getElementById('home-add-' + section);
+    if (!sel || !sel.value) { showToast('Choose a package to add first.', 'error'); return; }
+    const id = Number(sel.value);
+    const before = homeSectionIds(section);
+    await window.toggleHomePackage(section, id, true);
+    if (!homeSectionIds(section).includes(id)) return; // the server refused it
+    await saveHomeOrder(section, [...before, id]); // new additions go last
+};
+
+async function saveHomeOrder(section, ids) {
+    const fd = new FormData();
+    fd.append('action', 'order');
+    fd.append('section', section);
+    ids.forEach(id => fd.append('ids[]', id));
+    await homeApi(fd, null);
+}
+
+window.moveHomePackage = (section, id, dir) => {
+    const ids = homeSectionIds(section);
+    const i = ids.indexOf(Number(id)), j = i + dir;
+    if (i < 0 || j < 0 || j >= ids.length) return;
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+    saveHomeOrder(section, ids);
 };
 
 window.viewTourPublic = (id) => {

@@ -21,18 +21,6 @@ $description = trim($_POST['description'] ?? '');
 // public cards draw five stars, so keep it on a 0–5 scale.
 $rating      = round(max(0, min(5, (float)($_POST['rating'] ?? 5.0))), 1);
 $imageRaw    = $_POST['image'] ?? '';
-$showOnHome  = isset($_POST['showOnHome']) && $_POST['showOnHome'] === 'on' ? 1 : 0;
-
-// A featured package must name a section the homepage actually renders,
-// otherwise it is flagged "on the homepage" yet shows up nowhere.
-$allowedSections = ['Explore Popular Tours', 'Marketing Highlights'];
-$homeSection     = trim($_POST['homeSection'] ?? '');
-if (!$showOnHome) {
-    $homeSection = '';
-} elseif (!in_array($homeSection, $allowedSections, true)) {
-    $homeSection = $allowedSections[0];
-}
-
 // Which public package pages this tour appears on. Stored as a comma-separated
 // list so a single package can sit on more than one page (a Maasai Mara trip
 // is both Safari and Local).
@@ -40,6 +28,19 @@ $allowedPages = ['International', 'Local', 'Safari'];
 $pagesInput   = $_POST['packagePages'] ?? [];
 if (!is_array($pagesInput)) $pagesInput = [$pagesInput];
 $packagePages = implode(',', array_values(array_intersect($allowedPages, $pagesInput)));
+
+// Homepage sections (safari / local / international / offers). A package can
+// only appear in a package-type section whose page it is on.
+$homeInput = $_POST['homeSections'] ?? [];
+if (!is_array($homeInput)) $homeInput = [$homeInput];
+$homeSecs = [];
+foreach (['safari' => 'Safari', 'local' => 'Local', 'international' => 'International', 'offers' => null] as $key => $page) {
+    if (in_array($key, $homeInput, true) && ($page === null || in_array($page, $pagesInput, true))) $homeSecs[] = $key;
+}
+$homeSections = implode(',', $homeSecs);
+// Legacy flags, kept in step with home_sections.
+$showOnHome  = $homeSecs ? 1 : 0;
+$homeSection = in_array('offers', $homeSecs, true) ? 'Marketing Highlights' : ($homeSecs ? 'Explore Popular Tours' : '');
 
 // Travel-style pages (romantic-travel.php etc.) this package is listed on.
 $allowedStyles = ['romantic', 'wellness', 'halal', 'kosher', 'faith', 'accessible', 'mice'];
@@ -163,26 +164,26 @@ try {
             "UPDATE tours SET title=?, location=?, price=?, duration=?, category=?, status=?, description=?,
                     rating=?, image=?, show_on_home=?, home_section=?, package_pages=?,
                     promo_badge=?, promo_style=?, promo_tagline=?,
-                    highlights=?, itinerary=?, inclusions=?, exclusions=?, travel_styles=?
+                    highlights=?, itinerary=?, inclusions=?, exclusions=?, travel_styles=?, home_sections=?
              WHERE id=?"
         );
         $stmt->execute([$title, $location, $price, $duration, $category, $status, $description,
                         $rating, $imagePath, $showOnHome, $homeSection, $packagePages,
                         $promoBadge, $promoStyle, $promoTagline,
-                        $highlights, $itinerary, $inclusions, $exclusions, $travelStyles, $id]);
+                        $highlights, $itinerary, $inclusions, $exclusions, $travelStyles, $homeSections ?: null, $id]);
         $newId = $id;
     } else {
         $stmt = $pdo->prepare(
             "INSERT INTO tours (title, location, price, duration, category, status, description,
                     rating, image, show_on_home, home_section, package_pages,
                     promo_badge, promo_style, promo_tagline,
-                    highlights, itinerary, inclusions, exclusions, travel_styles)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    highlights, itinerary, inclusions, exclusions, travel_styles, home_sections)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         $stmt->execute([$title, $location, $price, $duration, $category, $status, $description,
                         $rating, $imagePath, $showOnHome, $homeSection, $packagePages,
                         $promoBadge, $promoStyle, $promoTagline,
-                        $highlights, $itinerary, $inclusions, $exclusions, $travelStyles]);
+                        $highlights, $itinerary, $inclusions, $exclusions, $travelStyles, $homeSections ?: null]);
         $newId = (int)$pdo->lastInsertId();
     }
 

@@ -40,31 +40,6 @@ if (!function_exists('getPackagesForPage')) {
     }
 }
 
-if (!function_exists('getHomepagePackages')) {
-    /**
-     * Packages the admin has flagged for a homepage section.
-     *
-     * @param string $section 'Explore Popular Tours' or 'Marketing Highlights'.
-     */
-    function getHomepagePackages(PDO $pdo, string $section, int $limit = 8): array {
-        try {
-            $stmt = $pdo->prepare(
-                "SELECT * FROM tours
-                 WHERE status = 'Active'
-                   AND show_on_home = 1
-                   AND home_section = ?
-                 ORDER BY created_at DESC
-                 LIMIT " . (int)$limit
-            );
-            $stmt->execute([$section]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log('getHomepagePackages failed: ' . $e->getMessage());
-            return [];
-        }
-    }
-}
-
 if (!function_exists('packageImagePath')) {
     /**
      * Image path for a package, falling back when the admin left the image

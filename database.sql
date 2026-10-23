@@ -6,6 +6,8 @@ SET time_zone = "+00:00";
 -- NOTE: every table created below must be listed here. blog_posts was missing
 -- from this list, so a second run died on "table already exists" *after*
 -- activity_feed had been dropped, leaving that table gone for good.
+DROP TABLE IF EXISTS `newsletter_subscribers`;
+DROP TABLE IF EXISTS `site_settings`;
 DROP TABLE IF EXISTS `blog_posts`;
 DROP TABLE IF EXISTS `expenses`;
 DROP TABLE IF EXISTS `invoices`;
@@ -90,6 +92,10 @@ CREATE TABLE `tours` (
   -- Travel-style pages (romantic, wellness, halal, kosher, faith, accessible,
   -- mice) this tour is listed on. Comma-separated, chosen in the admin.
   `travel_styles` varchar(150) DEFAULT NULL,
+  -- Homepage sections this tour is shown in: safari, local, international,
+  -- offers (comma-separated). Managed from the admin Homepage tab.
+  `home_sections` varchar(100) DEFAULT NULL,
+  `home_order` int(11) DEFAULT 0,
   -- Optional promotion shown in the homepage Marketing Highlights carousel.
   `promo_badge` varchar(100) DEFAULT NULL,
   `promo_style` varchar(20) DEFAULT 'primary',
@@ -300,3 +306,25 @@ INSERT INTO `activity_feed` (`user`, `action`, `target`, `activity_time`) VALUES
 ('Admin', 'Added new tour', 'Iceland Northern Lights', '2 hours ago'),
 ('System', 'New Booking', 'BK-1011', '4 hours ago'),
 ('John Doe', 'Left a review', 'Safari in Kenya', '1 day ago');
+
+-- --------------------------------------------------------
+
+-- Table structure for table `newsletter_subscribers` (footer sign-up form)
+CREATE TABLE `newsletter_subscribers` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `email` varchar(100) NOT NULL,
+  `source` varchar(100) DEFAULT NULL,
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+-- Table structure for table `site_settings` (simple key/value options,
+-- e.g. which homepage sections are switched on)
+CREATE TABLE `site_settings` (
+  `name` varchar(100) NOT NULL,
+  `value` text DEFAULT NULL,
+  PRIMARY KEY (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

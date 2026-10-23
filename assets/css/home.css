@@ -1,0 +1,57 @@
+/*
+ * Homepage sections below the hero (index.php). Package tiles come from
+ * tour.css, section/heading styles from destination.css, journal cards from
+ * blog.css.
+ */
+
+/* ── Trip finder, just below the hero (overlapping it would cover the
+   slide counter and arrows) ─────────────────────────────────── */
+.hm-finder-wrap { position: relative; z-index: 30; padding: 28px 0 8px; background: var(--dst-tint); }
+.hm-finder { display: grid; gap: 12px; align-items: end; padding: 18px; border-radius: 22px; background: #fff; box-shadow: 0 24px 60px rgba(6, 50, 54, .18); }
+@media (min-width: 900px) { .hm-finder { grid-template-columns: 1.3fr 1fr auto auto; padding: 18px 18px 18px 26px; } }
+.hm-finder label { display: flex; flex-direction: column; gap: 6px; font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--dst-muted); }
+.hm-finder select { height: 50px; padding: 0 40px 0 14px; border: 1px solid #d5e1df; border-radius: 12px; font: inherit; font-size: .98rem; letter-spacing: 0; text-transform: none; color: var(--dst-ink); background: #fff; appearance: none; cursor: pointer; outline: none;
+	background-image: linear-gradient(45deg, transparent 50%, var(--dst-muted) 50%), linear-gradient(135deg, var(--dst-muted) 50%, transparent 50%); background-position: calc(100% - 20px) 22px, calc(100% - 15px) 22px; background-size: 5px 5px; background-repeat: no-repeat; }
+.hm-finder select:focus { border-color: var(--dst-teal); box-shadow: 0 0 0 3px rgba(6, 97, 104, .12); }
+.hm-finder .dst-btn { height: 50px; justify-content: center; }
+.hm-quick { display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: center; margin-top: 14px; font-size: .88rem; color: var(--dst-muted); }
+.hm-quick a { color: var(--dst-teal); font-weight: 700; }
+
+/* ── Package sections ───────────────────────────────────────── */
+.hm-pk .dst-section-head { align-items: end; }
+.hm-viewall { white-space: nowrap; }
+
+/* Special offers: tile with a promo badge and tagline */
+.hm-offer .pk-tile-img .hm-badge { position: absolute; right: 14px; top: 14px; padding: 5px 12px; border-radius: 999px; font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; box-shadow: 0 6px 14px rgba(0, 0, 0, .18); }
+.hm-badge--primary { background: #066168; color: #fff; }
+.hm-badge--secondary { background: #85D200; color: #10201f; }
+.hm-badge--citrus { background: #FFAA0D; color: #10201f; }
+.hm-badge--red { background: #DC2626; color: #fff; }
+.hm-offer .hm-tagline { font-style: italic; color: var(--dst-text); font-size: .9rem; line-height: 1.5; margin: 0; }
+
+/* ── Regions ────────────────────────────────────────────────── */
+.hm-regions { display: grid; gap: 16px; }
+@media (min-width: 640px) { .hm-regions { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .hm-regions { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.hm-region { position: relative; display: block; aspect-ratio: 3 / 4; border-radius: 20px; overflow: hidden; color: #fff; background: var(--dst-tint); }
+.hm-region img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .6s; }
+.hm-region::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4, 28, 22, 0) 40%, rgba(4, 28, 22, .85) 100%); }
+.hm-region:hover img { transform: scale(1.05); }
+.hm-region-text { position: absolute; left: 20px; right: 20px; bottom: 18px; z-index: 1; }
+.hm-region-text strong { display: flex; justify-content: space-between; align-items: center; font-family: var(--dst-serif); font-size: 1.6rem; font-weight: 600; }
+.hm-region-text strong::after { content: '→'; font-family: system-ui, sans-serif; font-size: 1.1rem; transition: transform .2s; }
+.hm-region:hover .hm-region-text strong::after { transform: translateX(4px); }
+.hm-region-text span { display: block; margin-top: 4px; font-size: .88rem; color: rgba(255, 255, 255, .85); }
+.hm-region:hover, .hm-region:focus-visible { color: #fff; }
+
+/* ── How it works ───────────────────────────────────────────── */
+.hm-steps { display: grid; gap: 16px; counter-reset: step; }
+@media (min-width: 900px) { .hm-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.hm-step { padding: 26px; border-radius: 20px; background: #fff; border: 1px solid var(--dst-line); }
+.hm-step-n { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--dst-teal); color: #fff; font-weight: 800; margin-bottom: 16px; }
+.hm-step h3 { font-family: var(--dst-serif); font-weight: 600; color: var(--dst-ink); font-size: 1.25rem; margin: 0 0 8px; }
+.hm-step p { margin: 0; line-height: 1.65; }
+
+/* The journal section (.hj) sits on the tint background already. */
+.hm-cta { padding-bottom: 96px; }
+
