@@ -1,0 +1,116 @@
+/*
+ * Destinations overview, region and country pages (includes/destination-view.php).
+ * Package tiles reuse .pk-tile / .pk-grid from tour.css (loaded alongside).
+ */
+
+.dst {
+	--dst-ink: #10201f;
+	--dst-text: #3a4846;
+	--dst-muted: #6b7a78;
+	--dst-line: #e3eceb;
+	--dst-tint: #eef7f6;
+	--dst-teal: #066168;
+	--dst-teal-dark: #054f55;
+	--dst-gold: #FFD214;
+	--dst-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+	color: var(--dst-text);
+}
+.dst-wrap { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.dst-eyebrow { font-size: .75rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--dst-teal); }
+.dst-h2 { font-family: var(--dst-serif); font-weight: 600; color: var(--dst-ink); font-size: clamp(1.7rem, 3vw, 2.3rem); line-height: 1.2; margin: 6px 0 12px; }
+.dst-lead { font-size: 1.08rem; line-height: 1.8; margin: 0; }
+
+/* ── Hero: text beside a photo card. The source photos are 640px, so they
+   are shown at card size where they stay sharp rather than stretched. ── */
+.dst-hero { background: linear-gradient(180deg, #e4f3f1 0%, var(--dst-tint) 100%); padding: 168px 0 64px; }
+@media (min-width: 1024px) { .dst-hero { padding: 200px 0 80px; } }
+.dst-hero-grid { display: grid; gap: 36px; align-items: center; }
+@media (min-width: 900px) { .dst-hero-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 56px; } }
+.dst-crumbs { display: flex; flex-wrap: wrap; gap: 8px; font-size: .82rem; color: var(--dst-muted); margin-bottom: 18px; }
+.dst-crumbs a { color: var(--dst-muted); }
+.dst-crumbs a:hover { color: var(--dst-teal); }
+.dst-crumbs [aria-current] { color: var(--dst-ink); font-weight: 600; }
+.dst-title { font-family: var(--dst-serif); font-weight: 600; color: var(--dst-ink); font-size: clamp(2.4rem, 5.4vw, 4.2rem); line-height: 1.05; margin: 10px 0 16px; letter-spacing: -.01em; }
+.dst-tagline { font-size: clamp(1.08rem, 1.6vw, 1.3rem); line-height: 1.55; color: var(--dst-muted); margin: 0 0 26px; max-width: 30em; }
+.dst-facts { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; }
+.dst-fact { display: flex; gap: 10px; align-items: flex-start; padding: 12px 16px; border-radius: 14px; background: #fff; border: 1px solid var(--dst-line); max-width: 100%; }
+.dst-fact i { color: var(--dst-teal); margin-top: 3px; }
+.dst-fact small { display: block; font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--dst-muted); }
+.dst-fact span { display: block; font-weight: 600; color: var(--dst-ink); font-size: .92rem; }
+.dst-ctas { display: flex; flex-wrap: wrap; gap: 12px; }
+.dst-btn { display: inline-flex; align-items: center; gap: 9px; height: 50px; padding: 0 24px; border-radius: 999px; font-weight: 700; font-size: .95rem; transition: background .2s, color .2s, border-color .2s; }
+.dst-btn--primary { background: var(--dst-teal); color: #fff; }
+.dst-btn--primary:hover { background: var(--dst-teal-dark); color: #fff; }
+.dst-btn--ghost { border: 1px solid #c9dbd8; color: var(--dst-ink); background: #fff; }
+.dst-btn--ghost:hover { border-color: var(--dst-teal); color: var(--dst-teal); }
+.dst-btn--wa { background: #25D366; color: #fff; }
+.dst-hero-photo { position: relative; border-radius: 26px; overflow: hidden; aspect-ratio: 1 / 1; max-width: 520px; width: 100%; justify-self: center; box-shadow: 0 30px 60px rgba(6, 50, 54, .2); }
+.dst-hero-photo img { width: 100%; height: 100%; object-fit: cover; }
+.dst-hero-photo figcaption { position: absolute; left: 16px; bottom: 16px; padding: 8px 14px; border-radius: 999px; background: rgba(255, 255, 255, .92); color: var(--dst-ink); font-weight: 700; font-size: .85rem; display: inline-flex; gap: 8px; align-items: center; }
+.dst-hero-photo figcaption i { color: var(--dst-teal); }
+
+/* ── Sections ───────────────────────────────────────────────── */
+.dst-section { padding: 72px 0; background: #fff; }
+.dst-section--tint { background: var(--dst-tint); }
+.dst-section-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+.dst-section-head p { margin: 0; color: var(--dst-muted); max-width: 36em; }
+.dst-about { display: grid; gap: 40px; }
+@media (min-width: 1024px) { .dst-about { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 64px; } }
+
+.dst-hl-grid { display: grid; gap: 16px; }
+@media (min-width: 640px) { .dst-hl-grid { grid-template-columns: 1fr 1fr; } }
+.dst-hl { padding: 22px; border-radius: 18px; background: var(--dst-tint); }
+.dst-hl-n { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--dst-teal); color: #fff; font-weight: 700; font-size: .85rem; margin-bottom: 12px; }
+.dst-hl h3 { font-family: var(--dst-serif); font-weight: 600; color: var(--dst-ink); font-size: 1.15rem; margin: 0 0 6px; }
+.dst-hl p { margin: 0; line-height: 1.6; font-size: .95rem; }
+
+/* Empty-state when no packages match yet */
+.dst-empty { display: grid; gap: 20px; align-items: center; padding: 32px; border-radius: 22px; background: #fff; border: 1px dashed #bcd3cf; }
+@media (min-width: 900px) { .dst-empty { grid-template-columns: auto 1fr auto; } }
+.dst-empty-icon { width: 60px; height: 60px; border-radius: 18px; display: grid; place-items: center; background: var(--dst-tint); color: var(--dst-teal); font-size: 1.4rem; }
+.dst-empty h3 { font-family: var(--dst-serif); color: var(--dst-ink); font-size: 1.35rem; margin: 0 0 6px; }
+.dst-empty p { margin: 0; line-height: 1.6; }
+
+/* Country cards (region + overview pages). Text-led: there is one photo per
+   region, so repeating it on every card would look like filler. */
+.dst-cards { display: grid; gap: 16px; }
+@media (min-width: 640px) { .dst-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .dst-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.dst-card { display: flex; flex-direction: column; gap: 8px; padding: 22px 22px 20px; border-radius: 18px; background: #fff; border: 1px solid var(--dst-line); color: inherit; transition: transform .25s, box-shadow .25s, border-color .25s; }
+.dst-card:hover { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(6, 97, 104, .12); border-color: transparent; }
+.dst-card-name { display: flex; justify-content: space-between; align-items: center; font-family: var(--dst-serif); font-weight: 600; font-size: 1.3rem; color: var(--dst-ink); }
+.dst-card-name::after { content: '→'; font-family: system-ui, sans-serif; color: var(--dst-teal); transition: transform .2s; }
+.dst-card:hover .dst-card-name::after { transform: translateX(4px); }
+.dst-card p { margin: 0; line-height: 1.55; font-size: .93rem; }
+.dst-card-meta { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--dst-line); font-size: .8rem; color: var(--dst-muted); display: flex; gap: 8px; align-items: center; }
+.dst-card-meta i { color: var(--dst-teal); }
+
+/* Region blocks on the overview page */
+.dst-region { display: grid; gap: 28px; padding: 40px 0; border-top: 1px solid var(--dst-line); }
+.dst-region:first-child { border-top: 0; padding-top: 0; }
+@media (min-width: 1024px) { .dst-region { grid-template-columns: 300px minmax(0, 1fr); gap: 48px; } }
+/* Keep cards at their natural height beside the taller region photo. */
+.dst-region .dst-cards { align-content: start; align-items: start; }
+.dst-region-photo { border-radius: 20px; overflow: hidden; aspect-ratio: 4 / 3; margin-bottom: 18px; }
+.dst-region-photo img { width: 100%; height: 100%; object-fit: cover; }
+.dst-region-aside h2 { font-family: var(--dst-serif); font-weight: 600; color: var(--dst-ink); font-size: 1.9rem; margin: 0 0 8px; }
+.dst-region-aside p { margin: 0 0 16px; line-height: 1.6; }
+.dst-region-aside a.dst-link { color: var(--dst-teal); font-weight: 700; display: inline-flex; gap: 8px; align-items: center; }
+.dst-jump { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+.dst-jump a { padding: 8px 16px; border-radius: 999px; background: #fff; border: 1px solid var(--dst-line); font-weight: 600; font-size: .88rem; color: var(--dst-ink); }
+.dst-jump a:hover { border-color: var(--dst-teal); color: var(--dst-teal); }
+
+/* Closing call to action. Bottom padding clears footer.php's raised band. */
+.dst-cta-wrap { background: var(--dst-tint); padding: 64px 0 240px; }
+.dst-cta { display: grid; gap: 24px; align-items: center; padding: 40px; border-radius: 26px; color: #fff; background: linear-gradient(135deg, #077a82 0%, var(--dst-teal) 50%, #04454a 100%); }
+@media (min-width: 900px) { .dst-cta { grid-template-columns: 1fr auto; padding: 48px 56px; } }
+.dst-cta h2 { font-family: var(--dst-serif); font-weight: 600; font-size: clamp(1.7rem, 3vw, 2.3rem); color: #fff; margin: 0 0 8px; }
+.dst-cta p { margin: 0; color: rgba(255, 255, 255, .85); line-height: 1.6; max-width: 36em; }
+.dst-cta .dst-ctas .dst-btn--primary { background: var(--dst-gold); color: var(--dst-ink); }
+.dst-cta .dst-ctas .dst-btn--primary:hover { background: #fff; }
+
+@media (max-width: 639px) {
+	.dst-section { padding: 52px 0; }
+	.dst-cta { padding: 30px 24px; }
+	.dst-empty { padding: 24px; }
+}

@@ -222,32 +222,32 @@ $hImage = htmlspecialchars($page_image ?? 'assets/images/seo/og_index.png', ENT_
 									<div class="mm-dest">
 										<div class="mm-rail" role="tablist" aria-label="Regions">
 											<p class="mm-label">Regions</p>
-											<?php $first = true; foreach ($mmRegions as $key => [$name, $page, $img, $blurb, $places]) : ?>
-											<a class="mm-region<?php echo $first ? ' is-active' : ''; ?>" href="<?php echo $page; ?>" role="tab" aria-selected="<?php echo $first ? 'true' : 'false'; ?>" aria-controls="mm-region-<?php echo $key; ?>" data-mm-region="<?php echo $key; ?>">
-												<span><?php echo $name; ?></span>
-												<small><?php echo count($places); ?></small>
+											<?php $mmFirst = true; foreach ($mmRegions as $mmKey => [$mmName, $mmPage, $mmImg, $mmBlurb, $mmPlaces]) : ?>
+											<a class="mm-region<?php echo $mmFirst ? ' is-active' : ''; ?>" href="<?php echo $mmPage; ?>" role="tab" aria-selected="<?php echo $mmFirst ? 'true' : 'false'; ?>" aria-controls="mm-region-<?php echo $mmKey; ?>" data-mm-region="<?php echo $mmKey; ?>">
+												<span><?php echo $mmName; ?></span>
+												<small><?php echo count($mmPlaces); ?></small>
 											</a>
-											<?php $first = false; endforeach; ?>
+											<?php $mmFirst = false; endforeach; ?>
 										</div>
-										<?php $first = true; foreach ($mmRegions as $key => [$name, $page, $img, $blurb, $places]) : ?>
-										<div class="mm-region-pane<?php echo $first ? ' is-active' : ''; ?>" id="mm-region-<?php echo $key; ?>" role="tabpanel">
+										<?php $mmFirst = true; foreach ($mmRegions as $mmKey => [$mmName, $mmPage, $mmImg, $mmBlurb, $mmPlaces]) : ?>
+										<div class="mm-region-pane<?php echo $mmFirst ? ' is-active' : ''; ?>" id="mm-region-<?php echo $mmKey; ?>" role="tabpanel">
 											<div class="mm-places">
-												<p class="mm-label"><?php echo $name; ?> &middot; <?php echo count($places); ?> destinations</p>
+												<p class="mm-label"><?php echo $mmName; ?> &middot; <?php echo count($mmPlaces); ?> destinations</p>
 												<div class="mm-place-grid">
-													<?php foreach ($places as $place => $href) : ?>
-													<a class="mm-place" href="<?php echo $href; ?>"><?php echo $place; ?></a>
+													<?php foreach ($mmPlaces as $mmPlace => $mmHref) : ?>
+													<a class="mm-place" href="<?php echo $mmHref; ?>"><?php echo $mmPlace; ?></a>
 													<?php endforeach; ?>
 												</div>
 											</div>
-											<a class="mm-feature" href="<?php echo $page; ?>">
-												<img src="<?php echo $img; ?>" alt="" loading="lazy" width="320" height="320">
+											<a class="mm-feature" href="<?php echo $mmPage; ?>">
+												<img src="<?php echo $mmImg; ?>" alt="" loading="lazy" width="320" height="320">
 												<span class="mm-feature-text">
-													<strong>Explore <?php echo $name; ?></strong>
-													<span><?php echo $blurb; ?></span>
+													<strong>Explore <?php echo $mmName; ?></strong>
+													<span><?php echo $mmBlurb; ?></span>
 												</span>
 											</a>
 										</div>
-										<?php $first = false; endforeach; ?>
+										<?php $mmFirst = false; endforeach; ?>
 									</div>
 									<div class="mm-foot">
 										<span><i class="fa-solid fa-compass" aria-hidden="true"></i> Not sure where to go? Our specialists will suggest destinations for your dates and budget.</span>
@@ -270,20 +270,20 @@ $hImage = htmlspecialchars($page_image ?? 'assets/images/seo/og_index.png', ENT_
 										<div>
 											<p class="mm-label">Tour packages</p>
 											<div class="mm-pack-grid">
-												<?php foreach ($mmPackages as [$name, $href, $img, $desc]) : ?>
-												<a class="mm-pack" href="<?php echo $href; ?>">
-													<span class="mm-pack-img"><img src="<?php echo $img; ?>" alt="" loading="lazy" width="320" height="240"></span>
-													<span class="mm-pack-text"><strong><?php echo $name; ?></strong><span><?php echo $desc; ?></span></span>
+												<?php foreach ($mmPackages as [$mmName, $mmHref, $mmImg, $mmDesc]) : ?>
+												<a class="mm-pack" href="<?php echo $mmHref; ?>">
+													<span class="mm-pack-img"><img src="<?php echo $mmImg; ?>" alt="" loading="lazy" width="320" height="240"></span>
+													<span class="mm-pack-text"><strong><?php echo $mmName; ?></strong><span><?php echo $mmDesc; ?></span></span>
 												</a>
 												<?php endforeach; ?>
 											</div>
 										</div>
 										<div class="mm-styles">
 											<p class="mm-label">Travel styles</p>
-											<?php foreach ($mmStyles as [$name, $href, $icon, $desc]) : ?>
-											<a class="mm-style" href="<?php echo $href; ?>">
-												<span class="mm-style-icon"><i class="fa-solid <?php echo $icon; ?>" aria-hidden="true"></i></span>
-												<span><strong><?php echo $name; ?></strong><small><?php echo $desc; ?></small></span>
+											<?php foreach ($mmStyles as [$mmName, $mmHref, $mmIcon, $mmDesc]) : ?>
+											<a class="mm-style" href="<?php echo $mmHref; ?>">
+												<span class="mm-style-icon"><i class="fa-solid <?php echo $mmIcon; ?>" aria-hidden="true"></i></span>
+												<span><strong><?php echo $mmName; ?></strong><small><?php echo $mmDesc; ?></small></span>
 											</a>
 											<?php endforeach; ?>
 										</div>
@@ -311,16 +311,16 @@ $hImage = htmlspecialchars($page_image ?? 'assets/images/seo/og_index.png', ENT_
 						<div class="lg:hidden block max-lg:p-5 text-center mt-auto">
 							<ul>
 								<li class="inline-block mx-0.5">
-									<a class="size-10 !leading-10 border border-black/10 text-center text-primary fab fa-facebook-f" target="_blank" href="https://www.facebook.com/luxitafrica/dexignzone"></a>
+									<a class="size-10 !leading-10 border border-black/10 text-center text-primary fab fa-facebook-f" target="_blank" rel="noopener" aria-label="Facebook" href="https://www.facebook.com/luxitafrica"></a>
 								</li>
 								<li class="inline-block mx-0.5">
-									<a class="size-10 !leading-10 border border-black/10 text-center text-primary fab fa-twitter" target="_blank" href="https://twitter.com/dexignzones"></a>
+									<a class="size-10 !leading-10 border border-black/10 text-center text-primary fa-brands fa-x-twitter" target="_blank" rel="noopener" aria-label="X" href="https://x.com/Luxitafrica"></a>
 								</li>
 								<li class="inline-block mx-0.5">
-									<a class="size-10 !leading-10 border border-black/10 text-center text-primary fab fa-linkedin-in" target="_blank" href="https://www.linkedin.com/showcase/3686700/admin/"></a>
+									<a class="size-10 !leading-10 border border-black/10 text-center text-primary fa-brands fa-tiktok" target="_blank" rel="noopener" aria-label="TikTok" href="https://www.tiktok.com/@luxitglobalescapes"></a>
 								</li>
 								<li class="inline-block mx-0.5">
-									<a class="size-10 !leading-10 border border-black/10 text-center text-primary fab fa-instagram" target="_blank" href="https://www.instagram.com/p/DIoeX4NuF4S//dexignzone/"></a>
+									<a class="size-10 !leading-10 border border-black/10 text-center text-primary fab fa-instagram" target="_blank" rel="noopener" aria-label="Instagram" href="https://www.instagram.com/p/DIoeX4NuF4S/"></a>
 								</li>
 							</ul>
 						</div>

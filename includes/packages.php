@@ -158,6 +158,28 @@ if (!function_exists('renderPackageCard')) {
     }
 }
 
+if (!function_exists('packageTile')) {
+    /**
+     * Compact package card (tour-detail.php "You may also like" and the
+     * destination pages). Styles: .pk-tile in assets/css/tour.css.
+     */
+    function packageTile(array $tour): void {
+        ?>
+                    <a class="pk-tile" href="tour-detail.php?id=<?php echo (int)$tour['id']; ?>">
+                        <div class="pk-tile-img">
+                            <img src="<?php echo packageImage($tour); ?>" alt="" loading="lazy">
+                            <?php if (!empty($tour['duration'])) : ?><span class="pk-tile-dur"><?php echo htmlspecialchars($tour['duration']); ?></span><?php endif; ?>
+                        </div>
+                        <div class="pk-tile-body">
+                            <span class="pk-tile-loc"><i class="fa-solid fa-location-dot"></i> <?php echo htmlspecialchars($tour['location']); ?></span>
+                            <h3 class="pk-tile-title"><?php echo htmlspecialchars($tour['title']); ?></h3>
+                            <span class="pk-tile-price">From <b>$<?php echo number_format((float)$tour['price']); ?></b> per person</span>
+                        </div>
+                    </a>
+        <?php
+    }
+}
+
 if (!function_exists('packageLines')) {
     /** Non-empty lines of a one-item-per-line admin field (highlights, inclusions…). */
     function packageLines(?string $text): array {

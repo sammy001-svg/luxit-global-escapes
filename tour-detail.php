@@ -264,19 +264,7 @@ include 'header.php';
                     <a href="international-packages.php">All packages <i class="fa-solid fa-arrow-right"></i></a>
                 </div>
                 <div class="pk-grid">
-                    <?php foreach ($related as $rt) : ?>
-                    <a class="pk-tile" href="tour-detail.php?id=<?php echo (int)$rt['id']; ?>">
-                        <div class="pk-tile-img">
-                            <img src="<?php echo packageImage($rt); ?>" alt="" loading="lazy">
-                            <?php if (!empty($rt['duration'])) : ?><span class="pk-tile-dur"><?php echo htmlspecialchars($rt['duration']); ?></span><?php endif; ?>
-                        </div>
-                        <div class="pk-tile-body">
-                            <span class="pk-tile-loc"><i class="fa-solid fa-location-dot"></i> <?php echo htmlspecialchars($rt['location']); ?></span>
-                            <h3 class="pk-tile-title"><?php echo htmlspecialchars($rt['title']); ?></h3>
-                            <span class="pk-tile-price">From <b>$<?php echo number_format((float)$rt['price']); ?></b> per person</span>
-                        </div>
-                    </a>
-                    <?php endforeach; ?>
+                    <?php foreach ($related as $rt) packageTile($rt); ?>
                 </div>
             </div>
         </section>
